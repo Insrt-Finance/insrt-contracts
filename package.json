@@ -1,10 +1,10 @@
 {
-  "name": "TODO",
+  "name": "insert-contracts",
   "version": "0.0.0",
   "private": true,
-  "author": "TODO",
-  "license": "TODO",
-  "description": "TODO",
+  "author": "Insert Finance",
+  "license": "UNLICENSED",
+  "description": "Insert Finance smart contracts",
   "keywords": [
     "hardhat",
     "waffle",

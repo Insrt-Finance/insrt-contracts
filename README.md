@@ -1,8 +1,6 @@
-# SolidState Smart Contract Project
+# Insert Finance
 
-> Note: This repository was generated from a template or is the template itself. To set up a new project, set the missing data marked "TODO" in `package.json` and remove this notice.
-
-This project is built with [SolidState](https://github.com/solidstate-network). See the [solidstate-solidity](https://github.com/solidstate-network/solidstate-solidity) documentation for information about contract integration and testing.
+Secure, diversified exposure to NFTs and NFT infrastructure.
 
 ## Development
 
