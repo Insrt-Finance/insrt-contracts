@@ -4,13 +4,30 @@ pragma solidity ^0.8.11;
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
 library StakingPoolStorage {
+    /**
+     * @notice a struct to contain information pertaining to user deposits
+     * @param duration the duration in blocks of the staking period for the deposit
+     * @param amount the amount of LP tokens staked in total
+     * @param previousDepositBlock the block in which the last deposit of the user occurred
+     * @param accruedRewards the total rewards accrued by the user for each consecutive deposit
+     */
     struct UserDepositInfo {
         uint256 duration;
         uint256 amount;
         uint256 previousDepositBlock;
         uint256 accruedRewards;
     }
-
+    /**
+     * @notice Layout struct for a staking pool
+     * @param insertToken the token of insert protocol
+     * @param productToken the LP token from an index
+     * @param deploymentBlock the block number which the staking pool was deployed in
+     * @param maxEmissionSlots the maximum amount of product tokens accepted by the staking pool
+     * @param emissionSlots the current amount of product tokens in the staking pool
+     * @param emissionRate the amount of insert tokens emitted per block
+     * @param maxStakingDuration the maximum duration a user can stake in the staking pool - the life-time of the staking pool
+     * @param userDepositInfo a mapping from a user address to UserDepositInfo
+     */
     struct Layout {
         IERC20 insertToken;
         IERC20 productToken;
