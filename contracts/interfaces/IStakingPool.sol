@@ -4,6 +4,9 @@ pragma solidity ^0.8.11;
 interface IStakingPool {
     /**
      * @notice function for a user to deposit an amount of product tokens for a specific duration in blocks
+     * @dev a check occurs to see if a user has previously deposited. If yes, then their current deposit amount
+     * is added onto their previous deposit amount, and re-staked. For the previous deposit amount, the claims
+     * are calculated, and stored in accruedRewards parameter in UserDepositInfo struct.
      * @param amount the amount of product tokens to deposit
      * @param duration the duration in blocks of the staking
      */
