@@ -28,9 +28,9 @@ interface IStakingPool {
     function getMaxEmissionSlots() external view returns (uint256);
 
     /**
-     * @notice return the deploymentBlock of a StakingPool
+     * @notice return the deploymentStamp of a StakingPool
      */
-    function getDeploymentBlock() external view returns (uint256);
+    function getDeploymentStamp() external view returns (uint256);
 
     /**
      * @notice return the emissionSlots of a StakingPool

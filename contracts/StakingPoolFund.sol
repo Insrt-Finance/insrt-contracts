@@ -33,8 +33,8 @@ contract StakingPoolFund is SafeOwnable {
         if (currentPool != address(0)) {
             require(
                 IStakingPool(currentPool).getMaxStakingDuration() +
-                    IStakingPool(currentPool).getDeploymentBlock() >
-                    block.number,
+                    IStakingPool(currentPool).getDeploymentStamp() >
+                    block.timestamp,
                 'StakingPool: pool already exists and has not run out'
             );
         }

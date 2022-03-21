@@ -21,7 +21,7 @@ contract StakingPool is IStakingPool {
 
         l.insertToken = insertToken;
         l.productToken = productToken;
-        l.deploymentBlock = block.number;
+        l.deploymentStamp = block.timestamp;
         l.maxEmissionSlots = maxEmissionSlots;
         l.emissionSlots = emissionSlots;
         l.emissionRate = emissionRate;
@@ -42,19 +42,20 @@ contract StakingPool is IStakingPool {
             'StakingPool: exceeded maxEmissionSlots'
         );
         require(
-            l.deploymentBlock + l.maxStakingDuration - block.number > 0,
+            l.deploymentStamp + l.maxStakingDuration - block.timestamp > 0,
             'StakingPool: staking period complete'
         );
         require(
-            duration < l.deploymentBlock + l.maxStakingDuration - block.number,
+            duration <
+                l.deploymentStamp + l.maxStakingDuration - block.timestamp,
             'StakingPool: staking duration exceeds staking period'
         );
 
-        if (l.userDepositInfo[msg.sender].previousDepositBlock != 0) {
+        if (l.userDepositInfo[msg.sender].previousDepositStamp != 0) {
             uint256 claims = _calculateClaims(
                 l.userDepositInfo[msg.sender].amount,
-                block.number -
-                    l.userDepositInfo[msg.sender].previousDepositBlock,
+                block.timestamp -
+                    l.userDepositInfo[msg.sender].previousDepositStamp,
                 l.emissionRate,
                 l.maxEmissionSlots
             );
@@ -62,7 +63,7 @@ contract StakingPool is IStakingPool {
         }
 
         l.productToken.transferFrom(msg.sender, address(this), amount);
-        l.userDepositInfo[msg.sender].previousDepositBlock = block.number;
+        l.userDepositInfo[msg.sender].previousDepositStamp = block.timestamp;
         l.userDepositInfo[msg.sender].duration = duration;
         l.userDepositInfo[msg.sender].amount += amount;
         l.emissionSlots += amount;
@@ -75,8 +76,8 @@ contract StakingPool is IStakingPool {
         StakingPoolStorage.Layout storage l = StakingPoolStorage.layout();
 
         require(
-            l.userDepositInfo[msg.sender].duration + l.deploymentBlock >
-                block.number,
+            l.userDepositInfo[msg.sender].duration + l.deploymentStamp >
+                block.timestamp,
             'StakingPool: user staking period has not elapsed'
         );
 
@@ -112,8 +113,8 @@ contract StakingPool is IStakingPool {
     /**
      * @inheritdoc IStakingPool
      */
-    function getDeploymentBlock() external view returns (uint256) {
-        return StakingPoolStorage.layout().deploymentBlock;
+    function getDeploymentStamp() external view returns (uint256) {
+        return StakingPoolStorage.layout().deploymentStamp;
     }
 
     /**

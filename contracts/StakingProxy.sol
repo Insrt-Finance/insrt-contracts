@@ -24,7 +24,7 @@ contract StakingProxy is Proxy {
 
         l.insertToken = insertToken;
         l.productToken = productToken;
-        l.deploymentBlock = block.number;
+        l.deploymentStamp = block.timestamp;
         l.maxEmissionSlots = maxEmissionSlots;
         l.emissionSlots = emissionSlots;
         l.emissionRate = emissionRate;
