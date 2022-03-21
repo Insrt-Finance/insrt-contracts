@@ -9,7 +9,7 @@ import { ERC20MetadataStorage } from '@solidstate/contracts/token/ERC20/metadata
  * @title Insert Finance staking token
  * @author Insert Finance
  */
-contract xInsert is ERC20 {
+contract XInsert is ERC20 {
     using ERC20MetadataStorage for ERC20MetadataStorage.Layout;
 
     IERC20 private immutable INSERT_TOKEN;

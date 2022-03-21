@@ -17,6 +17,7 @@ library StakingPoolStorage {
         uint256 previousDepositStamp;
         uint256 accruedRewards;
     }
+
     /**
      * @notice Layout struct for a staking pool
      * @param insertToken the token of insert protocol
@@ -28,6 +29,7 @@ library StakingPoolStorage {
      * @param maxStakingDuration the maximum duration a user can stake in the staking pool - the life-time of the staking pool
      * @param userDepositInfo a mapping from a user address to UserDepositInfo
      */
+
     struct Layout {
         IERC20 insertToken;
         IERC20 productToken;
