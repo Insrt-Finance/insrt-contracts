@@ -8,9 +8,8 @@ contract xInsertMock is xInsert {
     constructor(
         string memory name,
         string memory symbol,
-        uint8 decimals,
         IERC20 insertToken
-    ) xInsert(name, symbol, decimals, insertToken) {}
+    ) xInsert(name, symbol, insertToken) {}
 
     function __mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);

@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { StakingPoolStorage } from './lib/StakingPoolStorage.sol';
+import { StakingPoolStorage } from './StakingPoolStorage.sol';
 
 contract StakingProxy is Proxy {
     using StakingPoolStorage for StakingPoolStorage.Layout;

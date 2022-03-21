@@ -5,8 +5,8 @@ import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/Ownable.sol';
 import { StakingProxy } from './StakingProxy.sol';
-import { IStakingPool } from './interfaces/IStakingPool.sol';
-import { StakingPoolFundStorage } from './lib/StakingPoolFundStorage.sol';
+import { IStakingPool } from './IStakingPool.sol';
+import { StakingPoolFundStorage } from './StakingPoolFundStorage.sol';
 
 contract StakingPoolFund is SafeOwnable {
     using OwnableStorage for OwnableStorage.Layout;

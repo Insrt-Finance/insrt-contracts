@@ -2,8 +2,8 @@
 pragma solidity ^0.8.11;
 
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { IStakingPool } from './interfaces/IStakingPool.sol';
-import { StakingPoolStorage } from './lib/StakingPoolStorage.sol';
+import { IStakingPool } from './IStakingPool.sol';
+import { StakingPoolStorage } from './StakingPoolStorage.sol';
 
 contract StakingPool is IStakingPool {
     using StakingPoolStorage for StakingPoolStorage.Layout;

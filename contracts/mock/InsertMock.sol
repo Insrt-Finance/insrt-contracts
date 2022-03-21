@@ -4,11 +4,9 @@ pragma solidity ^0.8.11;
 import { Insert } from '../Insert.sol';
 
 contract InsertMock is Insert {
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint8 decimals
-    ) Insert(name, symbol, decimals) {}
+    constructor(string memory name, string memory symbol)
+        Insert(name, symbol)
+    {}
 
     function __mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);
