@@ -8,7 +8,7 @@ import { StakingPoolStorage } from './StakingPoolStorage.sol';
 contract StakingProxy is Proxy {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 
-    address private immutable STAKINGIMPLEMENTATION;
+    address private immutable STAKING_IMPLEMENTATION;
 
     constructor(
         IERC20 insertToken,
@@ -30,13 +30,13 @@ contract StakingProxy is Proxy {
         l.emissionRate = emissionRate;
         l.maxStakingDuration = maxStakingDuration;
 
-        STAKINGIMPLEMENTATION = stakingImplementation;
+        STAKING_IMPLEMENTATION = stakingImplementation;
 
         //WIP: Needs rework
         insertToken.transferFrom(msg.sender, address(this), totalEmissions);
     }
 
     function _getImplementation() internal view override returns (address) {
-        return STAKINGIMPLEMENTATION;
+        return STAKING_IMPLEMENTATION;
     }
 }
