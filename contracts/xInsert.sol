@@ -5,6 +5,10 @@ import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC20MetadataStorage } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataStorage.sol';
 
+/**
+ * @title Insert Finance staking token
+ * @author Insert Finance
+ */
 contract xInsert is ERC20 {
     using ERC20MetadataStorage for ERC20MetadataStorage.Layout;
 
@@ -13,7 +17,6 @@ contract xInsert is ERC20 {
     constructor(
         string memory name,
         string memory symbol,
-        uint8 decimals,
         IERC20 insertToken
     ) {
         ERC20MetadataStorage.Layout
@@ -21,7 +24,7 @@ contract xInsert is ERC20 {
 
         metadataLayout.name = name;
         metadataLayout.symbol = symbol;
-        metadataLayout.decimals = decimals;
+        metadataLayout.decimals = 18;
 
         INSERT_TOKEN = insertToken;
     }
