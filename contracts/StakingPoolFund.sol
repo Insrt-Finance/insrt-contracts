@@ -17,8 +17,8 @@ contract StakingPoolFund is SafeOwnable {
     }
 
     function deployStakingPoolProxy(
-        IERC20 insertToken,
-        IERC20 productToken,
+        address insertToken,
+        address productToken,
         uint256 maxEmissionSlots,
         uint256 emissionSlots,
         uint256 emissionRate,

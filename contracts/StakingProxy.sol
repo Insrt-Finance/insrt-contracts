@@ -11,8 +11,8 @@ contract StakingProxy is Proxy {
     address private immutable STAKING_IMPLEMENTATION;
 
     constructor(
-        IERC20 insertToken,
-        IERC20 productToken,
+        address insertToken,
+        address productToken,
         uint256 maxEmissionSlots,
         uint256 emissionSlots,
         uint256 emissionRate,
@@ -33,7 +33,11 @@ contract StakingProxy is Proxy {
         STAKING_IMPLEMENTATION = stakingImplementation;
 
         //WIP: Needs rework
-        insertToken.transferFrom(msg.sender, address(this), totalEmissions);
+        IERC20(insertToken).transferFrom(
+            msg.sender,
+            address(this),
+            totalEmissions
+        );
     }
 
     function _getImplementation() internal view override returns (address) {

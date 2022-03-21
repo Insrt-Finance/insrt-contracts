@@ -20,8 +20,8 @@ library StakingPoolStorage {
 
     /**
      * @notice Layout struct for a staking pool
-     * @param insertToken the token of insert protocol
-     * @param productToken the LP token from an index
+     * @param insertToken the token address of insert protocol
+     * @param productToken the LP token address from an index
      * @param deploymentStamp the block timestamp which the staking pool was deployed in
      * @param maxEmissionSlots the maximum amount of product tokens accepted by the staking pool
      * @param emissionSlots the current amount of product tokens in the staking pool
@@ -31,8 +31,8 @@ library StakingPoolStorage {
      */
 
     struct Layout {
-        IERC20 insertToken;
-        IERC20 productToken;
+        address insertToken;
+        address productToken;
         uint256 deploymentStamp;
         uint256 maxEmissionSlots;
         uint256 emissionSlots;

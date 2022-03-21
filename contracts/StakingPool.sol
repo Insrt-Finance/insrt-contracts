@@ -9,8 +9,8 @@ contract StakingPool is IStakingPool {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 
     constructor(
-        IERC20 insertToken,
-        IERC20 productToken,
+        address insertToken,
+        address productToken,
         uint256 maxEmissionSlots,
         uint256 emissionSlots,
         uint256 emissionRate,
@@ -28,7 +28,11 @@ contract StakingPool is IStakingPool {
         l.maxStakingDuration = maxStakingDuration;
 
         //WIP: Needs rework
-        insertToken.transferFrom(msg.sender, address(this), totalEmissions);
+        IERC20(insertToken).transferFrom(
+            msg.sender,
+            address(this),
+            totalEmissions
+        );
     }
 
     /**
@@ -62,7 +66,7 @@ contract StakingPool is IStakingPool {
             l.userDepositInfo[msg.sender].accruedRewards = claims;
         }
 
-        l.productToken.transferFrom(msg.sender, address(this), amount);
+        IERC20(l.productToken).transferFrom(msg.sender, address(this), amount);
         l.userDepositInfo[msg.sender].previousDepositStamp = block.timestamp;
         l.userDepositInfo[msg.sender].duration = duration;
         l.userDepositInfo[msg.sender].amount += amount;
@@ -88,8 +92,12 @@ contract StakingPool is IStakingPool {
         uint256 totalClaims = outstandingClaims +
             l.userDepositInfo[msg.sender].accruedRewards;
 
-        l.insertToken.transferFrom(address(this), msg.sender, totalClaims);
-        l.productToken.transferFrom(
+        IERC20(l.insertToken).transferFrom(
+            address(this),
+            msg.sender,
+            totalClaims
+        );
+        IERC20(l.productToken).transferFrom(
             address(this),
             msg.sender,
             l.userDepositInfo[msg.sender].amount
