@@ -22,16 +22,11 @@ describe('xInsert', () => {
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
 
-    insertToken = await new InsertMock__factory(deployer).deploy(
-      name,
-      symbol,
-      decimals,
-    );
+    insertToken = await new InsertMock__factory(deployer).deploy(name, symbol);
 
     instance = await new XInsertMock__factory(deployer).deploy(
       name,
       symbol,
-      decimals,
       insertToken.address,
     );
   });

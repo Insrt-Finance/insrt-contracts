@@ -16,11 +16,7 @@ describe('Insert', () => {
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
 
-    instance = await new InsertMock__factory(deployer).deploy(
-      name,
-      symbol,
-      decimals,
-    );
+    instance = await new InsertMock__factory(deployer).deploy(name, symbol);
   });
 
   describeBehaviorOfERC20({
