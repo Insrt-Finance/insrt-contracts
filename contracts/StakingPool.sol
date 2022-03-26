@@ -5,6 +5,12 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { IStakingPool } from './IStakingPool.sol';
 import { StakingPoolStorage } from './StakingPoolStorage.sol';
 
+/**
+ * @title Insert Finance Staking Pool contract
+ * @author Insert Finance
+ * @notice Logic for staking product tokens of Insert Finance
+ * @dev Implementation contract
+ */
 contract StakingPool is IStakingPool {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 

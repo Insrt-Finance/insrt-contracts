@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+/**
+ * @title Insert Finance Staking Pool Interface
+ * @author Insert Finance
+ */
 interface IStakingPool {
     /**
      * @notice lock a quantity of Insert Finance product tokens for a specified duration

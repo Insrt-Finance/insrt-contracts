@@ -5,6 +5,11 @@ import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { StakingPoolStorage } from './StakingPoolStorage.sol';
 
+/**
+ * @title Insert Finance Staking Pool Proxy
+ * @author Insert Finance
+ * @notice Proxy for StakingPool implementation
+ */
 contract StakingProxy is Proxy {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 

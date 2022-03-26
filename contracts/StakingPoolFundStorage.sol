@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
+/**
+ * @title Insert Finance Staking Pool Fund Storage library
+ * @author Insert Finance
+ * @notice Storage layout of StakingPoolFund contract
+ */
 library StakingPoolFundStorage {
     struct Layout {
         mapping(address => address) productTokenToPool;

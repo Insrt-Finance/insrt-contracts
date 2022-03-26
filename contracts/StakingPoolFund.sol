@@ -8,6 +8,11 @@ import { StakingProxy } from './StakingProxy.sol';
 import { IStakingPool } from './IStakingPool.sol';
 import { StakingPoolFundStorage } from './StakingPoolFundStorage.sol';
 
+/**
+ * @title Insert Finance Staking Pool Fund contract
+ * @author Insert Finance
+ * @notice StakingPool contracts deploying and managing
+ */
 contract StakingPoolFund is SafeOwnable {
     using OwnableStorage for OwnableStorage.Layout;
     using StakingPoolFundStorage for StakingPoolFundStorage.Layout;

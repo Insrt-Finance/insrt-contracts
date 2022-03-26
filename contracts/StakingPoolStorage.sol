@@ -3,6 +3,11 @@ pragma solidity ^0.8.11;
 
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
+/**
+ * @title Insert Finance Staking Pool Storage library
+ * @author Insert Finance
+ * @notice Storage layout of StakingPool contract
+ */
 library StakingPoolStorage {
     /**
      * @notice a struct to contain information pertaining to user deposits
