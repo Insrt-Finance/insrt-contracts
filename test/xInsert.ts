@@ -15,18 +15,16 @@ describe('xInsert', () => {
   let insertToken: InsertMock;
   let deployer: SignerWithAddress;
 
-  const name: string = 'ERC20MetadataStorage.name';
-  const symbol: string = 'ERC20MetadataStorage.symbol';
+  const name: string = 'XInsert';
+  const symbol: string = 'XINSRT';
   const decimals: BigNumber = BigNumber.from('18');
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
 
-    insertToken = await new InsertMock__factory(deployer).deploy(name, symbol);
+    insertToken = await new InsertMock__factory(deployer).deploy();
 
     instance = await new XInsertMock__factory(deployer).deploy(
-      name,
-      symbol,
       insertToken.address,
     );
   });

@@ -9,14 +9,14 @@ describe('Insert', () => {
   let instance: InsertMock;
   let deployer: SignerWithAddress;
 
-  const name: string = 'ERC20MetadataStorage.name';
-  const symbol: string = 'ERC20MetadataStorage.symbol';
+  const name: string = 'Insert';
+  const symbol: string = 'INSRT';
   const decimals: BigNumber = BigNumber.from('18');
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
 
-    instance = await new InsertMock__factory(deployer).deploy(name, symbol);
+    instance = await new InsertMock__factory(deployer).deploy();
   });
 
   describeBehaviorOfERC20({
