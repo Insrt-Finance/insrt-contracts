@@ -11,12 +11,17 @@ import { ERC20MetadataStorage } from '@solidstate/contracts/token/ERC20/metadata
 contract Insert is ERC20 {
     using ERC20MetadataStorage for ERC20MetadataStorage.Layout;
 
-    constructor(string memory name, string memory symbol) {
-        ERC20MetadataStorage.Layout
-            storage metadataLayout = ERC20MetadataStorage.layout();
+    constructor() {}
 
-        metadataLayout.name = name;
-        metadataLayout.symbol = symbol;
-        metadataLayout.decimals = 18;
+    function name() public pure override returns (string memory) {
+        return 'Insert';
+    }
+
+    function symbol() public pure override returns (string memory) {
+        return 'INSRT';
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 18;
     }
 }

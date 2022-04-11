@@ -3,7 +3,6 @@ pragma solidity ^0.8.11;
 
 import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { ERC20MetadataStorage } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataStorage.sol';
 
 /**
  * @title Insert Finance staking token
@@ -11,23 +10,22 @@ import { ERC20MetadataStorage } from '@solidstate/contracts/token/ERC20/metadata
  * @dev Implementation of XInsert Token accessed via XInsertProxy
  */
 contract XInsert is ERC20 {
-    using ERC20MetadataStorage for ERC20MetadataStorage.Layout;
-
     IERC20 private immutable INSERT_TOKEN;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        IERC20 insertToken
-    ) {
-        ERC20MetadataStorage.Layout
-            storage metadataLayout = ERC20MetadataStorage.layout();
-
-        metadataLayout.name = name;
-        metadataLayout.symbol = symbol;
-        metadataLayout.decimals = 18;
-
+    constructor(IERC20 insertToken) {
         INSERT_TOKEN = insertToken;
+    }
+
+    function name() public pure override returns (string memory) {
+        return 'XInsert';
+    }
+
+    function symbol() public pure override returns (string memory) {
+        return 'XINSRT';
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 18;
     }
 
     function deposit(uint256 amount) external {
