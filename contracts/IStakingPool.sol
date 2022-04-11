@@ -23,11 +23,15 @@ interface IStakingPool {
 
     /**
      * @notice return the maxStakingDuration of a StakingPool
+     * @dev This is the life-time of the staking pool
      */
     function getMaxStakingDuration() external view returns (uint256);
 
     /**
      * @notice return the maxEmissionSlots of a StakingPool
+     * @dev the maxEmissionSlots are the maximum tokens a StakingPool will accept for staking.
+     * This is set by the StakingPoolFund in order to govern how many product tokens a single pool may
+     * receive for staking.
      */
     function getMaxEmissionSlots() external view returns (uint256);
 
@@ -38,11 +42,13 @@ interface IStakingPool {
 
     /**
      * @notice return the emissionSlots of a StakingPool
+     * @dev emissionSlots are the amount of tokens which are currently staked
      */
     function getEmissionSlots() external view returns (uint256);
 
     /**
      * @notice return the emissionRate of a StakingPool
+     * @dev the units are INSRT per Second
      */
     function getEmissionRate() external view returns (uint256);
 }
