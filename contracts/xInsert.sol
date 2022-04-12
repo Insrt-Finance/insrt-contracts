@@ -17,11 +17,11 @@ contract XInsert is ERC20 {
     }
 
     function name() public pure override returns (string memory) {
-        return 'XInsert';
+        return 'xInsert';
     }
 
     function symbol() public pure override returns (string memory) {
-        return 'XINSRT';
+        return 'xINSRT';
     }
 
     function decimals() public pure override returns (uint8) {

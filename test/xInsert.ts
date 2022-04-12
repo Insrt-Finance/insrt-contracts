@@ -15,8 +15,8 @@ describe('xInsert', () => {
   let insertToken: InsertMock;
   let deployer: SignerWithAddress;
 
-  const name: string = 'XInsert';
-  const symbol: string = 'XINSRT';
+  const name: string = 'xInsert';
+  const symbol: string = 'xINSRT';
   const decimals: BigNumber = BigNumber.from('18');
 
   beforeEach(async () => {
