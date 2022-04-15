@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.11;
 
 import { UpgradeableProxy } from '@solidstate/contracts/proxy/upgradeable/UpgradeableProxy.sol';

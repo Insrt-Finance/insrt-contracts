@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.11;
 
 import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
