@@ -1,8 +1,10 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
+
 pragma solidity ^0.8.11;
 
 import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20Metadata.sol';
 
 /**
  * @title Insert Finance staking token
@@ -16,14 +18,23 @@ contract XInsert is ERC20 {
         INSERT_TOKEN = insertToken;
     }
 
+    /**
+     * @inheritdoc ERC20Metadata
+     */
     function name() public pure override returns (string memory) {
         return 'xInsert';
     }
 
+    /**
+     * @inheritdoc ERC20Metadata
+     */
     function symbol() public pure override returns (string memory) {
         return 'xINSRT';
     }
 
+    /**
+     * @inheritdoc ERC20Metadata
+     */
     function decimals() public pure override returns (uint8) {
         return 18;
     }
