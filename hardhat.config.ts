@@ -1,6 +1,7 @@
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import 'hardhat-docgen';
+import 'hardhat-dependency-compiler';
 import 'hardhat-gas-reporter';
 import 'hardhat-spdx-license-identifier';
 import 'solidity-coverage';
@@ -19,7 +20,14 @@ const {
 
 export default {
   solidity: {
-    version: '0.8.11',
+    compilers: [
+      {
+        version: '0.8.11',
+      },
+      {
+        version: '0.7.0',
+      },
+    ],
     settings: {
       optimizer: {
         enabled: true,
@@ -29,6 +37,13 @@ export default {
   },
 
   networks: {
+    hardhat: {
+      forking: {
+        url: 'https://arb-mainnet.g.alchemy.com/v2/9699FMx-YuVAQVvYsBX6Eay8mbSWcJQD',
+        blockNumber: 9759597,
+      },
+    },
+
     mainnet: {
       url: NODE_URL_MAINNET,
       accounts: [PKEY_MAINNET],
@@ -43,6 +58,10 @@ export default {
   docgen: {
     clear: true,
     runOnCompile: false,
+  },
+
+  dependencyCompiler: {
+    paths: ['@balancer-labs/v2-vault/contracts/interfaces/IVault.sol'],
   },
 
   gasReporter: {
