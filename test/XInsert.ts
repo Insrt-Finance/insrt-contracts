@@ -10,7 +10,7 @@ import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-describe('xInsert', () => {
+describe('XInsert', () => {
   let instance: XInsertMock;
   let insertToken: InsertMock;
   let deployer: SignerWithAddress;
