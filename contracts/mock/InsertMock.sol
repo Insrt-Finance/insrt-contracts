@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.11;
 
-import { Insert } from '../Insert.sol';
+import { Insert } from '../token/Insert.sol';
 
 contract InsertMock is Insert {
     constructor(address holder) Insert(holder) {}

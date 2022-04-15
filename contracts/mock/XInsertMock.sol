@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.11;
 
-import { XInsert } from '../XInsert.sol';
+import { XInsert } from '../token/XInsert.sol';
 
 contract XInsertMock is XInsert {
     constructor(address insertToken) XInsert(insertToken) {}

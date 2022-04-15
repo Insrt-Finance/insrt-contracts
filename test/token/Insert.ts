@@ -1,4 +1,4 @@
-import { InsertMock, InsertMock__factory } from '../typechain-types';
+import { InsertMock, InsertMock__factory } from '../../typechain-types';
 import { describeBehaviorOfERC20 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';

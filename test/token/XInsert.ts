@@ -3,7 +3,7 @@ import {
   InsertMock__factory,
   XInsertMock,
   XInsertMock__factory,
-} from '../typechain-types';
+} from '../../typechain-types';
 import { describeBehaviorOfERC20 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
