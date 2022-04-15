@@ -10,7 +10,9 @@ import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20M
  * @author Insert Finance
  */
 contract Insert is ERC20 {
-    constructor() {}
+    constructor(address holder) {
+        _mint(holder, 100e6 ether);
+    }
 
     /**
      * @inheritdoc ERC20Metadata
