@@ -25,7 +25,7 @@ export default {
         version: '0.8.11',
       },
       {
-        version: '0.7.0',
+        version: '0.7.1',
       },
     ],
     settings: {
@@ -61,7 +61,10 @@ export default {
   },
 
   dependencyCompiler: {
-    paths: ['@balancer-labs/v2-vault/contracts/interfaces/IVault.sol'],
+    paths: [
+      '@balancer-labs/v2-pool-weighted/contracts/WeightedPoolFactory.sol',
+      '@balancer-labs/v2-vault/contracts/interfaces/IVault.sol',
+    ],
   },
 
   gasReporter: {
