@@ -1,7 +1,7 @@
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
-import 'hardhat-docgen';
 import 'hardhat-dependency-compiler';
+import 'hardhat-docgen';
 import 'hardhat-gas-reporter';
 import 'hardhat-spdx-license-identifier';
 import 'solidity-coverage';
@@ -23,23 +23,29 @@ export default {
     compilers: [
       {
         version: '0.8.11',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       {
         version: '0.7.1',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
     ],
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-    },
   },
 
   networks: {
     hardhat: {
       forking: {
-        url: 'https://arb-mainnet.g.alchemy.com/v2/9699FMx-YuVAQVvYsBX6Eay8mbSWcJQD',
+        url: NODE_URL_MAINNET,
         blockNumber: 9759597,
       },
     },
