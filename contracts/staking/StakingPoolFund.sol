@@ -23,17 +23,18 @@ contract StakingPoolFund is SafeOwnable {
     }
 
     function deployStakingPoolProxy(
-        address productToken,
+        address underlying,
         uint256 maxEmissionSlots,
         uint256 emissionSlots,
         uint256 emissionRate,
         uint256 maxStakingDuration,
         uint256 totalEmissions,
         address stakingImplementation
-    ) external onlyOwner returns (address) {
+    ) external onlyOwner returns (address deployment) {
         StakingPoolFundStorage.Layout storage l = StakingPoolFundStorage
             .layout();
-        address currentPool = l.getStakingPool(address(productToken));
+
+        address currentPool = l.getStakingPool(underlying);
 
         if (currentPool != address(0)) {
             require(
@@ -44,9 +45,9 @@ contract StakingPoolFund is SafeOwnable {
             );
         }
 
-        address poolProxy = address(
+        deployment = address(
             new StakingPoolProxy(
-                productToken,
+                underlying,
                 maxEmissionSlots,
                 emissionSlots,
                 emissionRate,
@@ -56,11 +57,6 @@ contract StakingPoolFund is SafeOwnable {
             )
         );
 
-        StakingPoolFundStorage.layout().setStakingPool(
-            address(productToken),
-            poolProxy
-        );
-
-        return poolProxy;
+        l.setStakingPool(underlying, deployment);
     }
 }
