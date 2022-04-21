@@ -11,7 +11,7 @@ import { StakingPoolStorage } from './StakingPoolStorage.sol';
  * @author Insert Finance
  * @notice Proxy for StakingPool implementation
  */
-contract StakingProxy is Proxy {
+contract StakingPoolProxy is Proxy {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 
     address private immutable STAKING_IMPLEMENTATION;
