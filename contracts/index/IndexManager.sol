@@ -13,17 +13,17 @@ import { IndexDiamond } from './IndexDiamond.sol';
 contract IndexManager is SafeOwnable {
     address public immutable INDEX_DIAMOND;
 
+    event IndexDeployed(address deployment);
+
     constructor() {
         IndexDiamond indexDiamond = new IndexDiamond();
         // TODO: set diamond owner
         INDEX_DIAMOND = address(indexDiamond);
     }
 
-    function deployIndexProxy()
-        external
-        onlyOwner
-        returns (address deployment)
-    {
+    function deployIndex() external onlyOwner returns (address deployment) {
         deployment = address(new IndexProxy(INDEX_DIAMOND));
+
+        emit IndexDeployed(deployment);
     }
 }
