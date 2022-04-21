@@ -15,6 +15,8 @@ import { StakingPoolStorage } from './StakingPoolStorage.sol';
 contract StakingPool is IStakingPool {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 
+    address public immutable INSERT;
+
     constructor(
         address insertToken,
         address productToken,
@@ -26,7 +28,7 @@ contract StakingPool is IStakingPool {
     ) {
         StakingPoolStorage.Layout storage l = StakingPoolStorage.layout();
 
-        l.insertToken = insertToken;
+        INSERT = insertToken;
         l.productToken = productToken;
         l.deploymentStamp = block.timestamp;
         l.maxEmissionSlots = maxEmissionSlots;
@@ -99,11 +101,7 @@ contract StakingPool is IStakingPool {
         uint256 totalClaims = outstandingClaims +
             l.userDepositInfo[msg.sender].accruedRewards;
 
-        IERC20(l.insertToken).transferFrom(
-            address(this),
-            msg.sender,
-            totalClaims
-        );
+        IERC20(INSERT).transferFrom(address(this), msg.sender, totalClaims);
         IERC20(l.productToken).transferFrom(
             address(this),
             msg.sender,
