@@ -17,31 +17,8 @@ contract StakingPool is IStakingPool {
 
     address public immutable INSERT;
 
-    constructor(
-        address insertToken,
-        address productToken,
-        uint256 maxEmissionSlots,
-        uint256 emissionSlots,
-        uint256 emissionRate,
-        uint256 maxStakingDuration,
-        uint256 totalEmissions
-    ) {
-        StakingPoolStorage.Layout storage l = StakingPoolStorage.layout();
-
+    constructor(address insertToken) {
         INSERT = insertToken;
-        l.productToken = productToken;
-        l.deploymentStamp = block.timestamp;
-        l.maxEmissionSlots = maxEmissionSlots;
-        l.emissionSlots = emissionSlots;
-        l.emissionRate = emissionRate;
-        l.maxStakingDuration = maxStakingDuration;
-
-        //WIP: Needs rework
-        IERC20(insertToken).transferFrom(
-            msg.sender,
-            address(this),
-            totalEmissions
-        );
     }
 
     /**
