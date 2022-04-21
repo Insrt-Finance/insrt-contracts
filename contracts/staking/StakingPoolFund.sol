@@ -25,7 +25,6 @@ contract StakingPoolFund is SafeOwnable {
     function deployStakingPoolProxy(
         address underlying,
         uint256 maxEmissionSlots,
-        uint256 emissionSlots,
         uint256 emissionRate,
         uint256 maxStakingDuration,
         uint256 totalEmissions,
@@ -49,7 +48,6 @@ contract StakingPoolFund is SafeOwnable {
             new StakingPoolProxy(
                 underlying,
                 maxEmissionSlots,
-                emissionSlots,
                 emissionRate,
                 maxStakingDuration,
                 totalEmissions,

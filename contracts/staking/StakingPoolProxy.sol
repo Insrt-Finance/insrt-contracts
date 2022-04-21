@@ -19,7 +19,6 @@ contract StakingPoolProxy is Proxy {
     constructor(
         address productToken,
         uint256 maxEmissionSlots,
-        uint256 emissionSlots,
         uint256 emissionRate,
         uint256 maxStakingDuration,
         uint256 totalEmissions,
@@ -30,7 +29,6 @@ contract StakingPoolProxy is Proxy {
         l.productToken = productToken;
         l.deploymentStamp = block.timestamp;
         l.maxEmissionSlots = maxEmissionSlots;
-        l.emissionSlots = emissionSlots;
         l.emissionRate = emissionRate;
         l.maxStakingDuration = maxStakingDuration;
 
