@@ -11,13 +11,12 @@ import { StakingPoolStorage } from './StakingPoolStorage.sol';
  * @author Insert Finance
  * @notice Proxy for StakingPool implementation
  */
-contract StakingProxy is Proxy {
+contract StakingPoolProxy is Proxy {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 
     address private immutable STAKING_IMPLEMENTATION;
 
     constructor(
-        address insertToken,
         address productToken,
         uint256 maxEmissionSlots,
         uint256 emissionSlots,
@@ -28,7 +27,6 @@ contract StakingProxy is Proxy {
     ) {
         StakingPoolStorage.Layout storage l = StakingPoolStorage.layout();
 
-        l.insertToken = insertToken;
         l.productToken = productToken;
         l.deploymentStamp = block.timestamp;
         l.maxEmissionSlots = maxEmissionSlots;
@@ -39,11 +37,11 @@ contract StakingProxy is Proxy {
         STAKING_IMPLEMENTATION = stakingImplementation;
 
         //WIP: Needs rework
-        IERC20(insertToken).transferFrom(
-            msg.sender,
-            address(this),
-            totalEmissions
-        );
+        // IERC20(insertToken).transferFrom(
+        //     msg.sender,
+        //     address(this),
+        //     totalEmissions
+        // );
     }
 
     function _getImplementation() internal view override returns (address) {

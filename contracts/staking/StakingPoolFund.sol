@@ -5,7 +5,7 @@ pragma solidity ^0.8.11;
 import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/Ownable.sol';
-import { StakingProxy } from './StakingProxy.sol';
+import { StakingPoolProxy } from './StakingPoolProxy.sol';
 import { IStakingPool } from './IStakingPool.sol';
 import { StakingPoolFundStorage } from './StakingPoolFundStorage.sol';
 
@@ -23,18 +23,18 @@ contract StakingPoolFund is SafeOwnable {
     }
 
     function deployStakingPoolProxy(
-        address insertToken,
-        address productToken,
+        address underlying,
         uint256 maxEmissionSlots,
         uint256 emissionSlots,
         uint256 emissionRate,
         uint256 maxStakingDuration,
         uint256 totalEmissions,
         address stakingImplementation
-    ) external onlyOwner returns (address) {
+    ) external onlyOwner returns (address deployment) {
         StakingPoolFundStorage.Layout storage l = StakingPoolFundStorage
             .layout();
-        address currentPool = l.getStakingPool(address(productToken));
+
+        address currentPool = l.getStakingPool(underlying);
 
         if (currentPool != address(0)) {
             require(
@@ -45,10 +45,9 @@ contract StakingPoolFund is SafeOwnable {
             );
         }
 
-        address poolProxy = address(
-            new StakingProxy(
-                insertToken,
-                productToken,
+        deployment = address(
+            new StakingPoolProxy(
+                underlying,
                 maxEmissionSlots,
                 emissionSlots,
                 emissionRate,
@@ -58,11 +57,6 @@ contract StakingPoolFund is SafeOwnable {
             )
         );
 
-        StakingPoolFundStorage.layout().setStakingPool(
-            address(productToken),
-            poolProxy
-        );
-
-        return poolProxy;
+        l.setStakingPool(underlying, deployment);
     }
 }

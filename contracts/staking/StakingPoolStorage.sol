@@ -37,7 +37,6 @@ library StakingPoolStorage {
      */
 
     struct Layout {
-        address insertToken;
         address productToken;
         uint256 deploymentStamp;
         uint256 maxEmissionSlots;
