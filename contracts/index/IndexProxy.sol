@@ -11,8 +11,10 @@ import { IDiamondLoupe } from '@solidstate/contracts/proxy/diamond/IDiamondLoupe
 contract IndexProxy is Proxy {
     address private immutable INDEX_DIAMOND;
 
-    constructor(address indexDiamond) {
+    constructor(address indexDiamond, address investmentPool) {
         INDEX_DIAMOND = indexDiamond;
+
+        // TODO: store investmentPool
     }
 
     /**
