@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IDiamondLoupe } from '@solidstate/contracts/proxy/diamond/IDiamondLoupe.sol';
 
+import { IndexStorage } from './IndexStorage.sol';
+
 /**
  * @title Upgradeable proxy with externally controlled Index implementation
  */
@@ -14,7 +16,7 @@ contract IndexProxy is Proxy {
     constructor(address indexDiamond, address investmentPool) {
         INDEX_DIAMOND = indexDiamond;
 
-        // TODO: store investmentPool
+        IndexStorage.layout().balancerPool = investmentPool;
     }
 
     /**
