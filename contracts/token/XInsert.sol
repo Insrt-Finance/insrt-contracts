@@ -2,19 +2,22 @@
 
 pragma solidity ^0.8.11;
 
-import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20Metadata.sol';
+import { ERC4626 } from '@solidstate/contracts/token/ERC4626/ERC4626.sol';
+import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 
 /**
  * @title Insert Finance staking token
  * @author Insert Finance
  * @dev Implementation of XInsert Token accessed via XInsertProxy
  */
-contract XInsert is ERC20 {
+contract XInsert is ERC4626 {
+    using ERC4626BaseStorage for ERC4626BaseStorage.Layout;
     address private immutable INSERT_TOKEN;
 
     constructor(address insertToken) {
+        ERC4626BaseStorage.layout().asset = insertToken;
         INSERT_TOKEN = insertToken;
     }
 
@@ -39,23 +42,15 @@ contract XInsert is ERC20 {
         return 18;
     }
 
-    function deposit(uint256 amount) external {
-        IERC20(INSERT_TOKEN).approve(address(this), amount);
-
-        if (_totalSupply() == 0) {
-            _mint(msg.sender, amount);
-        } else {
-            uint256 mintAmount = (amount * _totalSupply()) /
-                IERC20(INSERT_TOKEN).balanceOf(address(this));
-            _mint(msg.sender, mintAmount);
-        }
+    function deposit(uint256 amount) external returns (uint256) {
+        return _deposit(amount, msg.sender);
     }
 
     function withdraw(uint256 amount) external {
-        _burn(msg.sender, amount);
+        _withdraw(amount, msg.sender, msg.sender);
+    }
 
-        uint256 transferAmount = (amount *
-            IERC20(INSERT_TOKEN).balanceOf(address(this))) / _totalSupply();
-        IERC20(INSERT_TOKEN).transfer(msg.sender, transferAmount);
+    function _totalAssets() internal view override returns (uint256) {
+        return IERC20(INSERT_TOKEN).balanceOf(address(this));
     }
 }
