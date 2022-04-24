@@ -42,14 +42,6 @@ contract XInsert is ERC4626 {
         return 18;
     }
 
-    function deposit(uint256 amount) external returns (uint256) {
-        return _deposit(amount, msg.sender);
-    }
-
-    function withdraw(uint256 amount) external {
-        _withdraw(amount, msg.sender, msg.sender);
-    }
-
     function _totalAssets() internal view override returns (uint256) {
         return IERC20(INSERT_TOKEN).balanceOf(address(this));
     }
