@@ -10,7 +10,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 
-describe.only('XInsert', () => {
+describe('XInsert', () => {
   let instance: XInsertMock;
   let insertToken: InsertMock;
   let deployer: SignerWithAddress;
