@@ -9,7 +9,7 @@ import {
   WeightedPoolFactory__factory,
 } from '../typechain-types';
 
-describe.only('Balancer', () => {
+describe('Balancer', () => {
   //taken from: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/deployments/tasks/20210418-vault/output/arbitrum.json
   const balancerVaultAddress = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
   const investmentPoolFactoryAddress =
