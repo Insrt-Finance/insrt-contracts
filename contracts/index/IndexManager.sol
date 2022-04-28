@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
-import { IInvestmentPoolFactory } from '../balancer/IInvestmentPoolFactory.sol';
 import { IndexProxy } from './IndexProxy.sol';
 import { IndexDiamond } from './IndexDiamond.sol';
 
@@ -27,36 +26,19 @@ contract IndexManager is SafeOwnable {
         INVESTMENT_POOL_FACTORY = balancerInvestmentPoolFactory;
     }
 
-    function deployIndex(
-        string memory name,
-        string memory symbol,
-        IERC20[] memory tokens,
-        uint256[] memory weights,
-        uint256 swapFeePercentage
-    ) external onlyOwner returns (address deployment) {
-        // TODO: metadata naming conventions?
-
-        // TODO: difference between owner and assetManagers?
-        address owner = owner();
-        address[] memory assetManagers = new address[](1);
-        assetManagers[0] = owner;
-
-        // TODO: implications?
-        bool swapEnabledOnStart = true;
-
-        address investmentPool = IInvestmentPoolFactory(INVESTMENT_POOL_FACTORY)
-            .create(
-                name,
-                symbol,
+    function deployIndex(IERC20[] calldata tokens, uint256[] calldata weights)
+        external
+        onlyOwner
+        returns (address deployment)
+    {
+        deployment = address(
+            new IndexProxy(
+                INDEX_DIAMOND,
+                INVESTMENT_POOL_FACTORY,
                 tokens,
-                weights,
-                assetManagers,
-                swapFeePercentage,
-                owner,
-                swapEnabledOnStart
-            );
-
-        deployment = address(new IndexProxy(INDEX_DIAMOND, investmentPool));
+                weights
+            )
+        );
 
         emit IndexDeployed(deployment);
     }
