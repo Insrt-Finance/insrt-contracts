@@ -17,11 +17,8 @@ contract IndexManager is SafeOwnable {
 
     event IndexDeployed(address deployment);
 
-    constructor(address balancerInvestmentPoolFactory) {
-        // TODO: set owner
-        IndexDiamond indexDiamond = new IndexDiamond();
-        // TODO: set diamond owner
-        INDEX_DIAMOND = address(indexDiamond);
+    constructor(address indexDiamond, address balancerInvestmentPoolFactory) {
+        INDEX_DIAMOND = indexDiamond;
 
         INVESTMENT_POOL_FACTORY = balancerInvestmentPoolFactory;
     }
