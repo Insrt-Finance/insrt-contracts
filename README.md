@@ -1,4 +1,4 @@
-# Insert Finance
+# Insrt Finance
 
 Secure, diversified exposure to NFTs and NFT infrastructure.
 

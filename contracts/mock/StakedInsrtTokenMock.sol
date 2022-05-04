@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.11;
 
-import { XInsert } from '../token/XInsert.sol';
+import { StakedInsrtToken } from '../token/StakedInsrtToken.sol';
 
-contract XInsertMock is XInsert {
-    constructor(address insertToken) XInsert(insertToken) {}
+contract StakedInsrtTokenMock is StakedInsrtToken {
+    constructor(address insrtToken) StakedInsrtToken(insrtToken) {}
 
     function __mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);

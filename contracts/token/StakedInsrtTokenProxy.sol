@@ -5,12 +5,10 @@ pragma solidity ^0.8.11;
 import { UpgradeableProxy } from '@solidstate/contracts/proxy/upgradeable/UpgradeableProxy.sol';
 
 /**
- * @title Insert Finance XInsert Proxy
- * @author Insert Finance
- * @notice Proxy for XInsert implementation
+ * @title xINSRT Token Proxy
+ * @author Insrt Finance
  */
-
-contract XInsertProxy is UpgradeableProxy {
+contract StakedInsrtTokenProxy is UpgradeableProxy {
     constructor(address implementation) {
         _setImplementation(implementation);
     }

@@ -1,22 +1,24 @@
-import { InsertMock, InsertMock__factory } from '../../typechain-types';
+import { InsrtTokenMock, InsrtTokenMock__factory } from '../../typechain-types';
 import { describeBehaviorOfERC20 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
-describe('Insert', () => {
-  let instance: InsertMock;
+describe('InsrtToken', () => {
+  let instance: InsrtTokenMock;
   let deployer: SignerWithAddress;
 
-  const name: string = 'Insert';
+  const name: string = 'INSRT';
   const symbol: string = 'INSRT';
   const decimals: BigNumber = BigNumber.from('18');
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
 
-    instance = await new InsertMock__factory(deployer).deploy(deployer.address);
+    instance = await new InsrtTokenMock__factory(deployer).deploy(
+      deployer.address,
+    );
   });
 
   describeBehaviorOfERC20({
