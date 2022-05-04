@@ -1,14 +1,14 @@
 import {
+  IERC20,
   InsrtTokenMock,
   InsrtTokenMock__factory,
   StakedInsrtTokenMock,
   StakedInsrtTokenMock__factory,
 } from '../../typechain-types';
-import { describeBehaviorOfERC20 } from '@solidstate/spec';
+import { describeBehaviorOfERC4626 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 describe('StakedInsrtToken', () => {
   let instance: StakedInsrtTokenMock;
@@ -31,25 +31,22 @@ describe('StakedInsrtToken', () => {
     );
   });
 
-  describeBehaviorOfERC20({
+  describeBehaviorOfERC4626({
     deploy: async () => instance,
     mint: async (recipient, amount) =>
       await instance['__mint(address,uint256)'](recipient, amount),
     burn: async (recipient, amount) =>
       await instance['__burn(address,uint256)'](recipient, amount),
+    getAsset: async () =>
+      ethers.getContractAt(
+        '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+        insrtToken.address,
+      ) as Promise<IERC20>,
+    mintAsset: async (recipient, amount) =>
+      await insrtToken['__mint(address,uint256)'](recipient, amount),
     name,
     symbol,
     decimals,
     supply: ethers.constants.Zero,
-  });
-
-  describe('#deposit(uint256)', () => {
-    it('mints tokens at 1:1 if supply is 0', async () => {});
-
-    it('mints tokens with correct rate', async () => {});
-  });
-
-  describe('#withdraw(uint256)', () => {
-    it('sends correct corresponding amount of INSRT', async () => {});
   });
 });
