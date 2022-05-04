@@ -10,8 +10,8 @@ import { IStakingPool } from './IStakingPool.sol';
 import { StakingPoolFundStorage } from './StakingPoolFundStorage.sol';
 
 /**
- * @title Insert Finance Staking Pool Fund contract
- * @author Insert Finance
+ * @title Insrt Finance Staking Pool Fund contract
+ * @author Insrt Finance
  * @notice StakingPool contracts deploying and managing
  */
 contract StakingPoolFund is SafeOwnable {

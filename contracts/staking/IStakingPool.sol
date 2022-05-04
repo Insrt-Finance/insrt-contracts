@@ -3,12 +3,12 @@
 pragma solidity ^0.8.11;
 
 /**
- * @title Insert Finance Staking Pool Interface
- * @author Insert Finance
+ * @title Insrt Finance Staking Pool Interface
+ * @author Insrt Finance
  */
 interface IStakingPool {
     /**
-     * @notice lock a quantity of Insert Finance product tokens for a specified duration
+     * @notice lock a quantity of Insrt Finance product tokens for a specified duration
      * @dev a check occurs to see if a user has previously deposited. If yes, then their current deposit amount
      * is added onto their previous deposit amount, and re-staked. For the previous deposit amount, the claims
      * are calculated, and stored in accruedRewards parameter in UserDepositInfo struct.
@@ -18,7 +18,7 @@ interface IStakingPool {
     function deposit(uint256 amount, uint256 duration) external;
 
     /**
-     * @notice claim the total INSRT token rewards owed for the staking of Insert Finance product tokens
+     * @notice claim the total INSRT token rewards owed for the staking of Insrt Finance product tokens
      */
     function claim() external;
 
