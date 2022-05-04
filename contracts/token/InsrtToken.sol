@@ -6,10 +6,10 @@ import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
 import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20Metadata.sol';
 
 /**
- * @title Insert Finance governance token
- * @author Insert Finance
+ * @title Insrt Finance governance token
+ * @author Insrt Finance
  */
-contract Insert is ERC20 {
+contract InsrtToken is ERC20 {
     constructor(address holder) {
         _mint(holder, 100e6 ether);
     }
@@ -18,7 +18,7 @@ contract Insert is ERC20 {
      * @inheritdoc ERC20Metadata
      */
     function name() public pure override returns (string memory) {
-        return 'Insert';
+        return 'INSRT';
     }
 
     /**

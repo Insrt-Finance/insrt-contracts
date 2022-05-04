@@ -3,8 +3,8 @@
 pragma solidity ^0.8.11;
 
 /**
- * @title Insert Finance Staking Pool Fund Storage library
- * @author Insert Finance
+ * @title Insrt Finance Staking Pool Fund Storage library
+ * @author Insrt Finance
  * @notice Storage layout of StakingPoolFund contract
  */
 library StakingPoolFundStorage {
@@ -13,7 +13,7 @@ library StakingPoolFundStorage {
     }
 
     bytes32 internal constant STORAGE_SLOT =
-        keccak256('insert.contracts.storage.StakingPoolFund');
+        keccak256('insrt.contracts.storage.StakingPoolFund');
 
     function layout() internal pure returns (Layout storage l) {
         bytes32 slot = STORAGE_SLOT;

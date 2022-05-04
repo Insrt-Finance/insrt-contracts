@@ -1,10 +1,10 @@
 {
-  "name": "insert-contracts",
+  "name": "insrt-contracts",
   "version": "0.0.0",
   "private": true,
-  "author": "Insert Finance",
+  "author": "Insrt Finance",
   "license": "UNLICENSED",
-  "description": "Insert Finance smart contracts",
+  "description": "Insrt Finance smart contracts",
   "keywords": [
     "hardhat",
     "waffle",

@@ -5,8 +5,8 @@ pragma solidity ^0.8.11;
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
 /**
- * @title Insert Finance Staking Pool Storage library
- * @author Insert Finance
+ * @title Insrt Finance Staking Pool Storage library
+ * @author Insrt Finance
  * @notice Storage layout of StakingPool contract
  */
 library StakingPoolStorage {
@@ -26,12 +26,12 @@ library StakingPoolStorage {
 
     /**
      * @notice Layout struct for a staking pool
-     * @param insertToken the token address of insert protocol
+     * @param insrtToken the token address of insrt protocol
      * @param productToken the LP token address from an index
      * @param deploymentStamp the block timestamp which the staking pool was deployed in
      * @param maxEmissionSlots the maximum amount of product tokens accepted by the staking pool
      * @param emissionSlots the current amount of product tokens in the staking pool
-     * @param emissionRate the amount of insert tokens emitted per second
+     * @param emissionRate the amount of insrt tokens emitted per second
      * @param maxStakingDuration the maximum duration a user can stake in the staking pool - the life-time of the staking pool
      * @param userDepositInfo a mapping from a user address to UserDepositInfo
      */
@@ -47,7 +47,7 @@ library StakingPoolStorage {
     }
 
     bytes32 internal constant STORAGE_SLOT =
-        keccak256('insert.contracts.storage.StakingPool');
+        keccak256('insrt.contracts.storage.StakingPool');
 
     function layout() internal pure returns (Layout storage l) {
         bytes32 slot = STORAGE_SLOT;

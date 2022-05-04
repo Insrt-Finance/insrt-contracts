@@ -7,22 +7,22 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20Metadata.sol';
 
 /**
- * @title Insert Finance staking token
- * @author Insert Finance
- * @dev Implementation of XInsert Token accessed via XInsertProxy
+ * @title Staked INSRT implementation
+ * @author Insrt Finance
+ * @dev Implementation of StakedInsrtToken accessed via StakedInsrtTokenProxy
  */
-contract XInsert is ERC20 {
-    address private immutable INSERT_TOKEN;
+contract StakedInsrtToken is ERC20 {
+    address private immutable INSRT_TOKEN;
 
-    constructor(address insertToken) {
-        INSERT_TOKEN = insertToken;
+    constructor(address insrtToken) {
+        INSRT_TOKEN = insrtToken;
     }
 
     /**
      * @inheritdoc ERC20Metadata
      */
     function name() public pure override returns (string memory) {
-        return 'xInsert';
+        return 'Staked INSRT';
     }
 
     /**
@@ -40,13 +40,13 @@ contract XInsert is ERC20 {
     }
 
     function deposit(uint256 amount) external {
-        IERC20(INSERT_TOKEN).approve(address(this), amount);
+        IERC20(INSRT_TOKEN).approve(address(this), amount);
 
         if (_totalSupply() == 0) {
             _mint(msg.sender, amount);
         } else {
             uint256 mintAmount = (amount * _totalSupply()) /
-                IERC20(INSERT_TOKEN).balanceOf(address(this));
+                IERC20(INSRT_TOKEN).balanceOf(address(this));
             _mint(msg.sender, mintAmount);
         }
     }
@@ -55,7 +55,7 @@ contract XInsert is ERC20 {
         _burn(msg.sender, amount);
 
         uint256 transferAmount = (amount *
-            IERC20(INSERT_TOKEN).balanceOf(address(this))) / _totalSupply();
-        IERC20(INSERT_TOKEN).transfer(msg.sender, transferAmount);
+            IERC20(INSRT_TOKEN).balanceOf(address(this))) / _totalSupply();
+        IERC20(INSRT_TOKEN).transfer(msg.sender, transferAmount);
     }
 }

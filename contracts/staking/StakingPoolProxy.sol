@@ -7,8 +7,8 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { StakingPoolStorage } from './StakingPoolStorage.sol';
 
 /**
- * @title Insert Finance Staking Pool Proxy
- * @author Insert Finance
+ * @title Insrt Finance Staking Pool Proxy
+ * @author Insrt Finance
  * @notice Proxy for StakingPool implementation
  */
 contract StakingPoolProxy is Proxy {
@@ -35,7 +35,7 @@ contract StakingPoolProxy is Proxy {
         STAKING_IMPLEMENTATION = stakingImplementation;
 
         //WIP: Needs rework
-        // IERC20(insertToken).transferFrom(
+        // IERC20(insrtToken).transferFrom(
         //     msg.sender,
         //     address(this),
         //     totalEmissions
