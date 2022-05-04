@@ -1,33 +1,33 @@
 import {
   IERC20,
-  InsertMock,
-  InsertMock__factory,
-  XInsertMock,
-  XInsertMock__factory,
+  InsrtTokenMock,
+  InsrtTokenMock__factory,
+  StakedInsrtTokenMock,
+  StakedInsrtTokenMock__factory,
 } from '../../typechain-types';
 import { describeBehaviorOfERC4626 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
 
-describe('XInsert', () => {
-  let instance: XInsertMock;
-  let insertToken: InsertMock;
+describe('StakedInsrtToken', () => {
+  let instance: StakedInsrtTokenMock;
+  let insrtToken: InsrtTokenMock;
   let deployer: SignerWithAddress;
 
-  const name: string = 'xInsert';
+  const name: string = 'Staked INSRT';
   const symbol: string = 'xINSRT';
   const decimals: BigNumber = BigNumber.from('18');
 
   beforeEach(async () => {
     [deployer] = await ethers.getSigners();
 
-    insertToken = await new InsertMock__factory(deployer).deploy(
+    insrtToken = await new InsrtTokenMock__factory(deployer).deploy(
       deployer.address,
     );
 
-    instance = await new XInsertMock__factory(deployer).deploy(
-      insertToken.address,
+    instance = await new StakedInsrtTokenMock__factory(deployer).deploy(
+      insrtToken.address,
     );
   });
 
@@ -40,10 +40,10 @@ describe('XInsert', () => {
     getAsset: async () =>
       ethers.getContractAt(
         '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
-        insertToken.address,
+        insrtToken.address,
       ) as Promise<IERC20>,
     mintAsset: async (recipient, amount) =>
-      await insertToken['__mint(address,uint256)'](recipient, amount),
+      await insrtToken['__mint(address,uint256)'](recipient, amount),
     name,
     symbol,
     decimals,

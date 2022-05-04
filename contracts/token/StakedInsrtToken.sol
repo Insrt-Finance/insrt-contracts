@@ -8,24 +8,26 @@ import { ERC4626 } from '@solidstate/contracts/token/ERC4626/ERC4626.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 
 /**
- * @title Insert Finance staking token
- * @author Insert Finance
- * @dev Implementation of XInsert Token accessed via XInsertProxy
+ * @title Staked INSRT implementation
+ * @author Insrt Finance
+ * @dev Implementation of StakedInsrtToken accessed via StakedInsrtTokenProxy
  */
-contract XInsert is ERC4626 {
+contract StakedInsrtToken is ERC4626 {
     using ERC4626BaseStorage for ERC4626BaseStorage.Layout;
-    address private immutable INSERT_TOKEN;
 
-    constructor(address insertToken) {
-        ERC4626BaseStorage.layout().asset = insertToken;
-        INSERT_TOKEN = insertToken;
+    address private immutable INSRT_TOKEN;
+
+    constructor(address insrtToken) {
+        ERC4626BaseStorage.layout().asset = insrtToken;
+
+        INSRT_TOKEN = insrtToken;
     }
 
     /**
      * @inheritdoc ERC20Metadata
      */
     function name() public pure override returns (string memory) {
-        return 'xInsert';
+        return 'Staked INSRT';
     }
 
     /**
@@ -43,6 +45,6 @@ contract XInsert is ERC4626 {
     }
 
     function _totalAssets() internal view override returns (uint256) {
-        return IERC20(INSERT_TOKEN).balanceOf(address(this));
+        return IERC20(INSRT_TOKEN).balanceOf(address(this));
     }
 }

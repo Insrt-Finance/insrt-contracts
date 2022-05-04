@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.11;
 
-import { Insert } from '../token/Insert.sol';
+import { InsrtToken } from '../token/InsrtToken.sol';
 
-contract InsertMock is Insert {
-    constructor(address holder) Insert(holder) {}
+contract InsrtTokenMock is InsrtToken {
+    constructor(address holder) InsrtToken(holder) {}
 
     function __mint(address recipient, uint256 amount) external {
         _mint(recipient, amount);

@@ -7,18 +7,18 @@ import { IStakingPool } from './IStakingPool.sol';
 import { StakingPoolStorage } from './StakingPoolStorage.sol';
 
 /**
- * @title Insert Finance Staking Pool contract
- * @author Insert Finance
- * @notice Logic for staking product tokens of Insert Finance
+ * @title Insrt Finance Staking Pool contract
+ * @author Insrt Finance
+ * @notice Logic for staking product tokens of Insrt Finance
  * @dev Implementation contract
  */
 contract StakingPool is IStakingPool {
     using StakingPoolStorage for StakingPoolStorage.Layout;
 
-    address public immutable INSERT;
+    address public immutable INSRT;
 
-    constructor(address insertToken) {
-        INSERT = insertToken;
+    constructor(address insrtToken) {
+        INSRT = insrtToken;
     }
 
     /**
@@ -78,7 +78,7 @@ contract StakingPool is IStakingPool {
         uint256 totalClaims = outstandingClaims +
             l.userDepositInfo[msg.sender].accruedRewards;
 
-        IERC20(INSERT).transferFrom(address(this), msg.sender, totalClaims);
+        IERC20(INSRT).transferFrom(address(this), msg.sender, totalClaims);
         IERC20(l.productToken).transferFrom(
             address(this),
             msg.sender,
