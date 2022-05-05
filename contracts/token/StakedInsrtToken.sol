@@ -3,7 +3,7 @@
 pragma solidity ^0.8.11;
 
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20Metadata.sol';
+import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { ERC4626 } from '@solidstate/contracts/token/ERC4626/ERC4626.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 
@@ -24,23 +24,23 @@ contract StakedInsrtToken is ERC4626 {
     }
 
     /**
-     * @inheritdoc ERC20Metadata
+     * @inheritdoc ERC20MetadataInternal
      */
-    function name() public pure override returns (string memory) {
+    function _name() internal pure override returns (string memory) {
         return 'Staked INSRT';
     }
 
     /**
-     * @inheritdoc ERC20Metadata
+     * @inheritdoc ERC20MetadataInternal
      */
-    function symbol() public pure override returns (string memory) {
+    function _symbol() internal pure override returns (string memory) {
         return 'xINSRT';
     }
 
     /**
-     * @inheritdoc ERC20Metadata
+     * @inheritdoc ERC20MetadataInternal
      */
-    function decimals() public pure override returns (uint8) {
+    function _decimals() internal pure override returns (uint8) {
         return 18;
     }
 

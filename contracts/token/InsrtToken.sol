@@ -3,7 +3,7 @@
 pragma solidity ^0.8.11;
 
 import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
-import { ERC20Metadata } from '@solidstate/contracts/token/ERC20/metadata/ERC20Metadata.sol';
+import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 
 /**
  * @title Insrt Finance governance token
@@ -15,23 +15,23 @@ contract InsrtToken is ERC20 {
     }
 
     /**
-     * @inheritdoc ERC20Metadata
+     * @inheritdoc ERC20MetadataInternal
      */
-    function name() public pure override returns (string memory) {
+    function _name() internal pure override returns (string memory) {
         return 'INSRT';
     }
 
     /**
-     * @inheritdoc ERC20Metadata
+     * @inheritdoc ERC20MetadataInternal
      */
-    function symbol() public pure override returns (string memory) {
+    function _symbol() internal pure override returns (string memory) {
         return 'INSRT';
     }
 
     /**
-     * @inheritdoc ERC20Metadata
+     * @inheritdoc ERC20MetadataInternal
      */
-    function decimals() public pure override returns (uint8) {
+    function _decimals() internal pure override returns (uint8) {
         return 18;
     }
 }
