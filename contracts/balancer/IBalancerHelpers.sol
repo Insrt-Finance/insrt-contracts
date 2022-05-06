@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import { IVault } from './IVault.sol';
 
 /**
- * @title Custom interface to interact with Balancer InvestmentPool
- * @dev This is a combination of Balancer interfaces (IBasePool) and a custom one made for investment pools specifically.
- * No investment pool interface was found on balancer.
+ * @title Custom interface to retrieve useful information on joining/exiting investment pool
  */
 interface IBalancerHelpers {
     function queryJoin(
