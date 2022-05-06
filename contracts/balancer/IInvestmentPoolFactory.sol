@@ -13,9 +13,9 @@ interface IInvestmentPoolFactory {
         string memory symbol,
         IERC20[] memory tokens,
         uint256[] memory weights,
-        address[] memory assetManagers,
         uint256 swapFeePercentage,
         address owner,
-        bool swapEnabledOnStart
+        bool swapEnabledOnStart,
+        uint256 managementSwapFeePercentage
     ) external returns (address);
 }

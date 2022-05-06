@@ -27,10 +27,6 @@ contract IndexProxy is Proxy {
 
         IndexStorage.layout().id = id;
 
-        // TODO: difference between owner and assetManagers?
-        address[] memory assetManagers = new address[](1);
-        assetManagers[0] = address(this);
-
         // deploy investment pool and store as base asset
 
         ERC4626BaseStorage.layout().asset = IInvestmentPoolFactory(
@@ -41,12 +37,13 @@ contract IndexProxy is Proxy {
                 'TODO: symbol',
                 tokens,
                 weights,
-                assetManagers,
                 // TODO: swapFeePercentage?
                 0,
                 address(this),
                 // TODO: implications of swapEnabledOnStart?
-                true
+                true,
+                // TOOD: managementSwapFeePercentage?
+                0
             );
     }
 
