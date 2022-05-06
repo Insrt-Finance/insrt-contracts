@@ -57,6 +57,7 @@ contract IndexProxy is Proxy {
         indexLayout.withdrawFee = withdrawFee;
         indexLayout.swapFee = swapFee;
         indexLayout.poolId = IInvestmentPool(vaultLayout.asset).getPoolId(); //fetch investment pool poolId for indexbase functionality
+        indexLayout.tokens = tokens;
     }
 
     /**
