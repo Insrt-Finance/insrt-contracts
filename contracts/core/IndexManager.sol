@@ -23,18 +23,23 @@ contract IndexManager is IIndexManager, OwnableInternal {
         INVESTMENT_POOL_FACTORY = balancerInvestmentPoolFactory;
     }
 
-    function deployIndex(IERC20[] calldata tokens, uint256[] calldata weights)
-        external
-        onlyOwner
-        returns (address deployment)
-    {
+    function deployIndex(
+        IERC20[] calldata tokens,
+        uint256[] calldata weights,
+        uint16 depositFee,
+        uint16 withdrawalFee,
+        uint16 swapFee
+    ) external onlyOwner returns (address deployment) {
         deployment = address(
             new IndexProxy(
                 INDEX_DIAMOND,
                 INVESTMENT_POOL_FACTORY,
                 tokens,
                 weights,
-                ++IndexManagerStorage.layout().count
+                ++IndexManagerStorage.layout().count,
+                depositFee,
+                withdrawalFee,
+                swapFee
             )
         );
 

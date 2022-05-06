@@ -14,7 +14,11 @@ interface IIndexManager {
     /**
      * @notice TODO
      */
-    function deployIndex(IERC20[] calldata tokens, uint256[] calldata weights)
-        external
-        returns (address deployment);
+    function deployIndex(
+        IERC20[] calldata tokens,
+        uint256[] calldata weights,
+        uint16 depositFee,
+        uint16 withdrawalFee,
+        uint16 swapFee
+    ) external returns (address deployment);
 }

@@ -16,6 +16,40 @@ import { IndexStorage } from './IndexStorage.sol';
 abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     using UintUtils for uint256;
 
+    address internal constant BALANCER_VAULT =
+        0xBA12222222228d8Ba445958a75a0704d566BF2C8;
+    address internal constant BALANCER_HELPERS =
+        0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab;
+    uint256 internal constant FEE_BASIS = 10000;
+
+    function _applyFee(uint16 fee, uint256 amount)
+        internal
+        pure
+        returns (uint256 totalFee, uint256 remainder)
+    {
+        totalFee = (fee * amount) / FEE_BASIS;
+        remainder = amount - totalFee;
+
+        return (totalFee, remainder);
+    }
+
+    function _exactFees(
+        IERC20[] storage tokens,
+        uint16 fee,
+        uint256[] memory amounts
+    ) internal returns (uint256[] memory remainders) {
+        remainders;
+        for (uint256 i; i < tokens.length; i++) {
+            (uint256 currTotalFee, uint256 currRemainder) = _applyFee(
+                fee,
+                amounts[i]
+            );
+            tokens[i].transferFrom(msg.sender, address(this), currTotalFee);
+            remainders[i] = currRemainder;
+        }
+        return remainders;
+    }
+
     /**
      * @inheritdoc ERC20MetadataInternal
      */

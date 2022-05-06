@@ -10,6 +10,11 @@
     "@balancer-labs/v2-solidity-utils" "2.0.0"
     "@balancer-labs/v2-vault" "2.0.0"
 
+"@balancer-labs/v2-deployments@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/v2-deployments/-/v2-deployments-2.3.0.tgz#d3810944e7b3efa890e8a207a2d0be53e9055b51"
+  integrity sha512-ShVgce/X8lhb6y9GvLmIXbYM1gONmh3rOM1BW9nfa0qW4hN1SThAbJlNWrEUUkE0VK8UT/fqGwEoyRB5In9QYA==
+
 "@balancer-labs/v2-pool-utils@2.0.1":
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/@balancer-labs/v2-pool-utils/-/v2-pool-utils-2.0.1.tgz#a98b7b10a8f7d6cbb8890394427334943eda81e8"
