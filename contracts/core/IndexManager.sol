@@ -2,21 +2,20 @@
 
 pragma solidity ^0.8.0;
 
-import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
+import { OwnableInternal } from '@solidstate/contracts/access/OwnableInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
-import { IndexDiamond } from './IndexDiamond.sol';
-import { IndexProxy } from './IndexProxy.sol';
+import { IndexProxy } from '../index/IndexProxy.sol';
+import { IIndexManager } from './IIndexManager.sol';
 import { IndexManagerStorage } from './IndexManagerStorage.sol';
 
 /**
  * @title Index management contract
+ * @dev deployed standalone and connected to core as diamond facet
  */
-contract IndexManager is SafeOwnable {
+contract IndexManager is IIndexManager, OwnableInternal {
     address public immutable INDEX_DIAMOND;
     address public immutable INVESTMENT_POOL_FACTORY;
-
-    event IndexDeployed(address deployment);
 
     constructor(address indexDiamond, address balancerInvestmentPoolFactory) {
         INDEX_DIAMOND = indexDiamond;
