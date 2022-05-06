@@ -5,8 +5,9 @@ pragma solidity ^0.8.0;
 import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
-import { IndexProxy } from './IndexProxy.sol';
 import { IndexDiamond } from './IndexDiamond.sol';
+import { IndexProxy } from './IndexProxy.sol';
+import { IndexManagerStorage } from './IndexManagerStorage.sol';
 
 /**
  * @title Index management contract
@@ -33,7 +34,8 @@ contract IndexManager is SafeOwnable {
                 INDEX_DIAMOND,
                 INVESTMENT_POOL_FACTORY,
                 tokens,
-                weights
+                weights,
+                ++IndexManagerStorage.layout().count
             )
         );
 
