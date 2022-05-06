@@ -5,13 +5,14 @@ pragma solidity ^0.8.0;
 import { ERC4626 } from '@solidstate/contracts/token/ERC4626/ERC4626.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 
+import { IIndexBase } from './IIndexBase.sol';
 import { IndexInternal } from './IndexInternal.sol';
 
 /**
  * @title Infra Index base functions
  * @dev deployed standalone and referenced by IndexProxy
  */
-contract IndexBase is ERC4626, IndexInternal {
+contract IndexBase is IIndexBase, ERC4626, IndexInternal {
     /**
      * @inheritdoc IndexInternal
      */
