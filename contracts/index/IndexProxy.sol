@@ -37,12 +37,11 @@ contract IndexProxy is Proxy {
                 'TODO: symbol',
                 tokens,
                 weights,
-                // TODO: swapFeePercentage?
-                0,
+                0.02 ether, // swapFeePercentage: 2%
                 address(this),
                 // TODO: implications of swapEnabledOnStart?
                 true,
-                // TOOD: managementSwapFeePercentage?
+                // TODO: managementSwapFeePercentage?
                 0
             );
     }
