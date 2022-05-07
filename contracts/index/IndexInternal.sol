@@ -32,8 +32,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     {
         totalFee = (fee * amount) / FEE_BASIS;
         remainder = amount - totalFee;
-
-        return (totalFee, remainder);
     }
 
     function _exactFees(
@@ -41,7 +39,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         uint16 fee,
         uint256[] memory amounts
     ) internal returns (uint256[] memory remainders) {
-        remainders;
+        remainders = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             (uint256 currTotalFee, uint256 currRemainder) = _applyFee(
                 fee,
@@ -50,7 +48,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
             tokens[i].transferFrom(msg.sender, address(this), currTotalFee);
             remainders[i] = currRemainder;
         }
-        return remainders;
     }
 
     /**
