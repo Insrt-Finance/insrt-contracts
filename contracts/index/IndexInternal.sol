@@ -16,11 +16,14 @@ import { IndexStorage } from './IndexStorage.sol';
 abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     using UintUtils for uint256;
 
-    address internal constant BALANCER_VAULT =
-        0xBA12222222228d8Ba445958a75a0704d566BF2C8;
-    address internal constant BALANCER_HELPERS =
-        0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab;
+    address internal immutable BALANCER_VAULT;
+    address internal immutable BALANCER_HELPERS;
     uint256 internal constant FEE_BASIS = 10000;
+
+    constructor(address balancerVault, address balancerHelpers) {
+        BALANCER_VAULT = balancerVault;
+        BALANCER_HELPERS = balancerHelpers;
+    }
 
     function _applyFee(uint16 fee, uint256 amount)
         internal
