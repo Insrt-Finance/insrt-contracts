@@ -114,7 +114,7 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
             request
         );
 
-        //Mint shares to joining user
+        //User withdraw and burn shares.
         _withdraw(bptIn, msg.sender, msg.sender);
     }
 }
