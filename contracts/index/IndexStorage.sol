@@ -7,7 +7,6 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 library IndexStorage {
     struct Layout {
         uint256 id;
-        uint16 depositFee;
         uint16 withdrawFee;
         uint16 swapFee;
         bytes32 poolId;

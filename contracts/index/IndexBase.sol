@@ -18,6 +18,10 @@ import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 contract IndexBase is IIndexBase, ERC4626, IndexInternal {
     using IndexStorage for IndexStorage.Layout;
 
+    constructor(address balancerVault, address balancerHelpers)
+        IndexInternal(balancerVault, balancerHelpers)
+    {}
+
     /**
      * @inheritdoc IndexInternal
      */
@@ -77,14 +81,6 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
             BALANCER_HELPERS
         ).queryJoin(l.poolId, address(this), address(this), request);
 
-        uint256[] memory remainingTokens = _exactFees(
-            l.tokens,
-            l.depositFee,
-            amountsIn
-        );
-
-        request.maxAmountsIn = remainingTokens;
-
         //TODO: UserData implications
         //TODO: InternalBalance implications
         IVault(BALANCER_VAULT).joinPool(
@@ -114,7 +110,7 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
             request
         );
 
-        //User withdraw and burn shares.
+        //User withdraw and burn shares for exiting user.
         _withdraw(bptIn, msg.sender, msg.sender);
     }
 }

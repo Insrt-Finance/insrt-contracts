@@ -26,7 +26,6 @@ contract IndexManager is IIndexManager, OwnableInternal {
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
-        uint16 depositFee,
         uint16 withdrawalFee,
         uint16 swapFee
     ) external onlyOwner returns (address deployment) {
@@ -37,7 +36,6 @@ contract IndexManager is IIndexManager, OwnableInternal {
                 tokens,
                 weights,
                 ++IndexManagerStorage.layout().count,
-                depositFee,
                 withdrawalFee,
                 swapFee
             )
