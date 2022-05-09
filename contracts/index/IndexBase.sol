@@ -103,7 +103,7 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         _mint(bptOut, msg.sender);
     }
 
-    function userWithdraw(uint256 sharesOut) external {
+    function userWithdrawAmount(uint256 sharesOut) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         //Maybe this should be accounted for somewhere? Automatically done by balanceOf bpt tokens
