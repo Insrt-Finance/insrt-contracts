@@ -58,8 +58,18 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         return super._decimals();
     }
 
-    function userDeposit(IVault.JoinPoolRequest memory request) external {
+    function userDepositAmounts(uint256[] memory amounts) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.JoinPoolRequest memory request;
+
+        JoinKind kind = JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT;
+        bytes memory userData = abi.encodePacked(kind);
+
+        request.assets = _tokensToAssets(l.tokens); //perhaps this function is needless if tokens are saved in storage as assets
+        request.maxAmountsIn = amounts;
+        request.userData = userData; //more userData needed?
+        request.fromInternalBalance = false; // not coming from investment pools internal balance (Implications?)
 
         if (
             !IVault(BALANCER_VAULT).hasApprovedRelayer(
@@ -76,7 +86,6 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         }
 
         //TODO: Is there a potential mismatch of results between queryJoin and joinPool?
-        //TODO: Need to apply 'depositFee' to all registered tokens of investment pool?
         (uint256 bptOut, uint256[] memory amountsIn) = IBalancerHelpers(
             BALANCER_HELPERS
         ).queryJoin(l.poolId, address(this), address(this), request);
@@ -94,14 +103,28 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         _mint(bptOut, msg.sender);
     }
 
-    function userWithdraw(IVault.ExitPoolRequest memory request) external {
+    function userWithdraw(uint256 sharesOut) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
+
+        //Maybe this should be accounted for somewhere? Automatically done by balanceOf bpt tokens
+        (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
+            l.exitFee,
+            sharesOut
+        );
+
+        IVault.ExitPoolRequest memory request;
+
+        ExitKind kind = ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT;
+        bytes memory userData = abi.encodePacked(kind);
+
+        request.assets = _tokensToAssets(l.tokens);
+        request.minAmountsOut = _convertToMinAmounts(remainingSharesOut);
+        request.userData = userData;
+        request.toInternalBalance = true; //implications?
 
         (uint256 bptIn, uint256[] memory amountsOut) = IBalancerHelpers(
             BALANCER_HELPERS
         ).queryExit(l.poolId, address(this), msg.sender, request);
-
-        (uint256 totalFee, uint256 remainder) = _applyFee(l.exitFee, bptIn);
 
         IVault(BALANCER_VAULT).exitPool(
             l.poolId,
@@ -111,6 +134,6 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         );
 
         //User withdraw and burn shares for exiting user.
-        _withdraw(bptIn, msg.sender, msg.sender);
+        _withdraw(sharesOut, msg.sender, msg.sender);
     }
 }

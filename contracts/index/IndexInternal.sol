@@ -8,12 +8,18 @@ import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ER
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
 import { IndexStorage } from './IndexStorage.sol';
+import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
+import { IAsset } from '../balancer/IVault.sol';
 
 /**
  * @title Infra Index internal functions
  * @dev inherited by all Index implementation contracts
  */
-abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
+abstract contract IndexInternal is
+    ERC4626BaseInternal,
+    ERC20MetadataInternal,
+    IInvestmentPool
+{
     using UintUtils for uint256;
 
     address internal immutable BALANCER_VAULT;
@@ -47,6 +53,30 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
             );
             tokens[i].transferFrom(msg.sender, address(this), currTotalFee);
             remainders[i] = currRemainder;
+        }
+    }
+
+    //remove and save assets instead, saved on deployment?
+    function _tokensToAssets(IERC20[] storage tokens)
+        internal
+        view
+        returns (IAsset[] memory assets)
+    {
+        assets = new IAsset[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            assets[i] = (IAsset(address(tokens[i])));
+        }
+    }
+
+    function _convertToMinAmounts(uint256 amount)
+        internal
+        view
+        returns (uint256[] memory minAmounts)
+    {
+        minAmounts = new uint256[](IndexStorage.layout().tokens.length);
+        uint256 amountsOfTokens = _convertToAssets(amount);
+        for (uint256 i; i < minAmounts.length; i++) {
+            minAmounts[i] = amountsOfTokens;
         }
     }
 
