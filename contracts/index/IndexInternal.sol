@@ -8,18 +8,13 @@ import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ER
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
 import { IndexStorage } from './IndexStorage.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 import { IAsset } from '../balancer/IVault.sol';
 
 /**
  * @title Infra Index internal functions
  * @dev inherited by all Index implementation contracts
  */
-abstract contract IndexInternal is
-    ERC4626BaseInternal,
-    ERC20MetadataInternal,
-    IInvestmentPool
-{
+abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     using UintUtils for uint256;
 
     address internal immutable BALANCER_VAULT;

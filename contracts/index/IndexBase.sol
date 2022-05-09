@@ -10,6 +10,7 @@ import { IndexInternal } from './IndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { IVault, IAsset } from '../balancer/IVault.sol';
 import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 
 /**
  * @title Infra Index base functions
@@ -63,7 +64,9 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
 
         IVault.JoinPoolRequest memory request;
 
-        JoinKind kind = JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT;
+        IInvestmentPool.JoinKind kind = IInvestmentPool
+            .JoinKind
+            .EXACT_TOKENS_IN_FOR_BPT_OUT;
         bytes memory userData = abi.encodePacked(kind);
 
         request.assets = _tokensToAssets(l.tokens); //perhaps this function is needless if tokens are saved in storage as assets
@@ -86,6 +89,7 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         }
 
         //TODO: Is there a potential mismatch of results between queryJoin and joinPool?
+        //Remove amountsIn declaration?
         (uint256 bptOut, uint256[] memory amountsIn) = IBalancerHelpers(
             BALANCER_HELPERS
         ).queryJoin(l.poolId, address(this), address(this), request);
@@ -114,7 +118,9 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
 
         IVault.ExitPoolRequest memory request;
 
-        ExitKind kind = ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT;
+        IInvestmentPool.ExitKind kind = IInvestmentPool
+            .ExitKind
+            .EXACT_BPT_IN_FOR_TOKENS_OUT;
         bytes memory userData = abi.encodePacked(kind);
 
         request.assets = _tokensToAssets(l.tokens);
@@ -122,9 +128,10 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         request.userData = userData;
         request.toInternalBalance = true; //implications?
 
-        (uint256 bptIn, uint256[] memory amountsOut) = IBalancerHelpers(
-            BALANCER_HELPERS
-        ).queryExit(l.poolId, address(this), msg.sender, request);
+        // No longer required... WIP
+        // (uint256 bptIn, uint256[] memory amountsOut) = IBalancerHelpers(
+        // BALANCER_HELPERS
+        // ).queryExit(l.poolId, address(this), msg.sender, request);
 
         IVault(BALANCER_VAULT).exitPool(
             l.poolId,
