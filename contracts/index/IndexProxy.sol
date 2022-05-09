@@ -25,8 +25,7 @@ contract IndexProxy is Proxy {
         IERC20[] memory tokens,
         uint256[] memory weights,
         uint256 id,
-        uint16 withdrawFee,
-        uint16 swapFee
+        uint16 exitFee
     ) {
         INDEX_DIAMOND = indexDiamond;
 
@@ -52,8 +51,7 @@ contract IndexProxy is Proxy {
             );
 
         indexLayout.id = id;
-        indexLayout.withdrawFee = withdrawFee;
-        indexLayout.swapFee = swapFee;
+        indexLayout.exitFee = exitFee;
         indexLayout.poolId = IInvestmentPool(vaultLayout.asset).getPoolId(); //fetch investment pool poolId for indexbase functionality
         indexLayout.tokens = tokens;
     }

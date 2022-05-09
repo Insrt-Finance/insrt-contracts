@@ -101,8 +101,8 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
             BALANCER_HELPERS
         ).queryExit(l.poolId, address(this), msg.sender, request);
 
-        //TODO: Withdraw fee applied to all tokens in token array (amountsOut)?
-        // Flow should perhaps be that this contract receives tokens, applies fee, transfers to msg.sender?
+        (uint256 totalFee, uint256 remainder) = _applyFee(l.exitFee, bptIn);
+
         IVault(BALANCER_VAULT).exitPool(
             l.poolId,
             msg.sender,
