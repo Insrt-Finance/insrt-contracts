@@ -121,12 +121,18 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         IInvestmentPool.ExitKind kind = IInvestmentPool
             .ExitKind
             .EXACT_BPT_IN_FOR_TOKENS_OUT;
-        bytes memory userData = abi.encodePacked(kind);
+        //To perform an Exit of kind `EXACT_BPT_IN_FOR_TOKENS_OUT` the `userData` variable
+        //must contain the encoded "kind" of exit, and the amount of BPT to "exit" from the
+        //pool.
+        bytes memory userData = abi.encodePacked(kind, remainingSharesOut);
 
         request.assets = _tokensToAssets(l.tokens);
         request.minAmountsOut = _convertToMinAmounts(remainingSharesOut);
         request.userData = userData;
-        request.toInternalBalance = true; //implications?
+        //Internal balance is set to true so the Balancer Vault and Investment Pool
+        //track the balance of this contract.
+        //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L410
+        request.toInternalBalance = true;
 
         // No longer required... WIP
         // (uint256 bptIn, uint256[] memory amountsOut) = IBalancerHelpers(
