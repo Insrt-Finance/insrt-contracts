@@ -59,7 +59,18 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         return super._decimals();
     }
 
-    function userDepositAmounts(uint256[] memory amounts) external {
+    /**
+     * @notice function to deposit an amount of tokens to Balancer InvestmentPool
+     * @dev takes all investmentPool tokens at specified amounts, deposits
+     * into InvestmentPool, receives BPT in exchange to store in insrt-index,
+     * returns insrt-index shares to user
+     * @param amounts the amounts of underlying tokens in balancer investmentPool
+     * @param minBPTAmountOut the minimum amount of BPT expected to be given back
+     */
+    function userDepositAmounts(
+        uint256[] memory amounts,
+        uint256 minBPTAmountOut
+    ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         IVault.JoinPoolRequest memory request;
@@ -67,12 +78,16 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         IInvestmentPool.JoinKind kind = IInvestmentPool
             .JoinKind
             .EXACT_TOKENS_IN_FOR_BPT_OUT;
-        bytes memory userData = abi.encodePacked(kind);
+        //To perform an Join of kind `EXACT_TOKENS_IN_FOR_BPT_OUT` the `userData` variable
+        //must contain the encoded "kind" of join, and the amounts of tokens given for the joins, and
+        //the minBPTAmountOut.
+        //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/d2794ef7d8f6d321cde36b7c536e8d51971688bd/pkg/interfaces/contracts/pool-weighted/WeightedPoolUserData.sol#L49
+        bytes memory userData = abi.encode(kind, amounts, minBPTAmountOut);
 
-        request.assets = _tokensToAssets(l.tokens); //perhaps this function is needless if tokens are saved in storage as assets
+        request.assets = _tokensToAssets(l.tokens); //perhaps this function is needless if tokens are saved in storage as assets (called in constructor)
         request.maxAmountsIn = amounts;
-        request.userData = userData; //more userData needed?
-        request.fromInternalBalance = false; // not coming from investment pools internal balance (Implications?)
+        request.userData = userData;
+        request.fromInternalBalance = false; // Implications?
 
         if (
             !IVault(BALANCER_VAULT).hasApprovedRelayer(
@@ -94,7 +109,6 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
             BALANCER_HELPERS
         ).queryJoin(l.poolId, address(this), address(this), request);
 
-        //TODO: UserData implications
         //TODO: InternalBalance implications
         IVault(BALANCER_VAULT).joinPool(
             l.poolId,
@@ -107,10 +121,16 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         _mint(bptOut, msg.sender);
     }
 
+    /**
+     * @notice function which burns insrt-index shares and returns underlying tokens in Balancer InvestmentPool
+     * @dev applies a fee on the shares, and sends an amount of `remainingShares` of BPT from insrt-index
+     * to Balancer InvestmentPool in exchange for tokens, sent to the user. Shares are burnt.
+     * @param sharesOut the amount of shares the user wishes to withdraw
+     */
     function userWithdrawAmount(uint256 sharesOut) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        //Maybe this should be accounted for somewhere? Automatically done by balanceOf bpt tokens
+        //Maybe this should be accounted for somewhere? Automatically done by balanceOf bpt tokens?
         (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
             l.exitFee,
             sharesOut
@@ -124,13 +144,13 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         //To perform an Exit of kind `EXACT_BPT_IN_FOR_TOKENS_OUT` the `userData` variable
         //must contain the encoded "kind" of exit, and the amount of BPT to "exit" from the
         //pool.
-        bytes memory userData = abi.encodePacked(kind, remainingSharesOut);
+        bytes memory userData = abi.encode(kind, remainingSharesOut);
 
         request.assets = _tokensToAssets(l.tokens);
         request.minAmountsOut = _convertToMinAmounts(remainingSharesOut);
         request.userData = userData;
         //Internal balance is set to true so the Balancer Vault and Investment Pool
-        //track the balance of this contract.
+        //track the balance of this contract. The Vault holds the tokens.
         //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L410
         request.toInternalBalance = true;
 
