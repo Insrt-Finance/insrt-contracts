@@ -52,9 +52,9 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     //remove and save assets instead, saved on deployment?
-    function _tokensToAssets(IERC20[] storage tokens)
+    function _tokensToAssets(IERC20[] memory tokens)
         internal
-        view
+        pure
         returns (IAsset[] memory assets)
     {
         assets = new IAsset[](tokens.length);
