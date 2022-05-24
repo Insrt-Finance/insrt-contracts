@@ -26,9 +26,7 @@ contract IndexManager is IIndexManager, OwnableInternal {
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
-        uint16 depositFee,
-        uint16 withdrawalFee,
-        uint16 swapFee
+        uint16 exitFee
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new IndexProxy(
@@ -37,9 +35,7 @@ contract IndexManager is IIndexManager, OwnableInternal {
                 tokens,
                 weights,
                 ++IndexManagerStorage.layout().count,
-                depositFee,
-                withdrawalFee,
-                swapFee
+                exitFee
             )
         );
 

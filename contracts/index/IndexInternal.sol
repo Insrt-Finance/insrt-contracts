@@ -8,6 +8,7 @@ import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ER
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
 import { IndexStorage } from './IndexStorage.sol';
+import { IAsset } from '../balancer/IVault.sol';
 
 /**
  * @title Infra Index internal functions
@@ -16,11 +17,14 @@ import { IndexStorage } from './IndexStorage.sol';
 abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     using UintUtils for uint256;
 
-    address internal constant BALANCER_VAULT =
-        0xBA12222222228d8Ba445958a75a0704d566BF2C8;
-    address internal constant BALANCER_HELPERS =
-        0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab;
+    address internal immutable BALANCER_VAULT;
+    address internal immutable BALANCER_HELPERS;
     uint256 internal constant FEE_BASIS = 10000;
+
+    constructor(address balancerVault, address balancerHelpers) {
+        BALANCER_VAULT = balancerVault;
+        BALANCER_HELPERS = balancerHelpers;
+    }
 
     function _applyFee(uint16 fee, uint256 amount)
         internal
@@ -29,8 +33,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     {
         totalFee = (fee * amount) / FEE_BASIS;
         remainder = amount - totalFee;
-
-        return (totalFee, remainder);
     }
 
     function _exactFees(
@@ -38,7 +40,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         uint16 fee,
         uint256[] memory amounts
     ) internal returns (uint256[] memory remainders) {
-        remainders;
+        remainders = new uint256[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             (uint256 currTotalFee, uint256 currRemainder) = _applyFee(
                 fee,
@@ -47,7 +49,30 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
             tokens[i].transferFrom(msg.sender, address(this), currTotalFee);
             remainders[i] = currRemainder;
         }
-        return remainders;
+    }
+
+    //remove and save assets instead, saved on deployment?
+    function _tokensToAssets(IERC20[] storage tokens)
+        internal
+        view
+        returns (IAsset[] memory assets)
+    {
+        assets = new IAsset[](tokens.length);
+        for (uint256 i; i < tokens.length; i++) {
+            assets[i] = (IAsset(address(tokens[i])));
+        }
+    }
+
+    function _convertToMinAmounts(uint256 amount)
+        internal
+        view
+        returns (uint256[] memory minAmounts)
+    {
+        minAmounts = new uint256[](IndexStorage.layout().tokens.length);
+        uint256 amountsOfTokens = _convertToAssets(amount);
+        for (uint256 i; i < minAmounts.length; i++) {
+            minAmounts[i] = amountsOfTokens;
+        }
     }
 
     /**
