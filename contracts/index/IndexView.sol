@@ -90,14 +90,9 @@ contract IndexView is IndexInternal, IIndexView {
         );
     }
 
-    //TODO: Query other withdraws
-    //TODO: Modify name
+    //TODO: Query exact out withdraw
     /**
-     * @notice function to return the amounts return for a certain BPT, and the BPT expected in for those amounts
-     * @param sharesOut the amount of insrt-index shares a user wants to redeem
-     * @param minAmountsOut the minimum amount of each token the user is willing to accept
-     * @return bptIn the amount of BPT required for the amounts out
-     * @return amountsOut the amount of each token returned for the BPT
+     * @inheritdoc IIndexView
      */
     function queryUserWithdrawExactForAll(
         uint256 sharesOut,
@@ -110,6 +105,32 @@ contract IndexView is IndexInternal, IIndexView {
                 l,
                 sharesOut,
                 minAmountsOut
+            );
+
+        (bptIn, amountsOut) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
+            l.poolId,
+            address(this),
+            msg.sender,
+            request
+        );
+    }
+
+    /**
+     * @inheritdoc IIndexView
+     */
+    function queryUserWithdrawExactForSingle(
+        uint256 sharesOut,
+        uint256[] memory minAmountsOut,
+        uint256 tokenId
+    ) external returns (uint256 bptIn, uint256[] memory amountsOut) {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.ExitPoolRequest
+            memory request = _constructExitExactForSingleRequest(
+                l,
+                minAmountsOut,
+                sharesOut,
+                tokenId
             );
 
         (bptIn, amountsOut) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
