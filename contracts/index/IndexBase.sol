@@ -164,6 +164,22 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         _performExitAndWithdraw(sharesOut, l.poolId, request);
     }
 
+    //TODO: Still WIP to identify how to apply a fee.
+    function userWithdrawExactOut(
+        uint256 maxSharesIn,
+        uint256[] memory minAmountsOut
+    ) external {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+        uint256 sharesOut; //NOTE: STILL NEEDS TO BE IDENTIFIED.
+        IVault.ExitPoolRequest memory request = _constructExitExactOutRequest(
+            l,
+            minAmountsOut,
+            maxSharesIn
+        );
+
+        _performExitAndWithdraw(sharesOut, l.poolId, request);
+    }
+
     //TODO: Query other deposits
     //TODO: Modify name
     /**
