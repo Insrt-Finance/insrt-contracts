@@ -56,7 +56,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         );
 
         //TODO: Is amountsIn (2nd return variable by `queryJoin`) a better check than BPT Out?
-        //TODO: Check if balancer contains internal check
+        //TODO: Check if balancer contains internal check => perhaps this check is needless
         require(
             bptOut >= amountOut,
             'Not enough tokens provided for desired BPT out'
@@ -252,7 +252,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      * @dev only works for ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT
      * @param sharesOut the amount of insrt-index shares a user wants to redeem
      * @param minAmountsOut the minimum amount of each token the user is willing to accept
-     * @return request an ExitPoolRequest constructed for EXACT_BPT_IN_FOR_TOKENS_OUT ExitKind
+     * @return request an ExitPoolRequest constructed for EXACT_BPT_IN_FOR_TOKENS_OUT
      */
     function _constructExitExactForAllRequest(
         IndexStorage.Layout storage l,
@@ -281,7 +281,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      * seek to use tokens they have already deposited elsewhere in Balancer Vault
      * Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L364
      * @param tokens the array of tokens to convert to assets
-     * @param maxAmountsIn the maximum amounts of tokens provided for the join
+     * @param maxAmountsIn the maximum amounts of tokens deposited for the join
      * @param userData the userData for the join request
      * @return joinRequest the constructed JoinPoolRequest
      */
@@ -302,7 +302,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      * seek to send/keep tokens elsewhere in Balancer Vault.
      * Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L410
      * @param tokens the array of tokens to convert to assets
-     * @param minAmountsOut the minimum amounts of tokens given for the BPT provided
+     * @param minAmountsOut the minimum amounts of tokens expected to be returned, for the BPT provided
      * @param userData the userData for the exit request
      * @return exitRequest the constructed ExitPoolRequest
      */
@@ -317,6 +317,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         exitRequest.toInternalBalance = false;
     }
 
+    //Note: may be unrequired
     /**
      * @notice function to check whether userInput amounts of tokens are enough to perform a Join
      * to a Balancer pool
@@ -339,6 +340,13 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         }
     }
 
+    /**
+     * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
+     * @param fee the fee as 0-10000 value representing a two decimal point percentage
+     * @param amount the amount to apply the fee on
+     * @return totalFee the actual value of the fee (not percent)
+     * @return remainder the remaining amount after the fee has been subtracted from it
+     */
     function _applyFee(uint16 fee, uint256 amount)
         internal
         pure
@@ -349,6 +357,11 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     //remove and save assets instead, saved on deployment?
+    /**
+     * @notice function to convert IERC20 to IAsset used in Balancer
+     * @param tokens an array of IERC20-wrapped addresses
+     * @return assets an array of IAsset-wrapped addresses
+     */
     function _tokensToAssets(IERC20[] memory tokens)
         internal
         pure
