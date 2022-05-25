@@ -35,22 +35,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         remainder = amount - totalFee;
     }
 
-    function _exactFees(
-        IERC20[] storage tokens,
-        uint16 fee,
-        uint256[] memory amounts
-    ) internal returns (uint256[] memory remainders) {
-        remainders = new uint256[](tokens.length);
-        for (uint256 i; i < tokens.length; i++) {
-            (uint256 currTotalFee, uint256 currRemainder) = _applyFee(
-                fee,
-                amounts[i]
-            );
-            tokens[i].transferFrom(msg.sender, address(this), currTotalFee);
-            remainders[i] = currRemainder;
-        }
-    }
-
     //remove and save assets instead, saved on deployment?
     function _tokensToAssets(IERC20[] memory tokens)
         internal
@@ -60,18 +44,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         assets = new IAsset[](tokens.length);
         for (uint256 i; i < tokens.length; i++) {
             assets[i] = (IAsset(address(tokens[i])));
-        }
-    }
-
-    function _convertToMinAmounts(uint256 amount)
-        internal
-        view
-        returns (uint256[] memory minAmounts)
-    {
-        minAmounts = new uint256[](IndexStorage.layout().tokens.length);
-        uint256 amountsOfTokens = _convertToAssets(amount);
-        for (uint256 i; i < minAmounts.length; i++) {
-            minAmounts[i] = amountsOfTokens;
         }
     }
 
