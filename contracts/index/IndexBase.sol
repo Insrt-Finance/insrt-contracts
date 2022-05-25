@@ -24,7 +24,26 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         IndexInternal(balancerVault, balancerHelpers)
     {}
 
-    //TODO: Check init join.
+    /**
+     * @notice function to initiliaze the Balancer InvestmentPool
+     * @dev required to be called once otherwise all other deposits will be reverted
+     * Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/823f7fe7d3cb45f9bc6bcdfb83af3d70c050d1d2/pkg/pool-utils/contracts/BasePool.sol#L220
+     * @param amountsIn the amounts of each token deposited
+     * @param amountOut the amount of BPT expected to be received as a minimum
+     */
+    function intializePoolByDeposit(
+        uint256[] memory amountsIn,
+        uint256 amountOut
+    ) external {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+        IVault.JoinPoolRequest memory request = _constructJoinInitRequest(
+            l,
+            amountsIn
+        );
+
+        //TODO: perhaps amountOut may be set to 0 in this case?
+        _performJoinAndMint(amountOut, l.poolId, request);
+    }
 
     /**
      * @notice function to deposit an amount of tokens to Balancer InvestmentPool
@@ -227,7 +246,7 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
         //TODO: Is there a potential mismatch of results between queryJoin and joinPool?
         (uint256 bptOut, ) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
             poolId,
-            address(this),
+            msg.sender,
             address(this),
             request
         );
@@ -288,6 +307,23 @@ contract IndexBase is IIndexBase, ERC4626, IndexInternal {
                 true
             );
         }
+    }
+
+    /**
+     * @notice function to construct the request needed to initialize a Balancer InvestmentPool
+     * @dev only works for JoinKind.INIT
+     * @param l the index layout
+     * @param amountsIn the amounts of tokens deposited
+     * @return request a JoinPoolRequest constructed for INIT JoinKind
+     */
+    function _constructJoinInitRequest(
+        IndexStorage.Layout storage l,
+        uint256[] memory amountsIn
+    ) internal view returns (IVault.JoinPoolRequest memory request) {
+        IInvestmentPool.JoinKind kind = IInvestmentPool.JoinKind.INIT;
+
+        bytes memory userData = abi.encode(kind, amountsIn);
+        request = _constructJoinRequest(l.tokens, amountsIn, userData);
     }
 
     /**
