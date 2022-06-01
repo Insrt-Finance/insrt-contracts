@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 //Cannot import contracts from balancer-labs, hence new interfaces. Delete comment code once confirmed.
 //import { IVault } from '@balancer-labs/v2-vault/contracts/interfaces/IVault.sol';
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
-import { IDiamondLoupe } from '@solidstate/contracts/proxy/diamond/IDiamondLoupe.sol';
+import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 
@@ -61,6 +61,6 @@ contract IndexProxy is Proxy {
      * @notice fetch logic implementation address from external diamond proxy
      */
     function _getImplementation() internal view override returns (address) {
-        return IDiamondLoupe(INDEX_DIAMOND).facetAddress(msg.sig);
+        return IDiamondReadable(INDEX_DIAMOND).facetAddress(msg.sig);
     }
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
-import { ERC4626 } from '@solidstate/contracts/token/ERC4626/ERC4626.sol';
+import { SolidStateERC4626 } from '@solidstate/contracts/token/ERC4626/SolidStateERC4626.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 
 /**
@@ -12,7 +12,7 @@ import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC
  * @author Insrt Finance
  * @dev Implementation of StakedInsrtToken accessed via StakedInsrtTokenProxy
  */
-contract StakedInsrtToken is ERC4626 {
+contract StakedInsrtToken is SolidStateERC4626 {
     using ERC4626BaseStorage for ERC4626BaseStorage.Layout;
 
     address private immutable INSRT_TOKEN;

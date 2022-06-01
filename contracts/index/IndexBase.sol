@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { ERC4626 } from '@solidstate/contracts/token/ERC4626/ERC4626.sol';
+import { SolidStateERC4626 } from '@solidstate/contracts/token/ERC4626/SolidStateERC4626.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 
 import { IIndexBase } from './IIndexBase.sol';
@@ -17,7 +17,7 @@ import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
  * @title Infra Index base functions
  * @dev deployed standalone and referenced by IndexProxy
  */
-contract IndexBase is IIndexBase, ERC4626, IndexInternal {
+contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
     using IndexStorage for IndexStorage.Layout;
 
     constructor(address balancerVault, address balancerHelpers)

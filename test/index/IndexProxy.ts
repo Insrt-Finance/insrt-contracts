@@ -50,7 +50,10 @@ describe('IndexProxy', () => {
     });
 
     const indexFacetCuts = [
-      await new IndexBase__factory(deployer).deploy(),
+      await new IndexBase__factory(deployer).deploy(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ),
     ].map(function (f) {
       return {
         target: f.address,
@@ -84,8 +87,6 @@ describe('IndexProxy', () => {
         ),
       tokens.map((el) => ethers.utils.parseEther('0.5')),
 
-      ethers.constants.Zero,
-      ethers.constants.Zero,
       ethers.constants.Zero,
     );
 

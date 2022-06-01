@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.11;
 
-import { ERC20 } from '@solidstate/contracts/token/ERC20/ERC20.sol';
+import { SolidStateERC20 } from '@solidstate/contracts/token/ERC20/SolidStateERC20.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 
 /**
  * @title Insrt Finance governance token
  * @author Insrt Finance
  */
-contract InsrtToken is ERC20 {
+contract InsrtToken is SolidStateERC20 {
     constructor(address holder) {
         _mint(holder, 100e6 ether);
     }

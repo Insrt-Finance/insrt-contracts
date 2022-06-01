@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { Diamond } from '@solidstate/contracts/proxy/diamond/Diamond.sol';
+import { SolidStateDiamond } from '@solidstate/contracts/proxy/diamond/SolidStateDiamond.sol';
 
 /**
  * @notice Insrt Finance platform core contract
  */
-contract Core is Diamond {
+contract Core is SolidStateDiamond {
 
 }

@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import { Diamond } from '@solidstate/contracts/proxy/diamond/Diamond.sol';
+import { SolidStateDiamond } from '@solidstate/contracts/proxy/diamond/SolidStateDiamond.sol';
 
 /**
  * @title Diamond proxy used as centrally controlled Index implementation
  * @dev deployed standalone and passed to IndexManager constructor
  */
-contract IndexDiamond is Diamond {
+contract IndexDiamond is SolidStateDiamond {
 
 }
