@@ -42,10 +42,23 @@ describe('Balancer', () => {
       ethers.provider,
     );
 
-    console.log(
-      await balancerVault.getPool(ethers.utils.formatBytes32String('test')),
-    );
-    console.log('test');
+    // await investmentPoolFactory.create(
+    //   'name',
+    //   'sym',
+    //   [],
+    //   [],
+    //   ethers.constants.Zero,
+    //   ethers.constants.AddressZero,
+    //   true,
+    //   ethers.constants.Zero,
+    // );
+    //
+    // console.log('dep');
+    //
+    // console.log(
+    //   await balancerVault.getPool(ethers.utils.formatBytes32String('test')),
+    // );
+    // console.log('test');
   });
 
   describe('test', () => {

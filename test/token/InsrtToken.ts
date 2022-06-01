@@ -1,5 +1,5 @@
 import { InsrtTokenMock, InsrtTokenMock__factory } from '../../typechain-types';
-import { describeBehaviorOfERC20 } from '@solidstate/spec';
+import { describeBehaviorOfSolidStateERC20 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
@@ -21,12 +21,13 @@ describe('InsrtToken', () => {
     );
   });
 
-  describeBehaviorOfERC20({
-    deploy: async () => instance,
+  describeBehaviorOfSolidStateERC20(async () => instance, {
     mint: async (recipient, amount) =>
       await instance['__mint(address,uint256)'](recipient, amount),
     burn: async (recipient, amount) =>
       await instance['__burn(address,uint256)'](recipient, amount),
+    allowance: (holder, spender) =>
+      instance.callStatic.allowance(holder, spender),
     name,
     symbol,
     decimals,

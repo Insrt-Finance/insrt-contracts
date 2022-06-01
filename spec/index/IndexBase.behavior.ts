@@ -1,25 +1,18 @@
 import { ethers } from 'hardhat';
-import { IIndex, IERC20, ERC4626 } from '../../typechain-types';
+import { IIndexBase } from '../../typechain-types';
 
 import { BigNumber, BigNumberish, ContractTransaction } from 'ethers';
-import { describeBehaviorOfERC4626 } from '@solidstate/spec';
+import {
+  describeBehaviorOfSolidStateERC4626,
+  SolidStateERC4626BehaviorArgs,
+} from '@solidstate/spec';
 
-interface IndexBaseBehaviorArgs {
-  deploy: () => Promise<IIndex>;
-  getAsset: () => Promise<IERC20>;
-  mint: (address: string, amount: BigNumber) => Promise<ContractTransaction>;
-  burn: (address: string, amount: BigNumber) => Promise<ContractTransaction>;
-  mintAsset: (
-    address: string,
-    amount: BigNumber,
-  ) => Promise<ContractTransaction>;
-  name: string;
-  symbol: string;
-  decimals: BigNumber;
-  supply: BigNumber;
-}
+export interface IndexBaseBehaviorArgs extends SolidStateERC4626BehaviorArgs {}
 
-export function describeBehaviorOfIndexBase(args: IndexBaseBehaviorArgs) {
+export function describeBehaviorOfIndexBase(
+  deploy: () => Promise<IIndexBase>,
+  args: IndexBaseBehaviorArgs,
+) {
   describe('::IndexBase', () => {
     // TODO: fix spec tests and uncomment
     // describeBehaviorOfERC4626(

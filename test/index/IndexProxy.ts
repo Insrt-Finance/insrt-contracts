@@ -24,7 +24,7 @@ describe('IndexProxy', () => {
   let snapshotId: number;
 
   let core: ICore;
-  let instance: IndexProxy;
+  let instance: IIndex;
 
   before(async () => {
     const [deployer] = await ethers.getSigners();
@@ -93,7 +93,12 @@ describe('IndexProxy', () => {
     const { events } = await deployIndexTx.wait();
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
 
-    instance = await IndexProxy__factory.connect(deployment, ethers.provider);
+    const indexProxy = await IndexProxy__factory.connect(
+      deployment,
+      ethers.provider,
+    );
+
+    instance = indexProxy as unknown as IIndex;
   });
 
   beforeEach(async () => {
@@ -104,9 +109,7 @@ describe('IndexProxy', () => {
     await ethers.provider.send('evm_revert', [snapshotId]);
   });
 
-  describeBehaviorOfIndexProxy({
-    deploy: async () => instance as unknown as IIndex,
-
+  describeBehaviorOfIndexProxy(async () => instance, {
     // TODO: replace circular `asset` logic with Balancer event output
     getAsset: async () =>
       IERC20__factory.connect(
@@ -115,12 +118,12 @@ describe('IndexProxy', () => {
         ).callStatic.asset(),
         ethers.provider,
       ),
-    mint: async () => {
-      return {} as unknown as Promise<ContractTransaction>;
-    },
-    burn: async () => {
-      return {} as unknown as Promise<ContractTransaction>;
-    },
+    mint: async (recipient, amount) =>
+      await instance['__mint(address,uint256)'](recipient, amount),
+    burn: async (recipient, amount) =>
+      await instance['__burn(address,uint256)'](recipient, amount),
+    allowance: (holder, spender) =>
+      instance.callStatic.allowance(holder, spender),
     mintAsset: async () => {
       return {} as unknown as Promise<ContractTransaction>;
     },
