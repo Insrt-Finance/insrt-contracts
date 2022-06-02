@@ -36,8 +36,8 @@ describe('IndexProxy', () => {
     const coreFacetCuts = [
       await new IndexManager__factory(deployer).deploy(
         indexDiamond.address,
-        // ethereum mainnet address
-        '0x48767F9F868a4A7b86A90736632F6E44C2df7fa9',
+        '0xaCd615B3705B9c880E4E7293f1030B34e57B4c1c', // abitrum mainnet address
+        // '0x48767F9F868a4A7b86A90736632F6E44C2df7fa9', ethereum mainnet address
       ),
     ].map(function (f) {
       return {

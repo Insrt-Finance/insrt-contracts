@@ -12,11 +12,12 @@ import {
 describe('Balancer', () => {
   //taken from: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/deployments/tasks/20210418-vault/output/arbitrum.json
   const balancerVaultAddress = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
-  // const investmentPoolFactoryAddress =
-  //   '0xaCd615B3705B9c880E4E7293f1030B34e57B4c1c';
-  // mainnet
+  //arbitrum
   const investmentPoolFactoryAddress =
-    '0x48767F9F868a4A7b86A90736632F6E44C2df7fa9';
+    '0xaCd615B3705B9c880E4E7293f1030B34e57B4c1c';
+  // mainnet
+  // const investmentPoolFactoryAddress =
+  // '0x48767F9F868a4A7b86A90736632F6E44C2df7fa9';
   const weightedPoolFactoryAddress =
     '0x7dFdEF5f355096603419239CE743BfaF1120312B';
 
