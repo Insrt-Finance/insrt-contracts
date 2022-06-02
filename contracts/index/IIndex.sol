@@ -5,5 +5,6 @@ pragma solidity ^0.8.0;
 import { IProxy } from '@solidstate/contracts/proxy/IProxy.sol';
 
 import { IIndexBase } from './IIndexBase.sol';
+import { IIndexIO } from './IIndexIO.sol';
 
-interface IIndex is IProxy, IIndexBase {}
+interface IIndex is IProxy, IIndexBase, IIndexIO {}

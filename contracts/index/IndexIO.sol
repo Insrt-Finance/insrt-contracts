@@ -13,7 +13,7 @@ import { IVault } from '../balancer/IVault.sol';
  * @title Infra Index Input-Output functions
  * @dev deployed standalone and referenced by IndexProxy
  */
-abstract contract IndexIO is IndexInternal, IIndexIO {
+contract IndexIO is IndexInternal, IIndexIO {
     using IndexStorage for IndexStorage.Layout;
 
     constructor(address balancerVault, address balancerHelpers)

@@ -12,6 +12,11 @@ import {
   IndexBase__factory,
   IndexProxy,
   IndexProxy__factory,
+  IIndexIO__factory,
+  IndexIO__factory,
+  IIndexBase,
+  IIndexIO,
+  IndexIO,
 } from '../../typechain-types';
 
 import { ContractTransaction } from 'ethers';
@@ -20,7 +25,7 @@ import { InsrtToken__factory } from '../../typechain-types';
 
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
 
-describe('IndexProxy', () => {
+describe.only('IndexProxy', () => {
   let snapshotId: number;
 
   let core: ICore;
@@ -54,6 +59,10 @@ describe('IndexProxy', () => {
         ethers.constants.AddressZero,
         ethers.constants.AddressZero,
       ),
+      await new IndexIO__factory(deployer).deploy(
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+      ),
     ].map(function (f) {
       return {
         target: f.address,
@@ -66,6 +75,12 @@ describe('IndexProxy', () => {
 
     await coreDiamond.diamondCut(
       coreFacetCuts,
+      ethers.constants.AddressZero,
+      '0x',
+    );
+
+    await indexDiamond.diamondCut(
+      indexFacetCuts,
       ethers.constants.AddressZero,
       '0x',
     );
@@ -98,7 +113,7 @@ describe('IndexProxy', () => {
       ethers.provider,
     );
 
-    instance = indexProxy as unknown as IIndex;
+    instance = indexProxy as IIndex;
   });
 
   beforeEach(async () => {
