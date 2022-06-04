@@ -98,18 +98,25 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      * @notice function to check the relayer approval for each user via Balancer of the Insrt-Index
      */
     function _checkBalancerRelayerStatus() internal {
-        if (
-            !IVault(BALANCER_VAULT).hasApprovedRelayer(
-                msg.sender,
-                address(this)
-            )
-        ) {
-            //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/9eb179da66c4f47c795b7b86479c3f13411c027d/pkg/vault/contracts/VaultAuthorization.sol#L116
-            IVault(BALANCER_VAULT).setRelayerApproval(
-                msg.sender,
-                address(this),
-                true
+        bool hasRelayer = IVault(BALANCER_VAULT).hasApprovedRelayer(
+            msg.sender,
+            address(this)
+        );
+        if (!hasRelayer) {
+            (bool success, ) = BALANCER_VAULT.delegatecall(
+                abi.encodeWithSignature(
+                    'setRelayerApproval(address,address,bool)',
+                    msg.sender,
+                    address(this),
+                    true
+                )
             );
+            //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/9eb179da66c4f47c795b7b86479c3f13411c027d/pkg/vault/contracts/VaultAuthorization.sol#L116
+            // IVault(BALANCER_VAULT).setRelayerApproval(
+            // msg.sender,
+            // address(this),
+            // true
+            // );
         }
     }
 
