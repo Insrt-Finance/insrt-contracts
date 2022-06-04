@@ -5,12 +5,17 @@ import {
   describeBehaviorOfIndexBase,
   IndexBaseBehaviorArgs,
 } from './IndexBase.behavior';
+import {
+  describeBehaviorOfIndexIO,
+  IndexIOBehaviorArgs,
+} from './IndexIO.behavior';
 
 import { IIndex } from '../../typechain-types';
 
 export interface IndexProxyBehaviorArgs
   extends ProxyBehaviorArgs,
-    IndexBaseBehaviorArgs {}
+    IndexBaseBehaviorArgs,
+    IndexIOBehaviorArgs {}
 
 export function describeBehaviorOfIndexProxy(
   deploy: () => Promise<IIndex>,
@@ -22,5 +27,9 @@ export function describeBehaviorOfIndexProxy(
     // TODO: facet behaviors
 
     describeBehaviorOfIndexBase(deploy, args);
+    describeBehaviorOfIndexIO(deploy, {
+      tokens: args.tokens,
+      weights: args.weights,
+    });
   });
 }
