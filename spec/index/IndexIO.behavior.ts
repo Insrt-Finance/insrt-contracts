@@ -59,7 +59,6 @@ export function describeBehaviorOfIndexIO(
     // InvestmentPool apparently does not require initialization. That being said, the error appearing
     // indicates that there are 0 balances of underlying tokens in the pool. How do balances increase
     // if all joinKinds reject them due to 0 balance?
-    //await instance.connect(depositor).initializePoolByDeposit(amountsIn, ethers.constants.Zero);
   });
 
   describe('correct initialization', () => {
@@ -67,6 +66,7 @@ export function describeBehaviorOfIndexIO(
       console.log(amountsIn);
       console.log(await instance['balanceOf(address)'](depositor.address));
       console.log(await instance['totalSupply()']());
+      //await instance.connect(depositor).initializePoolByDeposit(amountsIn, ethers.constants.Zero);
       //await instance.connect(depositor).userDepositExactInForAnyOut(amountsIn, 0);
       //await instance.connect(depositor)['queryUserDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, 0);
     });

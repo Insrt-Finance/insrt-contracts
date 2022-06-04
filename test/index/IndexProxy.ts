@@ -165,6 +165,7 @@ describe.only('IndexProxy', () => {
       BALANCER_VAULT,
       ethers.utils.parseEther('10'),
     );
+    // checking to see if balances are non-zero after initialization
     //console.log(await balancerVault.getPoolTokens(await instance.callStatic['getPoolId()']()));
   });
 
