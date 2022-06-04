@@ -74,4 +74,11 @@ interface IIndexView {
         uint256[] memory minAmountsOut,
         uint256 tokenId
     ) external returns (uint256 bptIn, uint256[] memory amountsOut);
+
+    /**
+     * @notice function to return the id of the Balancer Investment Pool corresponding to a target index
+     * @dev useful for querying properties of the Investment Pool underlying the index
+     * @return poolId
+     */
+    function getPoolId() external view returns (bytes32);
 }

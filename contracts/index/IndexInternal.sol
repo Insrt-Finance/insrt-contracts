@@ -374,6 +374,21 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     /**
+     * @notice function to return the id of the Balancer Investment Pool corresponding to a target index
+     * @dev useful for querying properties of the Investment Pool underlying the index
+     * @param l the layout struct of the target index
+     * @return poolId
+     */
+    function _poolId(IndexStorage.Layout storage l)
+        internal
+        view
+        virtual
+        returns (bytes32)
+    {
+        return l.poolId;
+    }
+
+    /**
      * @inheritdoc ERC20MetadataInternal
      */
     function _name() internal view virtual override returns (string memory) {

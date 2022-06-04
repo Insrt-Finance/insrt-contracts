@@ -140,4 +140,11 @@ contract IndexView is IndexInternal, IIndexView {
             request
         );
     }
+
+    /**
+     * @inheritdoc IIndexView
+     */
+    function getPoolId() external view returns (bytes32) {
+        return _poolId(IndexStorage.layout());
+    }
 }
