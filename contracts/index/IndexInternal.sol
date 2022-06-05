@@ -40,11 +40,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         bytes32 poolId,
         IVault.JoinPoolRequest memory request
     ) internal {
-        //Check this contract is an approved relayer for user
-        //If not, approve. Required so that in joinPool call, tokenized
-        //shares are sent to Insrt-Index, and user transfers to Balancer Vault
-        //directly.
-        //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L348
         _checkBalancerRelayerStatus();
 
         //TODO: Is there a potential mismatch of results between queryJoin and joinPool?
@@ -93,31 +88,17 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         _withdraw(sharesOut, msg.sender, msg.sender);
     }
 
-    //TODO: find better way to check if there is a relayer for each user to reduce gas checks?
     /**
      * @notice function to check the relayer approval for each user via Balancer of the Insrt-Index
+     * TODO: remove this helper after development
      */
     function _checkBalancerRelayerStatus() internal {
         bool hasRelayer = IVault(BALANCER_VAULT).hasApprovedRelayer(
             msg.sender,
             address(this)
         );
-        if (!hasRelayer) {
-            (bool success, ) = BALANCER_VAULT.delegatecall(
-                abi.encodeWithSignature(
-                    'setRelayerApproval(address,address,bool)',
-                    msg.sender,
-                    address(this),
-                    true
-                )
-            );
-            //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/9eb179da66c4f47c795b7b86479c3f13411c027d/pkg/vault/contracts/VaultAuthorization.sol#L116
-            // IVault(BALANCER_VAULT).setRelayerApproval(
-            // msg.sender,
-            // address(this),
-            // true
-            // );
-        }
+
+        require(hasRelayer, 'sender must approve index as relayer');
     }
 
     /**

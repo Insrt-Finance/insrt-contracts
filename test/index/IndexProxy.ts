@@ -137,14 +137,22 @@ describe.only('IndexProxy', () => {
 
     const balancerVault = IVault__factory.connect(BALANCER_VAULT, deployer);
 
-    await tokens[0]['approve(address,uint256)'](
-      BALANCER_VAULT,
-      ethers.utils.parseEther('10'),
-    );
-    await tokens[1]['approve(address,uint256)'](
-      BALANCER_VAULT,
-      ethers.utils.parseEther('10'),
-    );
+    await balancerVault
+      .connect(deployer)
+      .setRelayerApproval(deployer.address, instance.address, true);
+
+    await tokens[0]
+      .connect(deployer)
+      ['approve(address,uint256)'](
+        BALANCER_VAULT,
+        ethers.utils.parseEther('10'),
+      );
+    await tokens[1]
+      .connect(deployer)
+      ['approve(address,uint256)'](
+        BALANCER_VAULT,
+        ethers.utils.parseEther('10'),
+      );
     // checking to see if balances are non-zero after initialization
     //console.log(await balancerVault.getPoolTokens(await instance.callStatic['getPoolId()']()));
   });
