@@ -28,12 +28,10 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 amountOut
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest
-            memory request = _constructJoinAllForExactRequest(
-                l,
-                amountsIn,
-                1 ether
-            );
+        IVault.JoinPoolRequest memory request = _constructJoinInitRequest(
+            l,
+            amountsIn
+        );
 
         //TODO: perhaps amountOut may be set to 0 in this case?
         _performJoinAndMint(amountOut, l.poolId, request);
