@@ -29,13 +29,9 @@ contract IndexProxy is Proxy {
     ) {
         INDEX_DIAMOND = indexDiamond;
 
-        IndexStorage.Layout storage indexLayout = IndexStorage.layout();
-        ERC4626BaseStorage.Layout storage vaultLayout = ERC4626BaseStorage
-            .layout();
+        // deploy Balancer pool
 
-        // deploy investment pool and store as base asset
-
-        vaultLayout.asset = IInvestmentPoolFactory(investmentPoolFactory)
+        address balancerPool = IInvestmentPoolFactory(investmentPoolFactory)
             .create(
                 // TODO: metadata naming conventions?
                 'TODO: name',
@@ -50,10 +46,15 @@ contract IndexProxy is Proxy {
                 0
             );
 
-        indexLayout.id = id;
-        indexLayout.exitFee = exitFee;
-        indexLayout.poolId = IInvestmentPool(vaultLayout.asset).getPoolId(); //fetch investment pool poolId for indexbase functionality
-        indexLayout.tokens = tokens;
+        // set balancer pool as base ERC4626 asset
+        ERC4626BaseStorage.layout().asset = balancerPool;
+
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        l.id = id;
+        l.exitFee = exitFee;
+        l.poolId = IInvestmentPool(balancerPool).getPoolId();
+        l.tokens = tokens;
     }
 
     /**
