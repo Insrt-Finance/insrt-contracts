@@ -25,7 +25,7 @@ import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavi
 describe.only('IndexProxy', () => {
   let snapshotId: number;
 
-  //let core: ICore;
+  let core: ICore;
   let instance: IIndex;
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
@@ -90,7 +90,7 @@ describe.only('IndexProxy', () => {
       '0x',
     );
 
-    //core = ICore__factory.connect(coreDiamond.address, ethers.provider);
+    core = ICore__factory.connect(coreDiamond.address, ethers.provider);
 
     const tokens = [
       await new SolidStateERC20Mock__factory(deployer).deploy(
@@ -122,41 +122,21 @@ describe.only('IndexProxy', () => {
       weightsArg.push(weights[i]);
     }
 
-    const managementInterface = IndexManager__factory.connect(
-      coreDiamond.address,
-      deployer,
-    );
-    const indexAddress = await managementInterface
-      .connect(deployer)
-      .callStatic['deployIndex(address[],uint256[],uint16)'](
-        tokensArg,
-        weightsArg,
-        ethers.constants.Zero,
-      );
-    const indexDeploymentTx = await managementInterface
+    const deployIndexTx = await core
       .connect(deployer)
       ['deployIndex(address[],uint256[],uint16)'](
         tokensArg,
         weightsArg,
         ethers.constants.Zero,
       );
-    // const deployIndexTx = await core.connect(deployer).deployIndex(
-    // tokenAddresses,
-    // weights,
-    // ethers.constants.Zero,
-    // );
 
-    // const { events } = await deployIndexTx.wait();
-    // const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
+    const { events } = await deployIndexTx.wait();
+    const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
 
-    // const indexProxy = await IndexProxy__factory.connect(
-    // deployment,
-    // ethers.provider,
-    // );
+    instance = IIndex__factory.connect(deployment, deployer);
 
-    // instance = indexProxy as IIndex;
-    instance = IIndex__factory.connect(indexAddress, deployer);
     const balancerVault = IVault__factory.connect(BALANCER_VAULT, deployer);
+
     await tokens[0]['approve(address,uint256)'](
       BALANCER_VAULT,
       ethers.utils.parseEther('10'),
