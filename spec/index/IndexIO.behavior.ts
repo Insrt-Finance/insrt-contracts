@@ -1,6 +1,7 @@
 import { ethers } from 'hardhat';
 import {
   IIndex,
+  IVault__factory,
   SolidStateERC20Mock,
   SolidStateERC20Mock__factory,
 } from '../../typechain-types';
@@ -22,8 +23,10 @@ export function describeBehaviorOfIndexIO(
 ) {
   let depositor: SignerWithAddress;
   let instance: IIndex;
+  let investmentPoolToken: SolidStateERC20Mock;
   const assets: SolidStateERC20Mock[] = [];
   const amountsIn: BigNumber[] = [];
+  const BALANCER_VAULT = '0xBA12222222228d8Ba445958a75a0704d566BF2C8'; //arbitrum
 
   before(async () => {
     [depositor] = await ethers.getSigners();
@@ -55,20 +58,62 @@ export function describeBehaviorOfIndexIO(
 
   beforeEach(async () => {
     instance = await deploy();
-    //await instance.connect(depositor)['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, BigNumber.from('1'));
-    // InvestmentPool apparently does not require initialization. That being said, the error appearing
-    // indicates that there are 0 balances of underlying tokens in the pool. How do balances increase
-    // if all joinKinds reject them due to 0 balance?
+    console.log('\nInitialization of underlying Balancer Investment Pool: \n');
+    await assets[0]
+      .connect(depositor)
+      ['increaseAllowance(address,uint256)'](
+        instance.address,
+        amountsIn[0].mul(BigNumber.from('100')),
+      );
+    await assets[1]
+      .connect(depositor)
+      ['increaseAllowance(address,uint256)'](
+        instance.address,
+        amountsIn[1].mul(BigNumber.from('100')),
+      );
+    await instance.connect(depositor).initializePoolByDeposit(amountsIn);
+    console.log(
+      '\nExpect total BPT supply to be greater than what was received by the pool, ' +
+        'and for the depositor to have an equal amount of Insrt-Index tokens as the balance of BPT in the Insrt-Index.\n',
+    );
+    const investmentPoolAddress = await instance.getPool();
+    investmentPoolToken = SolidStateERC20Mock__factory.connect(
+      investmentPoolAddress,
+      depositor,
+    );
+    console.log(
+      'BPT Balance Supply: ',
+      await investmentPoolToken['totalSupply()'](),
+    );
+    console.log(
+      'Index Balance of BPT: ',
+      await investmentPoolToken['balanceOf(address)'](instance.address),
+    );
+    console.log(
+      'User balance of Insrt-Index: ',
+      await instance
+        .connect(depositor)
+        ['balanceOf(address)'](depositor.address),
+    );
   });
 
-  describe('correct initialization', () => {
-    it('correct initiliazation', async () => {
-      console.log(amountsIn);
-      console.log(await instance['balanceOf(address)'](depositor.address));
-      console.log(await instance['totalSupply()']());
-      //await instance.connect(depositor).initializePoolByDeposit(amountsIn, ethers.constants.Zero);
-      //await instance.connect(depositor).userDepositExactInForAnyOut(amountsIn, 0);
-      //await instance.connect(depositor)['queryUserDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, 0);
+  describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
+    it('perform join test', async () => {
+      console.log(
+        'Total BPT supply: ',
+        await investmentPoolToken['totalSupply()'](),
+      );
+      console.log(
+        'Approved relayer: ',
+        await IVault__factory.connect(BALANCER_VAULT, depositor)[
+          'hasApprovedRelayer(address,address)'
+        ](depositor.address, instance.address),
+      );
+      await instance
+        .connect(depositor)
+        ['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, 0);
+
+      await instance['balanceOf(address)'](depositor.address);
     });
   });
 }
