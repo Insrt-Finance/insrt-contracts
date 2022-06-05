@@ -81,4 +81,11 @@ interface IIndexView {
      * @return poolId
      */
     function getPoolId() external view returns (bytes32);
+
+    /**
+     * @notice function to return the address of the underlying Balancer Investment Pool
+     * corresponding to the Insrt-Index
+     * @return poolAddress the address of the Balancer Investment Pool
+     */
+    function getPool() external view returns (address poolAddress);
 }
