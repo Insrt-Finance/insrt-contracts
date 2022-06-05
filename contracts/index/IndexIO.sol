@@ -3,10 +3,13 @@
 pragma solidity ^0.8.0;
 
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 
 import { IIndexIO } from './IIndexIO.sol';
 import { IndexInternal } from './IndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
+import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 import { IVault } from '../balancer/IVault.sol';
 
 /**
@@ -15,6 +18,7 @@ import { IVault } from '../balancer/IVault.sol';
  */
 contract IndexIO is IndexInternal, IIndexIO {
     using IndexStorage for IndexStorage.Layout;
+    using SafeERC20 for IERC20;
 
     constructor(address balancerVault, address balancerHelpers)
         IndexInternal(balancerVault, balancerHelpers)
@@ -25,9 +29,13 @@ contract IndexIO is IndexInternal, IIndexIO {
      */
     function initializePoolByDeposit(uint256[] memory amountsIn) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest memory request = _constructJoinInitRequest(
-            l,
-            amountsIn
+        IInvestmentPool.JoinKind kind = IInvestmentPool.JoinKind.INIT;
+
+        bytes memory userData = abi.encode(kind, amountsIn);
+        IVault.JoinPoolRequest memory request = _constructJoinRequest(
+            l.tokens,
+            amountsIn,
+            userData
         );
 
         // Transfer tokens from user to Insrt-Index
@@ -81,14 +89,43 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 tokenIndex
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest memory request = _constructJoinSingleForExactRequest(
-            l,
-            amounts, //could perhaps be an empty array? Balancer will request the appropriate amount
-            bptAmountOut,
-            tokenIndex
+        IInvestmentPool.JoinKind kind = IInvestmentPool
+            .JoinKind
+            .TOKEN_IN_FOR_EXACT_BPT_OUT;
+        bytes memory userData = abi.encode(kind, bptAmountOut, tokenIndex);
+
+        IVault.JoinPoolRequest memory request = _constructJoinRequest(
+            l.tokens,
+            amounts,
+            userData
+        );
+        bytes32 poolId = l.poolId;
+
+        // Must perform operations prior to querying otherwise Balancer will revert
+        IERC20 depositToken = l.tokens[tokenIndex];
+        depositToken.transferFrom(
+            msg.sender,
+            address(this),
+            amounts[tokenIndex]
+        ); //perhaps input may be a single value
+        depositToken.safeIncreaseAllowance(BALANCER_VAULT, amounts[0]);
+
+        (uint256 bptOut, ) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
+            poolId,
+            address(this),
+            address(this),
+            request
         );
 
-        _performJoinAndMint(bptAmountOut, l.poolId, request);
+        IVault(BALANCER_VAULT).joinPool(
+            poolId,
+            address(this),
+            address(this),
+            request
+        );
+
+        //Mint shares to joining user
+        _mint(bptOut, msg.sender);
     }
 
     /**
