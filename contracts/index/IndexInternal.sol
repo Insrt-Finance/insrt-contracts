@@ -121,23 +121,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     /**
-     * @notice function to construct the request needed to initialize a Balancer InvestmentPool
-     * @dev only works for JoinKind.INIT
-     * @param l the index layout
-     * @param amountsIn the amounts of tokens deposited
-     * @return request a JoinPoolRequest constructed for INIT JoinKind
-     */
-    function _constructJoinInitRequest(
-        IndexStorage.Layout storage l,
-        uint256[] memory amountsIn
-    ) internal view returns (IVault.JoinPoolRequest memory request) {
-        IInvestmentPool.JoinKind kind = IInvestmentPool.JoinKind.INIT;
-
-        bytes memory userData = abi.encode(kind, amountsIn);
-        request = _constructJoinRequest(l.tokens, amountsIn, userData);
-    }
-
-    /**
      * @notice function to construct the request needed for a user to deposit in an insrt-index
      * @dev only works for JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT
      * @param l the index layout
