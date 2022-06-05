@@ -111,9 +111,20 @@ export function describeBehaviorOfIndexIO(
       );
       await instance
         .connect(depositor)
-        ['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, 0);
+        ['userDepositSingleForExactOut(uint256[],uint256,uint256)'](
+          amountsIn,
+          ethers.utils.parseUnits('1', 'wei'),
+          0,
+        );
 
-      await instance['balanceOf(address)'](depositor.address);
+      console.log(
+        'User Insrt-Index balance after single deposit: ',
+        await instance['balanceOf(address)'](depositor.address),
+      );
+      console.log(
+        'Index BPT balance after single deposit: ',
+        await investmentPoolToken['balanceOf(address)'](instance.address),
+      );
     });
   });
 }
