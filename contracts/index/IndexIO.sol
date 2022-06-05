@@ -23,18 +23,36 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initializePoolByDeposit(
-        uint256[] memory amountsIn,
-        uint256 amountOut
-    ) external {
+    function initializePoolByDeposit(uint256[] memory amountsIn) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
         IVault.JoinPoolRequest memory request = _constructJoinInitRequest(
             l,
             amountsIn
         );
 
-        //TODO: perhaps amountOut may be set to 0 in this case?
-        _performJoinAndMint(amountOut, l.poolId, request);
+        // Transfer tokens from user to Insrt-Index
+        // Approve Balancer Vault from Insrt-Index to take received tokens
+        IERC20[] memory tokens = l.tokens;
+        uint256 tokensLength = tokens.length;
+        for (uint256 i; i < tokensLength; ) {
+            tokens[i].transferFrom(msg.sender, address(this), amountsIn[i]);
+            tokens[i].approve(BALANCER_VAULT, amountsIn[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        IVault(BALANCER_VAULT).joinPool(
+            l.poolId,
+            address(this),
+            address(this),
+            request
+        );
+
+        // Mint an amount of shares to user for BPT received from Balancer Vault
+        (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(l.poolId);
+
+        _mint(msg.sender, IERC20(investmentPool).balanceOf(address(this)));
     }
 
     /**
