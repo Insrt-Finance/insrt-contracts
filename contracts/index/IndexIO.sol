@@ -60,7 +60,11 @@ contract IndexIO is IndexInternal, IIndexIO {
         // Mint an amount of shares to user for BPT received from Balancer Vault
         (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(l.poolId);
 
-        _mint(msg.sender, IERC20(investmentPool).balanceOf(address(this)));
+        //Note: workaround for same functionality as ERC4626._mint
+        _mint(
+            msg.sender,
+            _previewDeposit(IERC20(investmentPool).balanceOf(address(this)))
+        );
     }
 
     /**
@@ -118,7 +122,8 @@ contract IndexIO is IndexInternal, IIndexIO {
         );
 
         //Mint shares to joining user
-        _mint(bptAmountOut, msg.sender);
+        //Note: workaround for same functionality as ERC4626._mint
+        _mint(msg.sender, _previewDeposit(bptAmountOut));
     }
 
     /**
