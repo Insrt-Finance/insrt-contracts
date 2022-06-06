@@ -17,6 +17,7 @@ import {
   IVault__factory,
   IndexView__factory,
 } from '../../typechain-types';
+import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
 import { BigNumber, ContractTransaction } from 'ethers';
 
@@ -29,11 +30,22 @@ describe.only('IndexProxy', () => {
   let instance: IIndex;
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
-  const BALANCER_VAULT = '0xBA12222222228d8Ba445958a75a0704d566BF2C8'; //arbitrum
-  const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
+  let BALANCER_VAULT = '';
+  let INVESTMENT_POOL_FACTORY = '';
+  let BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
 
   before(async () => {
     const [deployer] = await ethers.getSigners();
+    BALANCER_VAULT = await getBalancerContractAddress(
+      '20210418-vault',
+      'Vault',
+      'arbitrum',
+    );
+    INVESTMENT_POOL_FACTORY = await getBalancerContractAddress(
+      '20210907-investment-pool',
+      'InvestmentPoolFactory',
+      'arbitrum',
+    );
 
     const coreDiamond = await new Core__factory(deployer).deploy();
 
@@ -42,8 +54,7 @@ describe.only('IndexProxy', () => {
     const coreFacetCuts = [
       await new IndexManager__factory(deployer).deploy(
         indexDiamond.address,
-        '0xaCd615B3705B9c880E4E7293f1030B34e57B4c1c', // abitrum mainnet address
-        // '0x48767F9F868a4A7b86A90736632F6E44C2df7fa9', ethereum mainnet address
+        INVESTMENT_POOL_FACTORY,
         BALANCER_VAULT,
       ),
     ].map(function (f) {
@@ -142,18 +153,11 @@ describe.only('IndexProxy', () => {
       .connect(deployer)
       .setRelayerApproval(deployer.address, instance.address, true);
 
-    await tokens[0]
-      .connect(deployer)
-      ['approve(address,uint256)'](
-        BALANCER_VAULT,
-        ethers.utils.parseEther('10'),
-      );
-    await tokens[1]
-      .connect(deployer)
-      ['approve(address,uint256)'](
-        BALANCER_VAULT,
-        ethers.utils.parseEther('10'),
-      );
+    for (let i = 0; i < tokens.length; i++) {
+      await tokens[i]
+        .connect(deployer)
+        .approve(BALANCER_VAULT, ethers.constants.MaxUint256);
+    }
   });
 
   beforeEach(async () => {
