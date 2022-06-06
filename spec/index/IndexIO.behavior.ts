@@ -12,6 +12,7 @@ import {
 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
@@ -27,12 +28,17 @@ export function describeBehaviorOfIndexIO(
   let investmentPoolToken: SolidStateERC20Mock;
   const assets: SolidStateERC20Mock[] = [];
   const amountsIn: BigNumber[] = [];
-  const BALANCER_VAULT = '0xBA12222222228d8Ba445958a75a0704d566BF2C8'; //arbitrum
-  const balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
+  let BALANCER_VAULT = '';
+  let balVaultInstance;
 
   before(async () => {
     [depositor] = await ethers.getSigners();
-
+    BALANCER_VAULT = await getBalancerContractAddress(
+      '20210418-vault',
+      'Vault',
+      'arbitrum',
+    );
+    balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
     let totalWeight: BigNumber = BigNumber.from('0');
     const mintAmount = ethers.utils.parseEther('10000'); //large value to suffice for all tests
     const tokenLength = args.tokens.length;
@@ -105,42 +111,27 @@ export function describeBehaviorOfIndexIO(
   });
 
   describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
-    it('receive user deposit, send to InvestmentPool, receive BPT and mint shares to user,', async () => {
-      const bptAmountWanted = ethers.utils.parseUnits('1', 'gwei');
+    it('mints shares to user at 1:1 for BPT received,', async () => {
+      const bptAmountWanted = ethers.utils.parseUnits('1000000', 'gwei');
       const [bptOut, amountsRequired] = await instance.callStatic[
         'queryUserDepositSingleForExactOut(uint256[],uint256,uint256)'
       ](amountsIn, bptAmountWanted, 0);
 
-      await expect(
-        await instance
+      console.log('BPT Out: ', bptOut);
+      console.log('IT Out: ', await instance.previewDeposit(bptAmountWanted));
+
+      await expect(() =>
+        instance
           .connect(depositor)
           ['userDepositSingleForExactOut(uint256[],uint256,uint256)'](
-            amountsRequired,
+            amountsIn,
             bptAmountWanted,
             0,
           ),
-      ).to.changeTokenBalances(
-        assets[0],
-        [depositor, balVaultInstance],
-        [
-          amountsRequired[0].mul(ethers.constants.NegativeOne),
-          amountsRequired[0],
-        ],
-      );
-
-      console.log(
-        'Total BPT supply: ',
-        (await investmentPoolToken['totalSupply()']()).toBigInt(),
-      );
-      console.log(
-        'Index Balance of BPT: ',
-        (
-          await investmentPoolToken['balanceOf(address)'](instance.address)
-        ).toBigInt(),
-      );
-      console.log(
-        'User balance of Insert-Index: ',
-        (await instance['balanceOf(address)'](depositor.address)).toBigInt(),
+      ).to.changeTokenBalance(
+        instance,
+        depositor,
+        await instance.previewDeposit(bptAmountWanted),
       );
     });
 
@@ -157,7 +148,6 @@ export function describeBehaviorOfIndexIO(
       const [bptOut, amountsInned] = await instance.callStatic[
         'queryUserDepositExactInForAnyOut(uint256[],uint256)'
       ](amountsIn, ethers.utils.parseUnits('1', 'wei'));
-      console.log(bptOut, amountsInned);
 
       await instance
         .connect(depositor)
@@ -165,18 +155,6 @@ export function describeBehaviorOfIndexIO(
           amountsIn,
           ethers.utils.parseUnits('1', 'gwei'),
         );
-      console.log(
-        'Total BPT supply: ',
-        await investmentPoolToken['totalSupply()'](),
-      );
-      console.log(
-        'User Insrt-Index balance after single deposit: ',
-        await instance['balanceOf(address)'](depositor.address),
-      );
-      console.log(
-        'Index BPT balance after single deposit: ',
-        await investmentPoolToken['balanceOf(address)'](instance.address),
-      );
     });
   });
 }
