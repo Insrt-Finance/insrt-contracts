@@ -124,9 +124,10 @@ describe.only('IndexProxy', () => {
 
     const deployIndexTx = await core
       .connect(deployer)
-      ['deployIndex(address[],uint256[],uint16)'](
+      ['deployIndex(address[],uint256[],address,uint16)'](
         tokensArg,
         weightsArg,
+        BALANCER_VAULT,
         ethers.constants.Zero,
       );
 

@@ -38,13 +38,10 @@ contract IndexIO is IndexInternal, IIndexIO {
             userData
         );
 
-        // Transfer tokens from user to Insrt-Index
-        // Approve Balancer Vault from Insrt-Index to take received tokens
         IERC20[] memory tokens = l.tokens;
         uint256 tokensLength = tokens.length;
         for (uint256 i; i < tokensLength; ) {
             tokens[i].transferFrom(msg.sender, address(this), amountsIn[i]);
-            tokens[i].approve(BALANCER_VAULT, amountsIn[i]);
             unchecked {
                 ++i;
             }
@@ -90,13 +87,10 @@ contract IndexIO is IndexInternal, IIndexIO {
             userData
         );
 
-        // Transfer tokens from user to Insrt-Index
-        // Approve Balancer Vault from Insrt-Index to take received tokens
         IERC20[] memory tokens = l.tokens;
         uint256 tokensLength = tokens.length;
         for (uint256 i; i < tokensLength; ) {
             tokens[i].transferFrom(msg.sender, address(this), amountsIn[i]);
-            tokens[i].approve(BALANCER_VAULT, amountsIn[i]);
             unchecked {
                 ++i;
             }
@@ -134,14 +128,12 @@ contract IndexIO is IndexInternal, IIndexIO {
         );
         bytes32 poolId = l.poolId;
 
-        // Must perform operations prior to querying otherwise Balancer will revert
         IERC20 depositToken = l.tokens[tokenIndex];
         depositToken.transferFrom(
             msg.sender,
             address(this),
             amounts[tokenIndex]
         ); //perhaps input may be a single value
-        depositToken.safeIncreaseAllowance(BALANCER_VAULT, amounts[0]);
 
         IVault(BALANCER_VAULT).joinPool(
             poolId,

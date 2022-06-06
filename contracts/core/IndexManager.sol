@@ -26,12 +26,14 @@ contract IndexManager is IIndexManager, OwnableInternal {
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
+        address balancerVault,
         uint16 exitFee
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new IndexProxy(
                 INDEX_DIAMOND,
                 INVESTMENT_POOL_FACTORY,
+                balancerVault,
                 tokens,
                 weights,
                 ++IndexManagerStorage.layout().count,
