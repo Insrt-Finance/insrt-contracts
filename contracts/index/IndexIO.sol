@@ -27,7 +27,7 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initializePoolByDeposit(uint256[] memory amountsIn) external {
+    function initialize(uint256[] memory amountsIn) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         bytes memory userData = abi.encode(
@@ -40,15 +40,6 @@ contract IndexIO is IndexInternal, IIndexIO {
             amountsIn,
             userData
         );
-
-        IERC20[] memory tokens = l.tokens;
-        uint256 tokensLength = tokens.length;
-        for (uint256 i; i < tokensLength; ) {
-            tokens[i].transferFrom(msg.sender, address(this), amountsIn[i]);
-            unchecked {
-                ++i;
-            }
-        }
 
         IVault(BALANCER_VAULT).joinPool(
             l.poolId,

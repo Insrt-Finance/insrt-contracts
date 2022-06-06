@@ -13,7 +13,7 @@ interface IIndexIO {
      * Note: CAN ONLY BE CALLED WHEN BPT == 0, SO ONLY ONCE AS SOME TOKENS ARE MINTED TO ZERO-ADDRESS SO SUPPLY IS NEVER AGAIN 0
      * @param amountsIn the amounts of each token deposited
      */
-    function initializePoolByDeposit(uint256[] memory amountsIn) external;
+    function initialize(uint256[] memory amountsIn) external;
 
     /**
      * @notice function to deposit an amount of tokens to Balancer InvestmentPool

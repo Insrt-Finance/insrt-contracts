@@ -30,6 +30,7 @@ describe.only('IndexProxy', () => {
   let instance: IIndex;
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
+  const amountsArg: BigNumber[] = [];
   let BALANCER_VAULT = '';
   let INVESTMENT_POOL_FACTORY = '';
   let BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
@@ -109,13 +110,13 @@ describe.only('IndexProxy', () => {
         'token1',
         'T1',
         ethers.BigNumber.from('18'),
-        ethers.constants.Zero,
+        ethers.utils.parseEther('10000'),
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy(
         'token2',
         'T2',
         ethers.BigNumber.from('18'),
-        ethers.constants.Zero,
+        ethers.utils.parseEther('10000'),
       ),
     ];
 
@@ -132,15 +133,23 @@ describe.only('IndexProxy', () => {
     for (let i = 0; i < tokenAddresses.length; i++) {
       tokensArg.push(tokenAddresses[i]);
       weightsArg.push(weights[i]);
+      amountsArg.push(
+        ethers.utils
+          .parseEther('1')
+          .mul(weights[i])
+          .div(ethers.utils.parseEther('1')),
+      );
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+      await tokens[i]
+        .connect(deployer)
+        .approve(core.address, ethers.constants.MaxUint256);
     }
 
     const deployIndexTx = await core
       .connect(deployer)
-      ['deployIndex(address[],uint256[],uint16)'](
-        tokensArg,
-        weightsArg,
-        ethers.constants.Zero,
-      );
+      .deployIndex(tokensArg, weightsArg, amountsArg, ethers.constants.Zero);
 
     const { events } = await deployIndexTx.wait();
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
@@ -152,12 +161,6 @@ describe.only('IndexProxy', () => {
     await balancerVault
       .connect(deployer)
       .setRelayerApproval(deployer.address, instance.address, true);
-
-    for (let i = 0; i < tokens.length; i++) {
-      await tokens[i]
-        .connect(deployer)
-        .approve(BALANCER_VAULT, ethers.constants.MaxUint256);
-    }
   });
 
   beforeEach(async () => {

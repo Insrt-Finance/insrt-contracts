@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
+import { IIndex } from '../index/IIndex.sol';
 import { IndexProxy } from '../index/IndexProxy.sol';
 import { IIndexManager } from './IIndexManager.sol';
 import { IndexManagerStorage } from './IndexManagerStorage.sol';
@@ -31,6 +32,7 @@ contract IndexManager is IIndexManager, OwnableInternal {
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
+        uint256[] calldata amounts,
         uint16 exitFee
     ) external onlyOwner returns (address deployment) {
         deployment = address(
@@ -44,6 +46,16 @@ contract IndexManager is IIndexManager, OwnableInternal {
                 exitFee
             )
         );
+
+        uint256 length = tokens.length;
+        for (uint256 i; i < length; ) {
+            tokens[i].transferFrom(msg.sender, deployment, amounts[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        IIndex(payable(deployment)).initialize(amounts);
 
         emit IndexDeployed(deployment);
     }

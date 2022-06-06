@@ -79,7 +79,7 @@ export function describeBehaviorOfIndexIO(
         instance.address,
         amountsIn[1].mul(BigNumber.from('100')),
       );
-    await instance.connect(depositor).initializePoolByDeposit(amountsIn);
+    await instance.connect(depositor).initialize(amountsIn);
     console.log(
       '\nExpect total BPT supply to be greater than what was received by the pool, ' +
         'and for the depositor to have an equal amount of Insrt-Index tokens as the balance of BPT in the Insrt-Index.\n',

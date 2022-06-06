@@ -17,6 +17,7 @@ interface IIndexManager {
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
+        uint256[] calldata amounts,
         uint16 exitFee
     ) external returns (address deployment);
 }
