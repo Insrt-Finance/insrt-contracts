@@ -110,13 +110,6 @@ contract IndexIO is IndexInternal, IIndexIO {
         ); //perhaps input may be a single value
         depositToken.safeIncreaseAllowance(BALANCER_VAULT, amounts[0]);
 
-        (uint256 bptOut, ) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
-            poolId,
-            address(this),
-            address(this),
-            request
-        );
-
         IVault(BALANCER_VAULT).joinPool(
             poolId,
             address(this),
@@ -125,7 +118,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         );
 
         //Mint shares to joining user
-        _mint(bptOut, msg.sender);
+        _mint(bptAmountOut, msg.sender);
     }
 
     /**
