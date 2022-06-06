@@ -40,9 +40,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         bytes32 poolId,
         IVault.JoinPoolRequest memory request
     ) internal {
-        _checkBalancerRelayerStatus();
-
-        //TODO: Is there a potential mismatch of results between queryJoin and joinPool?
         (uint256 bptOut, ) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
             poolId,
             msg.sender,
@@ -86,19 +83,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         );
 
         _withdraw(sharesOut, msg.sender, msg.sender);
-    }
-
-    /**
-     * @notice function to check the relayer approval for each user via Balancer of the Insrt-Index
-     * TODO: remove this helper after development
-     */
-    function _checkBalancerRelayerStatus() internal {
-        bool hasRelayer = IVault(BALANCER_VAULT).hasApprovedRelayer(
-            msg.sender,
-            address(this)
-        );
-
-        require(hasRelayer, 'sender must approve index as relayer');
     }
 
     /**
