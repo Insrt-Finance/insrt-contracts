@@ -11,6 +11,7 @@ import {
   SolidStateERC4626BehaviorArgs,
 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
@@ -27,6 +28,7 @@ export function describeBehaviorOfIndexIO(
   const assets: SolidStateERC20Mock[] = [];
   const amountsIn: BigNumber[] = [];
   const BALANCER_VAULT = '0xBA12222222228d8Ba445958a75a0704d566BF2C8'; //arbitrum
+  const balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
 
   before(async () => {
     [depositor] = await ethers.getSigners();
@@ -82,43 +84,63 @@ export function describeBehaviorOfIndexIO(
       depositor,
     );
     console.log(
-      'BPT Balance Supply: ',
-      await investmentPoolToken['totalSupply()'](),
+      'BPT Supply: ',
+      (await investmentPoolToken['totalSupply()']()).toBigInt(),
     );
     console.log(
       'Index Balance of BPT: ',
-      await investmentPoolToken['balanceOf(address)'](instance.address),
+      (
+        await investmentPoolToken['balanceOf(address)'](instance.address)
+      ).toBigInt(),
     );
     console.log(
       'User balance of Insrt-Index: ',
-      await instance
-        .connect(depositor)
-        ['balanceOf(address)'](depositor.address),
+      (
+        await instance
+          .connect(depositor)
+          ['balanceOf(address)'](depositor.address)
+      ).toBigInt(),
       '\n\n',
     );
   });
 
   describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
-    it('it transfers tokens from the user,', async () => {
-      await instance
-        .connect(depositor)
-        ['userDepositSingleForExactOut(uint256[],uint256,uint256)'](
-          amountsIn,
-          ethers.utils.parseUnits('1', 'gwei'),
-          0,
-        );
+    it('receive user deposit, send to InvestmentPool, receive BPT and mint shares to user,', async () => {
+      const bptAmountWanted = ethers.utils.parseUnits('1', 'gwei');
+      const [bptOut, amountsRequired] = await instance.callStatic[
+        'queryUserDepositSingleForExactOut(uint256[],uint256,uint256)'
+      ](amountsIn, bptAmountWanted, 0);
+
+      await expect(
+        await instance
+          .connect(depositor)
+          ['userDepositSingleForExactOut(uint256[],uint256,uint256)'](
+            amountsRequired,
+            bptAmountWanted,
+            0,
+          ),
+      ).to.changeTokenBalances(
+        assets[0],
+        [depositor, balVaultInstance],
+        [
+          amountsRequired[0].mul(ethers.constants.NegativeOne),
+          amountsRequired[0],
+        ],
+      );
 
       console.log(
         'Total BPT supply: ',
-        await investmentPoolToken['totalSupply()'](),
+        (await investmentPoolToken['totalSupply()']()).toBigInt(),
       );
       console.log(
-        'User Insrt-Index balance after single deposit: ',
-        await instance['balanceOf(address)'](depositor.address),
+        'Index Balance of BPT: ',
+        (
+          await investmentPoolToken['balanceOf(address)'](instance.address)
+        ).toBigInt(),
       );
       console.log(
-        'Index BPT balance after single deposit: ',
-        await investmentPoolToken['balanceOf(address)'](instance.address),
+        'User balance of Insert-Index: ',
+        (await instance['balanceOf(address)'](depositor.address)).toBigInt(),
       );
     });
 
@@ -132,11 +154,16 @@ export function describeBehaviorOfIndexIO(
 
   describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
     it('it transfers all tokens from the user', async () => {
+      const [bptOut, amountsInned] = await instance.callStatic[
+        'queryUserDepositExactInForAnyOut(uint256[],uint256)'
+      ](amountsIn, ethers.utils.parseUnits('1', 'wei'));
+      console.log(bptOut, amountsInned);
+
       await instance
         .connect(depositor)
         ['userDepositExactInForAnyOut(uint256[],uint256)'](
           amountsIn,
-          ethers.utils.parseUnits('1', 'wei'),
+          ethers.utils.parseUnits('1', 'gwei'),
         );
       console.log(
         'Total BPT supply: ',
