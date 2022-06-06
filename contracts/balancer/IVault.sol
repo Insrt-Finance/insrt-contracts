@@ -6,7 +6,7 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
 /**
  * @title Balancer Asset interface
- * @dev Empty interface used by balancer. For more info: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/vault/contracts/interfaces/IAsset.sol
+ * @dev Empty interface used by balancer. For more info: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IAsset.sol
  */
 interface IAsset {
 
@@ -15,7 +15,7 @@ interface IAsset {
 /**
  * @title Balancer Vault interface
  * @notice Required for pragma version workaround.
- * @dev Critical functions for interacting with the balancer vault.  For more info: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/vault/contracts/interfaces/IVault.sol
+ * @dev Critical functions for interacting with the balancer vault.  For more info: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol
  */
 interface IVault {
     function hasApprovedRelayer(address user, address relayer)
