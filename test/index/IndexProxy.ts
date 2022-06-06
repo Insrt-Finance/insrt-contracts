@@ -155,12 +155,6 @@ describe('IndexProxy', () => {
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
 
     instance = IIndex__factory.connect(deployment, deployer);
-
-    const balancerVault = IVault__factory.connect(BALANCER_VAULT, deployer);
-
-    await balancerVault
-      .connect(deployer)
-      .setRelayerApproval(deployer.address, instance.address, true);
   });
 
   beforeEach(async () => {
