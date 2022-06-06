@@ -94,6 +94,8 @@ contract IndexIO is IndexInternal, IIndexIO {
             }
         }
 
+        uint256 preJoinBPT = _totalSupply();
+
         IVault(BALANCER_VAULT).joinPool(
             l.poolId,
             address(this),
@@ -101,7 +103,9 @@ contract IndexIO is IndexInternal, IIndexIO {
             request
         );
 
-        _mint(msg.sender, _previewDeposit(minBPTAmountOut));
+        uint256 postJoinBPT = _totalSupply();
+
+        _mint(msg.sender, _previewDeposit(postJoinBPT - preJoinBPT));
     }
 
     /**
