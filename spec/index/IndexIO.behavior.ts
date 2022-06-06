@@ -94,29 +94,24 @@ export function describeBehaviorOfIndexIO(
       await instance
         .connect(depositor)
         ['balanceOf(address)'](depositor.address),
+      '\n\n',
     );
   });
 
   describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
-    it('perform join test', async () => {
-      console.log(
-        'Total BPT supply: ',
-        await investmentPoolToken['totalSupply()'](),
-      );
-      console.log(
-        'Approved relayer: ',
-        await IVault__factory.connect(BALANCER_VAULT, depositor)[
-          'hasApprovedRelayer(address,address)'
-        ](depositor.address, instance.address),
-      );
+    it('it transfers tokens from the user,', async () => {
       await instance
         .connect(depositor)
         ['userDepositSingleForExactOut(uint256[],uint256,uint256)'](
           amountsIn,
-          ethers.utils.parseUnits('1', 'wei'),
+          ethers.utils.parseUnits('1', 'gwei'),
           0,
         );
 
+      console.log(
+        'Total BPT supply: ',
+        await investmentPoolToken['totalSupply()'](),
+      );
       console.log(
         'User Insrt-Index balance after single deposit: ',
         await instance['balanceOf(address)'](depositor.address),
@@ -125,6 +120,13 @@ export function describeBehaviorOfIndexIO(
         'Index BPT balance after single deposit: ',
         await investmentPoolToken['balanceOf(address)'](instance.address),
       );
+    });
+
+    it('query test', async () => {
+      const [bptOut, amountsInned] = await instance.callStatic[
+        'queryUserDepositSingleForExactOut(uint256[],uint256,uint256)'
+      ](amountsIn, ethers.utils.parseUnits('1', 'wei'), 0);
+      console.log(bptOut, amountsInned);
     });
   });
 }
