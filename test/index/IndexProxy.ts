@@ -44,6 +44,7 @@ describe.only('IndexProxy', () => {
         indexDiamond.address,
         '0xaCd615B3705B9c880E4E7293f1030B34e57B4c1c', // abitrum mainnet address
         // '0x48767F9F868a4A7b86A90736632F6E44C2df7fa9', ethereum mainnet address
+        BALANCER_VAULT,
       ),
     ].map(function (f) {
       return {
@@ -124,10 +125,9 @@ describe.only('IndexProxy', () => {
 
     const deployIndexTx = await core
       .connect(deployer)
-      ['deployIndex(address[],uint256[],address,uint16)'](
+      ['deployIndex(address[],uint256[],uint16)'](
         tokensArg,
         weightsArg,
-        BALANCER_VAULT,
         ethers.constants.Zero,
       );
 

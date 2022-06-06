@@ -16,24 +16,28 @@ import { IndexManagerStorage } from './IndexManagerStorage.sol';
 contract IndexManager is IIndexManager, OwnableInternal {
     address public immutable INDEX_DIAMOND;
     address public immutable INVESTMENT_POOL_FACTORY;
+    address public immutable BALANCER_VAULT;
 
-    constructor(address indexDiamond, address balancerInvestmentPoolFactory) {
+    constructor(
+        address indexDiamond,
+        address balancerInvestmentPoolFactory,
+        address balancerVault
+    ) {
         INDEX_DIAMOND = indexDiamond;
-
         INVESTMENT_POOL_FACTORY = balancerInvestmentPoolFactory;
+        BALANCER_VAULT = balancerVault;
     }
 
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
-        address balancerVault,
         uint16 exitFee
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new IndexProxy(
                 INDEX_DIAMOND,
                 INVESTMENT_POOL_FACTORY,
-                balancerVault,
+                BALANCER_VAULT,
                 tokens,
                 weights,
                 ++IndexManagerStorage.layout().count,

@@ -21,7 +21,6 @@ contract IndexProxy is Proxy {
     using AddressUtils for address;
 
     address private immutable INDEX_DIAMOND;
-    address internal immutable BALANCER_VAULT;
 
     constructor(
         address indexDiamond,
@@ -33,7 +32,6 @@ contract IndexProxy is Proxy {
         uint16 exitFee
     ) {
         INDEX_DIAMOND = indexDiamond;
-        BALANCER_VAULT = balancerVault;
 
         string memory metadata = string(
             abi.encodePacked('INSRT-INDEX-', address(this).toString())
@@ -67,7 +65,7 @@ contract IndexProxy is Proxy {
 
         uint256 indexTokensLength = tokens.length;
         for (uint256 i; i < indexTokensLength; ) {
-            tokens[i].approve(BALANCER_VAULT, type(uint256).max);
+            tokens[i].approve(balancerVault, type(uint256).max);
             unchecked {
                 ++i;
             }
