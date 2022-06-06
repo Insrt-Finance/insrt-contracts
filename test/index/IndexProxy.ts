@@ -23,7 +23,7 @@ import { BigNumber, ContractTransaction } from 'ethers';
 
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
 
-describe.only('IndexProxy', () => {
+describe('IndexProxy', () => {
   let snapshotId: number;
 
   let core: ICore;
