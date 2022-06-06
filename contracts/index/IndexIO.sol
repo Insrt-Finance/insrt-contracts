@@ -29,9 +29,12 @@ contract IndexIO is IndexInternal, IIndexIO {
      */
     function initializePoolByDeposit(uint256[] memory amountsIn) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IInvestmentPool.JoinKind kind = IInvestmentPool.JoinKind.INIT;
 
-        bytes memory userData = abi.encode(kind, amountsIn);
+        bytes memory userData = abi.encode(
+            IInvestmentPool.JoinKind.INIT,
+            amountsIn
+        );
+
         IVault.JoinPoolRequest memory request = _constructJoinRequest(
             l.tokens,
             amountsIn,
@@ -72,14 +75,12 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 minBPTAmountOut
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IInvestmentPool.JoinKind kind = IInvestmentPool
-            .JoinKind
-            .EXACT_TOKENS_IN_FOR_BPT_OUT;
-        //To perform an Join of kind `EXACT_TOKENS_IN_FOR_BPT_OUT` the `userData` variable
-        //must contain the encoded "kind" of join, and the amounts of tokens given for the joins, and
-        //the minBPTAmountOut.
-        //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/d2794ef7d8f6d321cde36b7c536e8d51971688bd/pkg/interfaces/contracts/pool-weighted/WeightedPoolUserData.sol#L49
-        bytes memory userData = abi.encode(kind, amountsIn, minBPTAmountOut);
+
+        bytes memory userData = abi.encode(
+            IInvestmentPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+            amountsIn,
+            minBPTAmountOut
+        );
 
         IVault.JoinPoolRequest memory request = _constructJoinRequest(
             l.tokens,
@@ -116,10 +117,12 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 tokenIndex
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IInvestmentPool.JoinKind kind = IInvestmentPool
-            .JoinKind
-            .TOKEN_IN_FOR_EXACT_BPT_OUT;
-        bytes memory userData = abi.encode(kind, bptAmountOut, tokenIndex);
+
+        bytes memory userData = abi.encode(
+            IInvestmentPool.JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT,
+            bptAmountOut,
+            tokenIndex
+        );
 
         IVault.JoinPoolRequest memory request = _constructJoinRequest(
             l.tokens,
