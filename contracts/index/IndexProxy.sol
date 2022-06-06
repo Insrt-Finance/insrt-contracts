@@ -8,6 +8,7 @@ import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
+import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 
 import { IInvestmentPoolFactory } from '../balancer/IInvestmentPoolFactory.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
@@ -17,6 +18,8 @@ import { IndexStorage } from './IndexStorage.sol';
  * @title Upgradeable proxy with externally controlled Index implementation
  */
 contract IndexProxy is Proxy {
+    using AddressUtils for address;
+
     address private immutable INDEX_DIAMOND;
 
     constructor(
@@ -29,17 +32,16 @@ contract IndexProxy is Proxy {
     ) {
         INDEX_DIAMOND = indexDiamond;
 
-        IndexStorage.Layout storage indexLayout = IndexStorage.layout();
-        ERC4626BaseStorage.Layout storage vaultLayout = ERC4626BaseStorage
-            .layout();
+        string memory metadata = string(
+            abi.encodePacked('INSRT-INDEX-', address(this).toString())
+        );
 
-        // deploy investment pool and store as base asset
+        // deploy Balancer pool
 
-        vaultLayout.asset = IInvestmentPoolFactory(investmentPoolFactory)
+        address balancerPool = IInvestmentPoolFactory(investmentPoolFactory)
             .create(
-                // TODO: metadata naming conventions?
-                'TODO: name',
-                'TODO: symbol',
+                metadata,
+                metadata,
                 tokens,
                 weights,
                 0.02 ether, // swapFeePercentage: 2%
@@ -50,10 +52,15 @@ contract IndexProxy is Proxy {
                 0
             );
 
-        indexLayout.id = id;
-        indexLayout.exitFee = exitFee;
-        indexLayout.poolId = IInvestmentPool(vaultLayout.asset).getPoolId(); //fetch investment pool poolId for indexbase functionality
-        indexLayout.tokens = tokens;
+        // set balancer pool as base ERC4626 asset
+        ERC4626BaseStorage.layout().asset = balancerPool;
+
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        l.id = id;
+        l.exitFee = exitFee;
+        l.poolId = IInvestmentPool(balancerPool).getPoolId();
+        l.tokens = tokens;
     }
 
     /**

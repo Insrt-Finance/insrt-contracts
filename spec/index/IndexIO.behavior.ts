@@ -129,4 +129,27 @@ export function describeBehaviorOfIndexIO(
       console.log(bptOut, amountsInned);
     });
   });
+
+  describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
+    it('it transfers all tokens from the user', async () => {
+      await instance
+        .connect(depositor)
+        ['userDepositExactInForAnyOut(uint256[],uint256)'](
+          amountsIn,
+          ethers.utils.parseUnits('1', 'wei'),
+        );
+      console.log(
+        'Total BPT supply: ',
+        await investmentPoolToken['totalSupply()'](),
+      );
+      console.log(
+        'User Insrt-Index balance after single deposit: ',
+        await instance['balanceOf(address)'](depositor.address),
+      );
+      console.log(
+        'Index BPT balance after single deposit: ',
+        await investmentPoolToken['balanceOf(address)'](instance.address),
+      );
+    });
+  });
 }

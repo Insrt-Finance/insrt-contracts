@@ -71,17 +71,46 @@ contract IndexIO is IndexInternal, IIndexIO {
      * @inheritdoc IIndexIO
      */
     function userDepositExactInForAnyOut(
-        uint256[] memory amounts,
+        uint256[] memory amountsIn,
         uint256 minBPTAmountOut
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest memory request = _constructJoinExactInRequest(
-            l,
-            amounts,
-            minBPTAmountOut
+        IInvestmentPool.JoinKind kind = IInvestmentPool
+            .JoinKind
+            .EXACT_TOKENS_IN_FOR_BPT_OUT;
+        //To perform an Join of kind `EXACT_TOKENS_IN_FOR_BPT_OUT` the `userData` variable
+        //must contain the encoded "kind" of join, and the amounts of tokens given for the joins, and
+        //the minBPTAmountOut.
+        //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/d2794ef7d8f6d321cde36b7c536e8d51971688bd/pkg/interfaces/contracts/pool-weighted/WeightedPoolUserData.sol#L49
+        bytes memory userData = abi.encode(kind, amountsIn, minBPTAmountOut);
+
+        IVault.JoinPoolRequest memory request = _constructJoinRequest(
+            l.tokens,
+            amountsIn,
+            userData
         );
 
-        _performJoinAndMint(minBPTAmountOut, l.poolId, request);
+        // Transfer tokens from user to Insrt-Index
+        // Approve Balancer Vault from Insrt-Index to take received tokens
+        IERC20[] memory tokens = l.tokens;
+        uint256 tokensLength = tokens.length;
+        for (uint256 i; i < tokensLength; ) {
+            tokens[i].transferFrom(msg.sender, address(this), amountsIn[i]);
+            tokens[i].approve(BALANCER_VAULT, amountsIn[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        IVault(BALANCER_VAULT).joinPool(
+            l.poolId,
+            address(this),
+            address(this),
+            request
+        );
+
+        //Note: workaround for same functionality as ERC4626._mint
+        _mint(msg.sender, _previewDeposit(minBPTAmountOut));
     }
 
     /**
