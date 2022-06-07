@@ -1,11 +1,12 @@
 import { ethers } from 'hardhat';
 import {
   IIndex,
+  IVault,
   IVault__factory,
   SolidStateERC20Mock,
   SolidStateERC20Mock__factory,
 } from '../../typechain-types';
-import { BigNumber, BigNumberish, ContractTransaction } from 'ethers';
+import { BigNumber } from 'ethers';
 import {
   describeBehaviorOfSolidStateERC4626,
   SolidStateERC4626BehaviorArgs,
@@ -30,16 +31,10 @@ export function describeBehaviorOfIndexIO(
   const assets: SolidStateERC20Mock[] = [];
   const amountsIn: BigNumber[] = [];
   let BALANCER_VAULT = '';
-  let balVaultInstance;
+  let balVaultInstance: IVault;
 
   before(async () => {
     [depositor] = await ethers.getSigners();
-    BALANCER_VAULT = await getBalancerContractAddress(
-      '20210418-vault',
-      'Vault',
-      'arbitrum',
-    );
-    balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
     let totalWeight: BigNumber = BigNumber.from('0');
     const mintAmount = ethers.utils.parseEther('10000'); //large value to suffice for all tests
     const tokenLength = args.tokens.length;
@@ -67,6 +62,12 @@ export function describeBehaviorOfIndexIO(
 
   beforeEach(async () => {
     instance = await deploy();
+    BALANCER_VAULT = await getBalancerContractAddress(
+      '20210418-vault',
+      'Vault',
+      'arbitrum',
+    );
+    balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
     console.log('\nInitialization of underlying Balancer Investment Pool: \n');
     await assets[0]
       .connect(depositor)
@@ -111,17 +112,52 @@ export function describeBehaviorOfIndexIO(
   });
 
   describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
-    it('it transfers all tokens from the user', async () => {
-      const [bptOut, amountsInned] = await instance.callStatic[
+    it('it mints instance tokens to user at 1:1 for BPT received', async () => {
+      const minBPTOut = ethers.utils.parseUnits('1', 'gwei');
+      const [bptOut, amountsRequired] = await instance.callStatic[
         'queryUserDepositExactInForAnyOut(uint256[],uint256)'
-      ](amountsIn, ethers.utils.parseUnits('1', 'wei'));
+      ](amountsIn, minBPTOut);
 
+      await expect(() =>
+        instance
+          .connect(depositor)
+          ['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, bptOut),
+      ).to.changeTokenBalance(instance, depositor, bptOut);
+    });
+
+    it('transfers all of the deposited token amounts from user to Balancer Vault', async () => {
+      const minBPTOut = ethers.utils.parseUnits('1', 'gwei');
+      const [bptOut, amountsRequired] = await instance.callStatic[
+        'queryUserDepositExactInForAnyOut(uint256[],uint256)'
+      ](amountsIn, minBPTOut);
+
+      const preJoinVaultBalances = [
+        await assets[0].balanceOf(BALANCER_VAULT),
+        await assets[1].balanceOf(BALANCER_VAULT),
+      ];
+      const preJoinUserBalances = [
+        await assets[0].balanceOf(depositor.address),
+        await assets[1].balanceOf(depositor.address),
+      ];
       await instance
         .connect(depositor)
-        ['userDepositExactInForAnyOut(uint256[],uint256)'](
-          amountsIn,
-          ethers.utils.parseUnits('1', 'gwei'),
+        ['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, bptOut);
+      const postJoinVaultBalances = [
+        await assets[0].balanceOf(BALANCER_VAULT),
+        await assets[1].balanceOf(BALANCER_VAULT),
+      ];
+      const postJoinUserBalances = [
+        await assets[0].balanceOf(depositor.address),
+        await assets[1].balanceOf(depositor.address),
+      ];
+      for (let i = 0; i < assets.length; i++) {
+        expect(preJoinVaultBalances[i]).to.eq(
+          postJoinVaultBalances[i].sub(amountsIn[i]),
         );
+        expect(preJoinUserBalances[i]).to.eq(
+          postJoinUserBalances[i].add(amountsIn[i]),
+        );
+      }
     });
   });
 }
