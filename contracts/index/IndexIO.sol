@@ -27,7 +27,7 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initialize(uint256[] memory poolTokenAmounts, address beneficiary)
+    function initialize(uint256[] memory poolTokenAmounts, address receiver)
         external
     {
         bytes memory userData = abi.encode(
@@ -38,7 +38,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         _joinPool(poolTokenAmounts, userData);
 
         _mint(
-            beneficiary,
+            receiver,
             _previewDeposit(IERC20(_asset()).balanceOf(address(this)))
         );
     }
@@ -49,7 +49,7 @@ contract IndexIO is IndexInternal, IIndexIO {
     function deposit(
         uint256[] memory poolTokenAmounts,
         uint256 minAssetAmount,
-        address beneficiary
+        address receiver
     ) external returns (uint256 assetAmount) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
@@ -82,7 +82,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         assetAmount = newSupply - oldSupply;
 
-        _mint(beneficiary, assetAmount);
+        _mint(receiver, assetAmount);
     }
 
     /**
@@ -91,7 +91,7 @@ contract IndexIO is IndexInternal, IIndexIO {
     function redeem(
         uint256 shareAmount,
         uint256[] calldata minPoolTokenAmounts,
-        address beneficiary
+        address receiver
     ) external returns (uint256[] memory poolTokenAmounts) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
@@ -105,7 +105,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             remainingSharesOut
         );
 
-        _exitPool(l, minPoolTokenAmounts, userData, beneficiary);
+        _exitPool(l, minPoolTokenAmounts, userData, receiver);
 
         _withdraw(msg.sender, msg.sender, msg.sender, 0, shareAmount, 0, 0);
         // TODO: set poolTokenAmounts values
@@ -118,7 +118,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 shareAmount,
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
-        address beneficiary
+        address receiver
     ) external returns (uint256[] memory poolTokenAmounts) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
@@ -133,7 +133,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         );
 
-        _exitPool(l, minPoolTokenAmounts, userData, beneficiary);
+        _exitPool(l, minPoolTokenAmounts, userData, receiver);
 
         _withdraw(msg.sender, msg.sender, msg.sender, 0, shareAmount, 0, 0);
 

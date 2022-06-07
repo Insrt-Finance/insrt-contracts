@@ -10,9 +10,9 @@ interface IIndexIO {
      * @notice initialize the Balancer InvestmentPool
      * @dev internal Balancer call will revert if called more than once
      * @param poolTokenAmounts the amounts of each token deposited
-     * @param beneficiary recipient of initial BPT supply
+     * @param receiver recipient of initial BPT supply
      */
-    function initialize(uint256[] memory poolTokenAmounts, address beneficiary)
+    function initialize(uint256[] memory poolTokenAmounts, address receiver)
         external;
 
     /**
@@ -22,13 +22,13 @@ interface IIndexIO {
      * returns insrt-index shares to user
      * @param poolTokenAmounts the amounts of underlying tokens in balancer investmentPool
      * @param minAssetAmount the minimum amount of BPT expected to be given back
-     * @param beneficiary recipient of minted Index shares
+     * @param receiver recipient of minted Index shares
      * @return shareAmount quantity of shares to mint
      */
     function deposit(
         uint256[] memory poolTokenAmounts,
         uint256 minAssetAmount,
-        address beneficiary
+        address receiver
     ) external returns (uint256 shareAmount);
 
     /**
@@ -37,13 +37,13 @@ interface IIndexIO {
      * to Balancer InvestmentPool in exchange for tokens, sent to the user. Shares are burnt.
      * @param shareAmount quantity of Index shares to redeem
      * @param minPoolTokenAmounts the minimum amounts of pool tokens received for the withdraw
-     * @param beneficiary recipient of withdrawn pool tokens
+     * @param receiver recipient of withdrawn pool tokens
      * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function redeem(
         uint256 shareAmount,
         uint256[] calldata minPoolTokenAmounts,
-        address beneficiary
+        address receiver
     ) external returns (uint256[] memory poolTokenAmounts);
 
     /**
@@ -53,13 +53,13 @@ interface IIndexIO {
      * @param shareAmount quantity of Index shares to redeem
      * @param minPoolTokenAmounts the amounts of underlying token received in exchange for shares
      * @param tokenId the id of the token to be received
-     * @param beneficiary recipient of withdrawn pool tokens
+     * @param receiver recipient of withdrawn pool tokens
      * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function redeem(
         uint256 shareAmount,
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
-        address beneficiary
+        address receiver
     ) external returns (uint256[] memory poolTokenAmounts);
 }
