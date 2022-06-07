@@ -74,6 +74,8 @@ describe('IndexProxy', () => {
       };
     });
 
+    const indexSelectors = new Set();
+
     const indexFacetCuts = [
       await new IndexBase__factory(deployer).deploy(
         balancerVault.address,
@@ -87,13 +89,16 @@ describe('IndexProxy', () => {
         balancerVault.address,
         BALANCER_HELPERS,
       ),
+      await new SolidStateERC20Mock__factory(deployer).deploy(
+        ethers.constants.Zero,
+      ),
     ].map(function (f) {
       return {
         target: f.address,
         action: 0,
-        selectors: Object.keys(f.interface.functions).map((fn) =>
-          f.interface.getSighash(fn),
-        ),
+        selectors: Object.keys(f.interface.functions)
+          .filter((fn) => !indexSelectors.has(fn) && indexSelectors.add(fn))
+          .map((fn) => f.interface.getSighash(fn)),
       };
     });
 
@@ -113,15 +118,9 @@ describe('IndexProxy', () => {
 
     const tokens = [
       await new SolidStateERC20Mock__factory(deployer).deploy(
-        'token1',
-        'T1',
-        ethers.BigNumber.from('18'),
         ethers.utils.parseEther('10000'),
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy(
-        'token2',
-        'T2',
-        ethers.BigNumber.from('18'),
         ethers.utils.parseEther('10000'),
       ),
     ];
@@ -181,9 +180,13 @@ describe('IndexProxy', () => {
         ethers.provider,
       ),
     mint: async (recipient, amount) =>
-      await instance['__mint(address,uint256)'](recipient, amount),
+      await SolidStateERC20Mock__factory.connect(instance.address, deployer)[
+        '__mint(address,uint256)'
+      ](recipient, amount),
     burn: async (recipient, amount) =>
-      await instance['__burn(address,uint256)'](recipient, amount),
+      await SolidStateERC20Mock__factory.connect(instance.address, deployer)[
+        '__burn(address,uint256)'
+      ](recipient, amount),
     allowance: (holder, spender) =>
       instance.callStatic.allowance(holder, spender),
     mintAsset: async () => {
