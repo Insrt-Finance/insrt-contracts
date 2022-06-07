@@ -100,20 +100,37 @@ contract IndexIO is IndexInternal, IIndexIO {
      * @inheritdoc IIndexIO
      */
     function userWithdrawExactForSingle(
-        uint256 sharesOut,
+        uint256 bptAmountIn,
         uint256[] memory amountsOut,
         uint256 tokenId
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.ExitPoolRequest
-            memory request = _constructExitExactForSingleRequest(
-                l,
-                amountsOut,
-                sharesOut,
-                tokenId
-            );
 
-        _performExitAndWithdraw(sharesOut, l.poolId, request);
+        (uint256 feeBpt, uint256 remainingBPTIn) = _applyFee(
+            l.exitFee,
+            bptAmountIn
+        );
+
+        bytes memory userData = abi.encode(
+            IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+            remainingBPTIn,
+            tokenId
+        );
+
+        IVault.ExitPoolRequest memory request = _constructExitRequest(
+            l.tokens,
+            amountsOut,
+            userData
+        );
+
+        IVault(BALANCER_VAULT).exitPool(
+            l.poolId,
+            address(this),
+            payable(address(this)),
+            request
+        );
+
+        _withdraw(bptAmountIn, msg.sender, msg.sender);
     }
 
     //TODO: Still WIP to identify how to apply a fee.
