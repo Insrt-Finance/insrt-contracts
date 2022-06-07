@@ -54,6 +54,35 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     /**
+     * @notice construct Balancer exit request, exchange BPT for underlying pool token(s) and burn user shares
+     * @param l index layout struct
+     * @param sharesOut the insrt-index shares to withdraw
+     * @param minAmountsOut minimum amounts to be returned by Balancer
+     * @param userData encoded exit parameters
+     */
+    function _exitPool(
+        IndexStorage.Layout storage l,
+        uint256 sharesOut,
+        uint256[] memory minAmountsOut,
+        bytes memory userData
+    ) internal {
+        IVault.ExitPoolRequest memory request = _constructExitRequest(
+            l.tokens,
+            minAmountsOut,
+            userData
+        );
+
+        IVault(BALANCER_VAULT).exitPool(
+            l.poolId,
+            address(this),
+            payable(msg.sender),
+            request
+        );
+
+        _withdraw(sharesOut, msg.sender, msg.sender);
+    }
+
+    /**
      * @notice function to call exitPool in Balancer vault, and withdraw/burn Insrt-index shares of user
      * @dev used for all exits as the functionality is common
      * @param sharesOut the amounts
