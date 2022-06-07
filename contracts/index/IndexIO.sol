@@ -48,7 +48,7 @@ contract IndexIO is IndexInternal, IIndexIO {
      */
     function deposit(
         uint256[] memory poolTokenAmounts,
-        uint256 minAssetAmount,
+        uint256 minShareAmount,
         address receiver
     ) external returns (uint256 assetAmount) {
         IndexStorage.Layout storage l = IndexStorage.layout();
@@ -56,7 +56,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
             poolTokenAmounts,
-            minAssetAmount
+            minShareAmount
         );
 
         IERC20[] memory tokens = l.tokens;

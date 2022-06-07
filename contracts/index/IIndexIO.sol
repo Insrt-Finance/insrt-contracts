@@ -21,13 +21,13 @@ interface IIndexIO {
      * into InvestmentPool, receives BPT in exchange to store in insrt-index,
      * returns insrt-index shares to user
      * @param poolTokenAmounts the amounts of underlying tokens in balancer investmentPool
-     * @param minAssetAmount the minimum amount of BPT expected to be given back
+     * @param minShareAmount the minimum acceptable number of shares to be minted
      * @param receiver recipient of minted Index shares
      * @return shareAmount quantity of shares to mint
      */
     function deposit(
         uint256[] memory poolTokenAmounts,
-        uint256 minAssetAmount,
+        uint256 minShareAmount,
         address receiver
     ) external returns (uint256 shareAmount);
 
