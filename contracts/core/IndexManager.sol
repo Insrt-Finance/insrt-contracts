@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 
 import { IIndex } from '../index/IIndex.sol';
 import { IndexProxy } from '../index/IndexProxy.sol';
@@ -15,6 +16,8 @@ import { IndexManagerStorage } from './IndexManagerStorage.sol';
  * @dev deployed standalone and connected to core as diamond facet
  */
 contract IndexManager is IIndexManager, OwnableInternal {
+    using SafeERC20 for IERC20;
+
     address public immutable INDEX_DIAMOND;
     address public immutable INVESTMENT_POOL_FACTORY;
     address public immutable BALANCER_VAULT;
@@ -49,7 +52,7 @@ contract IndexManager is IIndexManager, OwnableInternal {
 
         uint256 length = tokens.length;
         for (uint256 i; i < length; ) {
-            tokens[i].transferFrom(msg.sender, deployment, amounts[i]);
+            tokens[i].safeTransferFrom(msg.sender, deployment, amounts[i]);
             unchecked {
                 ++i;
             }

@@ -79,7 +79,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         IERC20[] memory tokens = l.tokens;
         uint256 tokensLength = tokens.length;
         for (uint256 i; i < tokensLength; ) {
-            tokens[i].transferFrom(msg.sender, address(this), amountsIn[i]);
+            tokens[i].safeTransferFrom(msg.sender, address(this), amountsIn[i]);
             unchecked {
                 ++i;
             }
@@ -123,7 +123,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         bytes32 poolId = l.poolId;
 
         IERC20 depositToken = l.tokens[tokenIndex];
-        depositToken.transferFrom(
+        depositToken.safeTransferFrom(
             msg.sender,
             address(this),
             amounts[tokenIndex]

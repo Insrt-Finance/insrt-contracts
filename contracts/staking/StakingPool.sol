@@ -52,7 +52,9 @@ contract StakingPool is IStakingPool {
             l.userDepositInfo[msg.sender].accruedRewards = claims;
         }
 
+        // no need for SafeERC20#safeTransferFrom token is part of Insrt
         IERC20(l.productToken).transferFrom(msg.sender, address(this), amount);
+
         l.userDepositInfo[msg.sender].previousDepositStamp = block.timestamp;
         l.userDepositInfo[msg.sender].duration = duration;
         l.userDepositInfo[msg.sender].amount += amount;
@@ -78,7 +80,10 @@ contract StakingPool is IStakingPool {
         uint256 totalClaims = outstandingClaims +
             l.userDepositInfo[msg.sender].accruedRewards;
 
+        // no need for SafeERC20#safeTransferFrom token is part of Insrt
         IERC20(INSRT).transferFrom(address(this), msg.sender, totalClaims);
+
+        // no need for SafeERC20#safeTransferFrom token is part of Insrt
         IERC20(l.productToken).transferFrom(
             address(this),
             msg.sender,
