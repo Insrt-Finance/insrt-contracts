@@ -37,10 +37,10 @@ export function describeBehaviorOfIndexIO(
     [depositor] = await ethers.getSigners();
     let totalWeight: BigNumber = BigNumber.from('0');
     const mintAmount = ethers.utils.parseEther('10000'); //large value to suffice for all tests
-    const tokenLength = args.tokens.length;
+    const tokensLength = args.tokens.length;
     //giving balance to depositor, calculation of totalWeights for deposit amounts
     //note: assumption is that tokens are already deployed, and weights.length == tokens.length
-    for (let i = 0; i < tokenLength; i++) {
+    for (let i = 0; i < tokensLength; i++) {
       let asset = SolidStateERC20Mock__factory.connect(
         args.tokens[i],
         depositor,
@@ -54,7 +54,7 @@ export function describeBehaviorOfIndexIO(
     }
 
     //tokens and weights must be ordered so that weight position matches token position
-    for (let i = 0; i < args.tokens.length; i++) {
+    for (let i = 0; i < tokensLength; i++) {
       let depositAmount = mintAmount.mul(args.weights[i]).div(totalWeight);
       amountsIn.push(depositAmount);
     }
@@ -68,46 +68,21 @@ export function describeBehaviorOfIndexIO(
       'arbitrum',
     );
     balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
-    console.log('\nInitialization of underlying Balancer Investment Pool: \n');
-    await assets[0]
-      .connect(depositor)
-      ['increaseAllowance(address,uint256)'](
-        instance.address,
-        amountsIn[0].mul(BigNumber.from('100')),
-      );
-    await assets[1]
-      .connect(depositor)
-      ['increaseAllowance(address,uint256)'](
-        instance.address,
-        amountsIn[1].mul(BigNumber.from('100')),
-      );
-    console.log(
-      '\nExpect total BPT supply to be greater than what was received by the pool, ' +
-        'and for the depositor to have an equal amount of Insrt-Index tokens as the balance of BPT in the Insrt-Index.\n',
-    );
+
+    for (let i = 0; i < assets.length; i++) {
+      await assets[i]
+        .connect(depositor)
+        ['increaseAllowance(address,uint256)'](
+          instance.address,
+          ethers.constants.MaxUint256,
+        );
+    }
+
     const investmentPoolAddress = await instance.asset();
+
     investmentPoolToken = SolidStateERC20Mock__factory.connect(
       investmentPoolAddress,
       depositor,
-    );
-    console.log(
-      'BPT Supply: ',
-      (await investmentPoolToken['totalSupply()']()).toBigInt(),
-    );
-    console.log(
-      'Index Balance of BPT: ',
-      (
-        await investmentPoolToken['balanceOf(address)'](instance.address)
-      ).toBigInt(),
-    );
-    console.log(
-      'User balance of Insrt-Index: ',
-      (
-        await instance
-          .connect(depositor)
-          ['balanceOf(address)'](depositor.address)
-      ).toBigInt(),
-      '\n\n',
     );
   });
 
