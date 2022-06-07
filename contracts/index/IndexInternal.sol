@@ -272,29 +272,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         exitRequest.toInternalBalance = false;
     }
 
-    //Note: may be unrequired
-    /**
-     * @notice function to check whether userInput amounts of tokens are enough to perform a Join
-     * to a Balancer pool
-     * @param userInputs the amounts of tokens provided
-     * @param queryResults the queried result for amounts needed to perform join
-     */
-    function _checkJoinAmounts(
-        uint256[] memory userInputs,
-        uint256[] memory queryResults
-    ) internal pure {
-        uint256 length = userInputs.length;
-        for (uint256 i; i < length; ) {
-            require(
-                userInputs[i] >= queryResults[i],
-                'Not enough tokens for Balancer Join'
-            );
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
     /**
      * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
      * @param fee the fee as 0-10000 value representing a two decimal point percentage
