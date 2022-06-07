@@ -23,73 +23,9 @@ contract IndexView is IndexInternal, IIndexView {
     /**
      * @inheritdoc IIndexView
      */
-    function queryUserDepositExactInForAnyOut(
-        uint256[] memory amounts,
-        uint256 minBPTAmountOut
-    ) external returns (uint256 bptOut, uint256[] memory amountsIn) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest memory request = _constructJoinExactInRequest(
-            l,
-            amounts,
-            minBPTAmountOut
-        );
-
-        (bptOut, amountsIn) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
-            l.poolId,
-            address(this),
-            address(this),
-            request
-        );
-    }
-
-    //TODO: Query exact out withdraw
-    /**
-     * @inheritdoc IIndexView
-     */
-    function queryUserWithdrawExactForAll(
-        uint256 sharesOut,
-        uint256[] calldata minAmountsOut
-    ) external returns (uint256 bptIn, uint256[] memory amountsOut) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        IVault.ExitPoolRequest
-            memory request = _constructExitExactForAllRequest(
-                l,
-                sharesOut,
-                minAmountsOut
-            );
-
-        (bptIn, amountsOut) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
-            l.poolId,
-            address(this),
-            msg.sender,
-            request
-        );
-    }
-
-    /**
-     * @inheritdoc IIndexView
-     */
-    function queryUserWithdrawExactForSingle(
-        uint256 sharesOut,
-        uint256[] memory minAmountsOut,
-        uint256 tokenId
-    ) external returns (uint256 bptIn, uint256[] memory amountsOut) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        IVault.ExitPoolRequest
-            memory request = _constructExitExactForSingleRequest(
-                l,
-                minAmountsOut,
-                sharesOut,
-                tokenId
-            );
-
-        (bptIn, amountsOut) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
-            l.poolId,
-            address(this),
-            msg.sender,
-            request
+    function getPool() external view returns (address poolAddress) {
+        (poolAddress, ) = IVault(BALANCER_VAULT).getPool(
+            IndexStorage.layout().poolId
         );
     }
 
@@ -98,14 +34,5 @@ contract IndexView is IndexInternal, IIndexView {
      */
     function getPoolId() external view returns (bytes32) {
         return _poolId();
-    }
-
-    /**
-     * @inheritdoc IIndexView
-     */
-    function getPool() external view returns (address poolAddress) {
-        (poolAddress, ) = IVault(BALANCER_VAULT).getPool(
-            IndexStorage.layout().poolId
-        );
     }
 }

@@ -52,10 +52,4 @@ interface IIndexIO {
         uint256[] memory amountsOut,
         uint256 tokenId
     ) external;
-
-    //missing until refined
-    function userWithdrawExactOut(
-        uint256 maxSharesIn,
-        uint256[] memory minAmountsOut
-    ) external;
 }

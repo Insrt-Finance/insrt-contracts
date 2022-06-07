@@ -14,6 +14,7 @@ import {
   IndexProxy__factory,
   IndexIO__factory,
   SolidStateERC20Mock__factory,
+  IVault,
   IVault__factory,
   IndexView__factory,
 } from '../../typechain-types';
@@ -23,30 +24,37 @@ import { BigNumber, ContractTransaction } from 'ethers';
 
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
 
+const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
+
 describe('IndexProxy', () => {
   let snapshotId: number;
 
+  let deployer: any;
+
+  let balancerVault: IVault;
   let core: ICore;
   let instance: IIndex;
+
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
   const amountsArg: BigNumber[] = [];
-  let BALANCER_VAULT = '';
-  let INVESTMENT_POOL_FACTORY = '';
-  let BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
 
   before(async () => {
-    const [deployer] = await ethers.getSigners();
-    BALANCER_VAULT = await getBalancerContractAddress(
+    [deployer] = await ethers.getSigners();
+
+    const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
       'Vault',
       'arbitrum',
     );
-    INVESTMENT_POOL_FACTORY = await getBalancerContractAddress(
+
+    const investmentPoolFactoryAddress = await getBalancerContractAddress(
       '20210907-investment-pool',
       'InvestmentPoolFactory',
       'arbitrum',
     );
+
+    balancerVault = IVault__factory.connect(balancerVaultAddress, deployer);
 
     const coreDiamond = await new Core__factory(deployer).deploy();
 
@@ -55,8 +63,8 @@ describe('IndexProxy', () => {
     const coreFacetCuts = [
       await new IndexManager__factory(deployer).deploy(
         indexDiamond.address,
-        INVESTMENT_POOL_FACTORY,
-        BALANCER_VAULT,
+        investmentPoolFactoryAddress,
+        balancerVault.address,
       ),
     ].map(function (f) {
       return {
@@ -68,26 +76,29 @@ describe('IndexProxy', () => {
       };
     });
 
+    const indexSelectors = new Set();
+
     const indexFacetCuts = [
       await new IndexBase__factory(deployer).deploy(
-        BALANCER_VAULT,
+        balancerVault.address,
         BALANCER_HELPERS,
       ),
       await new IndexIO__factory(deployer).deploy(
-        BALANCER_VAULT,
+        balancerVault.address,
         BALANCER_HELPERS,
       ),
       await new IndexView__factory(deployer).deploy(
-        BALANCER_VAULT,
+        balancerVault.address,
         BALANCER_HELPERS,
       ),
+      await new SolidStateERC20Mock__factory(deployer).deploy(),
     ].map(function (f) {
       return {
         target: f.address,
         action: 0,
-        selectors: Object.keys(f.interface.functions).map((fn) =>
-          f.interface.getSighash(fn),
-        ),
+        selectors: Object.keys(f.interface.functions)
+          .filter((fn) => !indexSelectors.has(fn) && indexSelectors.add(fn))
+          .map((fn) => f.interface.getSighash(fn)),
       };
     });
 
@@ -106,18 +117,8 @@ describe('IndexProxy', () => {
     core = ICore__factory.connect(coreDiamond.address, ethers.provider);
 
     const tokens = [
-      await new SolidStateERC20Mock__factory(deployer).deploy(
-        'token1',
-        'T1',
-        ethers.BigNumber.from('18'),
-        ethers.utils.parseEther('10000'),
-      ),
-      await new SolidStateERC20Mock__factory(deployer).deploy(
-        'token2',
-        'T2',
-        ethers.BigNumber.from('18'),
-        ethers.utils.parseEther('10000'),
-      ),
+      await new SolidStateERC20Mock__factory(deployer).deploy(),
+      await new SolidStateERC20Mock__factory(deployer).deploy(),
     ];
 
     const tokenAddresses = tokens
@@ -144,7 +145,13 @@ describe('IndexProxy', () => {
     for (let i = 0; i < tokens.length; i++) {
       await tokens[i]
         .connect(deployer)
+        .__mint(deployer.address, ethers.utils.parseUnits('10000', 18));
+      await tokens[i]
+        .connect(deployer)
         .approve(core.address, ethers.constants.MaxUint256);
+      await tokens[i]
+        .connect(deployer)
+        .approve(balancerVault.address, ethers.constants.MaxUint256);
     }
 
     const deployIndexTx = await core
@@ -175,13 +182,48 @@ describe('IndexProxy', () => {
         ethers.provider,
       ),
     mint: async (recipient, amount) =>
-      await instance['__mint(address,uint256)'](recipient, amount),
+      await SolidStateERC20Mock__factory.connect(instance.address, deployer)[
+        '__mint(address,uint256)'
+      ](recipient, amount),
     burn: async (recipient, amount) =>
-      await instance['__burn(address,uint256)'](recipient, amount),
+      await SolidStateERC20Mock__factory.connect(instance.address, deployer)[
+        '__burn(address,uint256)'
+      ](recipient, amount),
     allowance: (holder, spender) =>
       instance.callStatic.allowance(holder, spender),
-    mintAsset: async () => {
-      return {} as unknown as Promise<ContractTransaction>;
+    mintAsset: async (recipient, amount) => {
+      // use JoinKind EXACT_TOKENS_IN_FOR_BPT_OUT
+      const userData = ethers.utils.solidityPack(
+        ['uint256', 'uint256'],
+        [ethers.BigNumber.from('3'), amount],
+      );
+
+      const request = {
+        assets: tokensArg,
+        maxAmountsIn: await Promise.all(
+          tokensArg.map((t) =>
+            IERC20__factory.connect(t, ethers.provider).callStatic.balanceOf(
+              deployer.address,
+            ),
+          ),
+        ),
+        userData,
+        fromInternalBalance: false,
+      };
+
+      await balancerVault
+        .connect(deployer)
+        .joinPool(
+          await instance.callStatic.getPoolId(),
+          deployer.address,
+          deployer.address,
+          request,
+        );
+
+      return await IERC20__factory.connect(
+        await instance.callStatic.getPool(),
+        deployer,
+      ).transfer(recipient, amount);
     },
     name: 'string',
     symbol: 'string',

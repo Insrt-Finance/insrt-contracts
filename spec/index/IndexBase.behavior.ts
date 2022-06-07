@@ -12,13 +12,9 @@ export interface IndexBaseBehaviorArgs extends SolidStateERC4626BehaviorArgs {}
 export function describeBehaviorOfIndexBase(
   deploy: () => Promise<IIndexBase>,
   args: IndexBaseBehaviorArgs,
+  skips?: string[],
 ) {
   describe('::IndexBase', () => {
-    // TODO: fix spec tests and uncomment
-    // describeBehaviorOfERC4626(
-    //   Object.assign({}, args, {
-    //     deploy: async () => args.deploy() as unknown as ERC4626,
-    //   }), //as unknown as ERC4626BehaviorArgs,
-    // );
+    describeBehaviorOfSolidStateERC4626(deploy, args, skips);
   });
 }
