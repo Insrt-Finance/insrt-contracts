@@ -158,4 +158,49 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     function _totalAssets() internal view override returns (uint256) {
         return IERC20(_asset()).balanceOf(address(this));
     }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewDeposit
+     */
+    function _previewMint(uint256 shareAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assetAmount)
+    {
+        assetAmount = _previewDeposit(shareAmount);
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewRedeem
+     */
+    function _previewWithdraw(uint256 assetAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 shareAmount)
+    {
+        shareAmount = _previewRedeem(assetAmount);
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev apply exit fee to amount out
+     */
+    function _previewRedeem(uint256 shareAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assetAmount)
+    {
+        (, assetAmount) = _applyFee(
+            IndexStorage.layout().exitFee,
+            _convertToAssets(shareAmount)
+        );
+    }
 }
