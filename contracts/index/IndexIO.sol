@@ -35,18 +35,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             amountsIn
         );
 
-        IVault.JoinPoolRequest memory request = _constructJoinRequest(
-            l.tokens,
-            amountsIn,
-            userData
-        );
-
-        IVault(BALANCER_VAULT).joinPool(
-            l.poolId,
-            address(this),
-            address(this),
-            request
-        );
+        _joinPool(amountsIn, userData);
 
         // Mint an amount of shares to user for BPT received from Balancer Vault
         _mint(
@@ -70,12 +59,6 @@ contract IndexIO is IndexInternal, IIndexIO {
             minBPTAmountOut
         );
 
-        IVault.JoinPoolRequest memory request = _constructJoinRequest(
-            l.tokens,
-            amountsIn,
-            userData
-        );
-
         IERC20[] memory tokens = l.tokens;
         uint256 tokensLength = tokens.length;
         for (uint256 i; i < tokensLength; ) {
@@ -87,12 +70,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         uint256 oldSupply = _totalSupply();
 
-        IVault(BALANCER_VAULT).joinPool(
-            l.poolId,
-            address(this),
-            address(this),
-            request
-        );
+        _joinPool(amountsIn, userData);
 
         uint256 newSupply = IERC20(_asset()).balanceOf(address(this));
 
@@ -103,7 +81,7 @@ contract IndexIO is IndexInternal, IIndexIO {
      * @inheritdoc IIndexIO
      */
     function userDepositSingleForExactOut(
-        uint256[] memory amounts,
+        uint256[] memory amountsIn,
         uint256 bptAmountOut,
         uint256 tokenIndex
     ) external {
@@ -115,26 +93,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenIndex
         );
 
-        IVault.JoinPoolRequest memory request = _constructJoinRequest(
-            l.tokens,
-            amounts,
-            userData
-        );
-        bytes32 poolId = l.poolId;
-
         IERC20 depositToken = l.tokens[tokenIndex];
         depositToken.safeTransferFrom(
             msg.sender,
             address(this),
-            amounts[tokenIndex]
+            amountsIn[tokenIndex]
         ); //perhaps input may be a single value
 
-        IVault(BALANCER_VAULT).joinPool(
-            poolId,
-            address(this),
-            address(this),
-            request
-        );
+        _joinPool(amountsIn, userData);
 
         //Mint shares to joining user
         _mint(msg.sender, _previewDeposit(bptAmountOut));

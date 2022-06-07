@@ -28,6 +28,25 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         BALANCER_HELPERS = balancerHelpers;
     }
 
+    function _joinPool(uint256[] memory amountsIn, bytes memory userData)
+        internal
+    {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.JoinPoolRequest memory request = _constructJoinRequest(
+            l.tokens,
+            amountsIn,
+            userData
+        );
+
+        IVault(BALANCER_VAULT).joinPool(
+            _poolId(l),
+            address(this),
+            address(this),
+            request
+        );
+    }
+
     /**
      * @notice function to call joinPool in Balancer Vault and mint Insrt-index shares to user
      * @dev used for all joins as the functionality is common
