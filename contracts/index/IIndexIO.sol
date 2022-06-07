@@ -23,12 +23,13 @@ interface IIndexIO {
      * @param poolTokenAmounts the amounts of underlying tokens in balancer investmentPool
      * @param minAssetAmount the minimum amount of BPT expected to be given back
      * @param beneficiary recipient of minted Index shares
+     * @return shareAmount quantity of shares to mint
      */
     function deposit(
         uint256[] memory poolTokenAmounts,
         uint256 minAssetAmount,
         address beneficiary
-    ) external;
+    ) external returns (uint256 shareAmount);
 
     /**
      * @notice function which burns insrt-index shares and returns underlying tokens in Balancer InvestmentPool
@@ -37,12 +38,13 @@ interface IIndexIO {
      * @param assetAmount quantity of Index shares to redeem
      * @param minPoolTokenAmounts the minimum amounts of pool tokens received for the withdraw
      * @param beneficiary recipient of withdrawn pool tokens
+     * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function redeem(
         uint256 assetAmount,
         uint256[] calldata minPoolTokenAmounts,
         address beneficiary
-    ) external;
+    ) external returns (uint256[] memory poolTokenAmounts);
 
     /**
      * @notice function to withdraw Insrt-shares for a single underlying token
@@ -52,11 +54,12 @@ interface IIndexIO {
      * @param minPoolTokenAmounts the amounts of underlying token received in exchange for shares
      * @param tokenId the id of the token to be received
      * @param beneficiary recipient of withdrawn pool tokens
+     * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function redeem(
         uint256 assetAmount,
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address beneficiary
-    ) external;
+    ) external returns (uint256[] memory poolTokenAmounts);
 }
