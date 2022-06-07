@@ -40,7 +40,7 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         );
 
         IVault(BALANCER_VAULT).joinPool(
-            _poolId(l),
+            _poolId(),
             address(this),
             address(this),
             request
@@ -325,18 +325,11 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     /**
-     * @notice function to return the id of the Balancer Investment Pool corresponding to a target index
-     * @dev useful for querying properties of the Investment Pool underlying the index
-     * @param l the layout struct of the target index
+     * @notice get the ID of the underlying Balancer pool
      * @return poolId
      */
-    function _poolId(IndexStorage.Layout storage l)
-        internal
-        view
-        virtual
-        returns (bytes32)
-    {
-        return l.poolId;
+    function _poolId() internal view virtual returns (bytes32) {
+        return IndexStorage.layout().poolId;
     }
 
     /**
