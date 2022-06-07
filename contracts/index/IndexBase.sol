@@ -89,4 +89,15 @@ contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
     {
         assetAmount = super._previewRedeem(shareAmount);
     }
+
+    /**
+     * @inheritdoc IndexInternal
+     */
+    function _beforeWithdraw(
+        address owner,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal override(ERC4626BaseInternal, IndexInternal) {
+        super._beforeWithdraw(owner, assetAmount, shareAmount);
+    }
 }
