@@ -60,12 +60,10 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      */
     function _performExitAndWithdraw(
         uint256 sharesOut,
-        bytes32 poolId,
         IVault.ExitPoolRequest memory request
     ) internal {
-        //TODO: confirm this does not drain vault
         IVault(BALANCER_VAULT).exitPool(
-            poolId,
+            _poolId(),
             address(this),
             payable(msg.sender),
             request

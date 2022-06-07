@@ -93,7 +93,7 @@ contract IndexIO is IndexInternal, IIndexIO {
                 minAmountsOut
             );
 
-        _performExitAndWithdraw(sharesOut, l.poolId, request);
+        _performExitAndWithdraw(sharesOut, request);
     }
 
     /**
@@ -113,6 +113,6 @@ contract IndexIO is IndexInternal, IIndexIO {
                 tokenId
             );
 
-        _performExitAndWithdraw(sharesOut, l.poolId, request);
+        _performExitAndWithdraw(sharesOut, request);
     }
 }
