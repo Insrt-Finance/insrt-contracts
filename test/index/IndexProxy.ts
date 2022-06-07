@@ -29,6 +29,8 @@ const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitru
 describe('IndexProxy', () => {
   let snapshotId: number;
 
+  let deployer: any;
+
   let balancerVault: IVault;
   let core: ICore;
   let instance: IIndex;
@@ -38,7 +40,7 @@ describe('IndexProxy', () => {
   const amountsArg: BigNumber[] = [];
 
   before(async () => {
-    const [deployer] = await ethers.getSigners();
+    [deployer] = await ethers.getSigners();
 
     const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
@@ -150,6 +152,9 @@ describe('IndexProxy', () => {
       await tokens[i]
         .connect(deployer)
         .approve(core.address, ethers.constants.MaxUint256);
+      await tokens[i]
+        .connect(deployer)
+        .approve(balancerVault.address, ethers.constants.MaxUint256);
     }
 
     const deployIndexTx = await core
@@ -189,8 +194,39 @@ describe('IndexProxy', () => {
       ](recipient, amount),
     allowance: (holder, spender) =>
       instance.callStatic.allowance(holder, spender),
-    mintAsset: async () => {
-      return {} as unknown as Promise<ContractTransaction>;
+    mintAsset: async (recipient, amount) => {
+      // use JoinKind EXACT_TOKENS_IN_FOR_BPT_OUT
+      const userData = ethers.utils.solidityPack(
+        ['uint256', 'uint256'],
+        [ethers.BigNumber.from('3'), amount],
+      );
+
+      const request = {
+        assets: tokensArg,
+        maxAmountsIn: await Promise.all(
+          tokensArg.map((t) =>
+            IERC20__factory.connect(t, ethers.provider).callStatic.balanceOf(
+              deployer.address,
+            ),
+          ),
+        ),
+        userData,
+        fromInternalBalance: false,
+      };
+
+      await balancerVault
+        .connect(deployer)
+        .joinPool(
+          await instance.callStatic.getPoolId(),
+          deployer.address,
+          deployer.address,
+          request,
+        );
+
+      return await IERC20__factory.connect(
+        await instance.callStatic.getPool(),
+        deployer,
+      ).transfer(recipient, amount);
     },
     name: 'string',
     symbol: 'string',
