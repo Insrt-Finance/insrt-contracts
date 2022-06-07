@@ -30,17 +30,11 @@ export function describeBehaviorOfIndexView(
     instance = await deploy();
   });
 
-  describe('#getPool()', () => {
-    it('returns Balancer pool address', async function () {
-      expect(await instance.callStatic.getPool()).to.be.properAddress;
-    });
-  });
-
   describe('#getPoolId()', () => {
     it('returns Balancer pool id', async function () {
       const id = await instance.callStatic.getPoolId();
       const [pool] = await balancerVault.callStatic.getPool(id);
-      expect(pool).to.equal(await instance.callStatic.getPool());
+      expect(pool).to.equal(await instance.callStatic.asset());
     });
   });
 }

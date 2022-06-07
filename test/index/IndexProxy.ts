@@ -221,7 +221,7 @@ describe('IndexProxy', () => {
         );
 
       return await IERC20__factory.connect(
-        await instance.callStatic.getPool(),
+        await instance.callStatic.asset(),
         deployer,
       ).transfer(recipient, amount);
     },
