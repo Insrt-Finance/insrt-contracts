@@ -28,15 +28,21 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         BALANCER_HELPERS = balancerHelpers;
     }
 
-    function _joinPool(uint256[] memory amountsIn, bytes memory userData)
+    /**
+     * @notice construct Balancer join request and exchange underlying pool tokens for BPT
+     * @param amounts token quantities to deposit, in asset-sorted order
+     * @param userData encoded join parameters
+     */
+    function _joinPool(uint256[] memory amounts, bytes memory userData)
         internal
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        IVault.JoinPoolRequest memory request = _constructJoinRequest(
-            l.tokens,
-            amountsIn,
-            userData
+        IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(
+            _tokensToAssets(l.tokens),
+            amounts,
+            userData,
+            false
         );
 
         IVault(BALANCER_VAULT).joinPool(
@@ -66,93 +72,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         );
 
         _withdraw(sharesOut, msg.sender, msg.sender);
-    }
-
-    /**
-     * @notice function to construct the request needed for a user to deposit in an insrt-index
-     * @dev only works for JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT
-     * @param l the index layout
-     * @param amounts an array comprised of the amount of each underlying token
-     * @param minBPTAmountOut the minimum amount of BPT accepted as a return
-     * @return request a JoinPoolRequest constructed for EXACT_TOKENS_IN_FOR_BPT_OUT JoinKind
-     */
-    function _constructJoinExactInRequest(
-        IndexStorage.Layout storage l,
-        uint256[] memory amounts,
-        uint256 minBPTAmountOut
-    ) internal view returns (IVault.JoinPoolRequest memory request) {
-        IInvestmentPool.JoinKind kind = IInvestmentPool
-            .JoinKind
-            .EXACT_TOKENS_IN_FOR_BPT_OUT;
-        //To perform an Join of kind `EXACT_TOKENS_IN_FOR_BPT_OUT` the `userData` variable
-        //must contain the encoded "kind" of join, and the amounts of tokens given for the joins, and
-        //the minBPTAmountOut.
-        //Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/d2794ef7d8f6d321cde36b7c536e8d51971688bd/pkg/interfaces/contracts/pool-weighted/WeightedPoolUserData.sol#L49
-        bytes memory userData = abi.encode(kind, amounts, minBPTAmountOut);
-
-        request = _constructJoinRequest(l.tokens, amounts, userData);
-    }
-
-    /**
-     * @notice function to construct the request needed for a user to deposit a single token in an insert-index
-     * @dev only works for JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT
-     * @param l the index layout
-     * @param amounts an array comprised of the amount of each token provided (note: this would be of length 1 in this case)
-     * @param bptAmountOut the exact amount of BPT to be returned for the sinlge token join
-     * @param tokenIndex the index of the underyling token in the tokens array
-     * @return request a JoinPoolRequest constructed for TOKEN_IN_FOR_EXACT_BPT_OUT
-     */
-    function _constructJoinSingleForExactRequest(
-        IndexStorage.Layout storage l,
-        uint256[] memory amounts,
-        uint256 bptAmountOut,
-        uint256 tokenIndex
-    ) internal view returns (IVault.JoinPoolRequest memory request) {
-        IInvestmentPool.JoinKind kind = IInvestmentPool
-            .JoinKind
-            .TOKEN_IN_FOR_EXACT_BPT_OUT;
-
-        bytes memory userData = abi.encode(kind, bptAmountOut, tokenIndex);
-
-        request = _constructJoinRequest(l.tokens, amounts, userData);
-    }
-
-    /**
-     * @notice function to construct the request needed for a user to deposit all underlying tokens
-     * in an Insrt-Index, for an exact amount of BPT out
-     * @dev only works for JoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
-     * @param l the index layout
-     * @param amounts the amounts of each underlying token provided
-     * @param bptAmountOut the exact BPT expected
-     * @return request a JoinPoolRequest constructed for ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
-     */
-    function _constructJoinAllForExactRequest(
-        IndexStorage.Layout storage l,
-        uint256[] memory amounts,
-        uint256 bptAmountOut
-    ) internal view returns (IVault.JoinPoolRequest memory request) {
-        IInvestmentPool.JoinKind kind = IInvestmentPool
-            .JoinKind
-            .ALL_TOKENS_IN_FOR_EXACT_BPT_OUT;
-
-        bytes memory userData = abi.encode(kind, bptAmountOut);
-
-        request = _constructJoinRequest(l.tokens, amounts, userData);
-    }
-
-    //TODO: How to apply fee?
-    function _constructExitExactOutRequest(
-        IndexStorage.Layout storage l,
-        uint256[] memory amountsOut,
-        uint256 maxBPTAmountIn
-    ) internal view returns (IVault.ExitPoolRequest memory request) {
-        IInvestmentPool.ExitKind kind = IInvestmentPool
-            .ExitKind
-            .BPT_IN_FOR_EXACT_TOKENS_OUT;
-
-        bytes memory userData = abi.encode(kind, amountsOut, maxBPTAmountIn);
-
-        request = _constructExitRequest(l.tokens, amountsOut, userData);
     }
 
     /**
@@ -211,27 +130,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
         bytes memory userData = abi.encode(kind, remainingSharesOut);
 
         request = _constructExitRequest(l.tokens, minAmountsOut, userData);
-    }
-
-    /**
-     * @notice function to construct arbitrary join request
-     * @dev fromInternalBalance always set to false as the assumption is made that the user will not
-     * seek to use tokens they have already deposited elsewhere in Balancer Vault
-     * Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L364
-     * @param tokens the array of tokens to convert to assets
-     * @param maxAmountsIn the maximum amounts of tokens deposited for the join
-     * @param userData the userData for the join request
-     * @return joinRequest the constructed JoinPoolRequest
-     */
-    function _constructJoinRequest(
-        IERC20[] memory tokens,
-        uint256[] memory maxAmountsIn,
-        bytes memory userData
-    ) internal pure returns (IVault.JoinPoolRequest memory joinRequest) {
-        joinRequest.assets = _tokensToAssets(tokens);
-        joinRequest.maxAmountsIn = maxAmountsIn;
-        joinRequest.userData = userData;
-        joinRequest.fromInternalBalance = false;
     }
 
     /**
