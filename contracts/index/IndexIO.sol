@@ -48,9 +48,11 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function deposit(uint256[] memory poolTokenAmounts, uint256 minAssetAmount)
-        external
-    {
+    function deposit(
+        uint256[] memory poolTokenAmounts,
+        uint256 minAssetAmount,
+        address beneficiary
+    ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         bytes memory userData = abi.encode(
@@ -80,15 +82,17 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         uint256 newSupply = IERC20(_asset()).balanceOf(address(this));
 
-        _mint(msg.sender, newSupply - oldSupply);
+        _mint(beneficiary, newSupply - oldSupply);
     }
 
     /**
      * @inheritdoc IIndexIO
      */
-    function redeem(uint256 assetAmount, uint256[] calldata minPoolTokenAmounts)
-        external
-    {
+    function redeem(
+        uint256 assetAmount,
+        uint256[] calldata minPoolTokenAmounts,
+        address beneficiary
+    ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
@@ -100,7 +104,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             remainingSharesOut
         );
 
-        _exitPool(l, assetAmount, minPoolTokenAmounts, userData);
+        _exitPool(l, assetAmount, minPoolTokenAmounts, userData, beneficiary);
     }
 
     /**
@@ -109,7 +113,8 @@ contract IndexIO is IndexInternal, IIndexIO {
     function redeem(
         uint256 assetAmount,
         uint256[] memory minPoolTokenAmounts,
-        uint256 tokenId
+        uint256 tokenId,
+        address beneficiary
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
@@ -124,6 +129,6 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         );
 
-        _exitPool(l, assetAmount, minPoolTokenAmounts, userData);
+        _exitPool(l, assetAmount, minPoolTokenAmounts, userData, beneficiary);
     }
 }
