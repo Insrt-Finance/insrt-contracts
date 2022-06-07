@@ -48,42 +48,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     /**
-     * @notice function to call joinPool in Balancer Vault and mint Insrt-index shares to user
-     * @dev used for all joins as the functionality is common
-     * @param amountOut the expected BPT amount to come form the join
-     * @param poolId the id of the Balancer investment pool
-     * @param request the JoinPoolRequest struct to pass into the joinPool call
-     */
-    function _performJoinAndMint(
-        uint256 amountOut,
-        bytes32 poolId,
-        IVault.JoinPoolRequest memory request
-    ) internal {
-        (uint256 bptOut, ) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
-            poolId,
-            msg.sender,
-            address(this),
-            request
-        );
-
-        //TODO: Is amountsIn (2nd return variable by `queryJoin`) a better check than BPT Out?
-        //TODO: Check if balancer contains internal check => perhaps this check is needless
-        require(
-            bptOut >= amountOut,
-            'Not enough tokens provided for desired BPT out'
-        );
-
-        IVault(BALANCER_VAULT).joinPool(
-            poolId,
-            msg.sender,
-            address(this),
-            request
-        );
-        //Mint shares to joining user
-        _mint(bptOut, msg.sender);
-    }
-
-    /**
      * @notice function to call exitPool in Balancer vault, and withdraw/burn Insrt-index shares of user
      * @dev used for all exits as the functionality is common
      * @param sharesOut the amounts

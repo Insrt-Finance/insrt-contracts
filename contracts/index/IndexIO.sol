@@ -109,24 +109,6 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function userDepositAllForExactOut(
-        uint256[] memory amounts,
-        uint256 bptAmountOut
-    ) external {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest
-            memory request = _constructJoinAllForExactRequest(
-                l,
-                amounts,
-                bptAmountOut
-            );
-
-        _performJoinAndMint(bptAmountOut, l.poolId, request);
-    }
-
-    /**
-     * @inheritdoc IIndexIO
-     */
     function userWithdrawExactForAll(
         uint256 sharesOut,
         uint256[] calldata minAmountsOut

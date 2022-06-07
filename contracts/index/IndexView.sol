@@ -67,29 +67,6 @@ contract IndexView is IndexInternal, IIndexView {
         );
     }
 
-    /**
-     * @inheritdoc IIndexView
-     */
-    function queryUserDepositAllForExactOut(
-        uint256[] memory amounts,
-        uint256 bptAmountOut
-    ) external returns (uint256 bptOut, uint256[] memory amountsIn) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.JoinPoolRequest
-            memory request = _constructJoinAllForExactRequest(
-                l,
-                amounts,
-                bptAmountOut
-            );
-
-        (bptOut, amountsIn) = IBalancerHelpers(BALANCER_HELPERS).queryJoin(
-            l.poolId,
-            address(this),
-            address(this),
-            request
-        );
-    }
-
     //TODO: Query exact out withdraw
     /**
      * @inheritdoc IIndexView
