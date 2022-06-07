@@ -27,19 +27,20 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initialize(uint256[] memory amountsIn) external {
+    function initialize(uint256[] memory amounts, address beneficiary)
+        external
+    {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.INIT,
-            amountsIn
+            amounts
         );
 
-        _joinPool(amountsIn, userData);
+        _joinPool(amounts, userData);
 
-        // Mint an amount of shares to user for BPT received from Balancer Vault
         _mint(
-            msg.sender,
+            beneficiary,
             _previewDeposit(IERC20(_asset()).balanceOf(address(this)))
         );
     }

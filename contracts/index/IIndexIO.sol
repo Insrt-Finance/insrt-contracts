@@ -7,13 +7,12 @@ pragma solidity ^0.8.0;
  */
 interface IIndexIO {
     /**
-     * @notice function to initiliaze the Balancer InvestmentPool
-     * @dev required to be called once otherwise all other deposits will be reverted
-     * Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/823f7fe7d3cb45f9bc6bcdfb83af3d70c050d1d2/pkg/pool-utils/contracts/BasePool.sol#L220
-     * Note: CAN ONLY BE CALLED WHEN BPT == 0, SO ONLY ONCE AS SOME TOKENS ARE MINTED TO ZERO-ADDRESS SO SUPPLY IS NEVER AGAIN 0
-     * @param amountsIn the amounts of each token deposited
+     * @notice initialize the Balancer InvestmentPool
+     * @dev internal Balancer call will revert if called more than once
+     * @param amounts the amounts of each token deposited
+     * @param beneficiary recipient of initial BPT supply
      */
-    function initialize(uint256[] memory amountsIn) external;
+    function initialize(uint256[] memory amounts, address beneficiary) external;
 
     /**
      * @notice function to deposit an amount of tokens to Balancer InvestmentPool

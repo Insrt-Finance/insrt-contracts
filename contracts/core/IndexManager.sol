@@ -51,6 +51,7 @@ contract IndexManager is IIndexManager, OwnableInternal {
         );
 
         uint256 length = tokens.length;
+
         for (uint256 i; i < length; ) {
             tokens[i].safeTransferFrom(msg.sender, deployment, amounts[i]);
             unchecked {
@@ -58,7 +59,7 @@ contract IndexManager is IIndexManager, OwnableInternal {
             }
         }
 
-        IIndex(payable(deployment)).initialize(amounts);
+        IIndex(payable(deployment)).initialize(amounts, msg.sender);
 
         emit IndexDeployed(deployment);
     }
