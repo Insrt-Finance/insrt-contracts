@@ -111,24 +111,24 @@ export function describeBehaviorOfIndexIO(
     );
   });
 
-  describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
+  describe('#deposit(uint256[],uint256)', () => {
     it('it mints instance tokens to user at 1:1 for BPT received', async () => {
       const minBPTOut = ethers.utils.parseUnits('1', 'gwei');
       const [bptOut, amountsRequired] = await instance.callStatic[
-        'queryUserDepositExactInForAnyOut(uint256[],uint256)'
+        'querydeposit(uint256[],uint256)'
       ](amountsIn, minBPTOut);
 
       await expect(() =>
         instance
           .connect(depositor)
-          ['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, bptOut),
+          ['deposit(uint256[],uint256)'](amountsIn, bptOut),
       ).to.changeTokenBalance(instance, depositor, bptOut);
     });
 
     it('transfers all of the deposited token amounts from user to Balancer Vault', async () => {
       const minBPTOut = ethers.utils.parseUnits('1', 'gwei');
       const [bptOut, amountsRequired] = await instance.callStatic[
-        'queryUserDepositExactInForAnyOut(uint256[],uint256)'
+        'querydeposit(uint256[],uint256)'
       ](amountsIn, minBPTOut);
 
       const preJoinVaultBalances = [
@@ -141,7 +141,7 @@ export function describeBehaviorOfIndexIO(
       ];
       await instance
         .connect(depositor)
-        ['userDepositExactInForAnyOut(uint256[],uint256)'](amountsIn, bptOut);
+        ['deposit(uint256[],uint256)'](amountsIn, bptOut);
       const postJoinVaultBalances = [
         await assets[0].balanceOf(BALANCER_VAULT),
         await assets[1].balanceOf(BALANCER_VAULT),

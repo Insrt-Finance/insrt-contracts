@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat';
-import { IIndexBase } from '../../typechain-types';
+import { IIndex } from '../../typechain-types';
 
 import { BigNumber, BigNumberish, ContractTransaction } from 'ethers';
 import {
@@ -10,7 +10,7 @@ import {
 export interface IndexBaseBehaviorArgs extends SolidStateERC4626BehaviorArgs {}
 
 export function describeBehaviorOfIndexBase(
-  deploy: () => Promise<IIndexBase>,
+  deploy: () => Promise<IIndex>,
   args: IndexBaseBehaviorArgs,
   skips?: string[],
 ) {

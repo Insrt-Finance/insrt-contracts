@@ -27,17 +27,17 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initialize(uint256[] memory amounts, address beneficiary)
+    function initialize(uint256[] memory poolTokenAmounts, address beneficiary)
         external
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.INIT,
-            amounts
+            poolTokenAmounts
         );
 
-        _joinPool(amounts, userData);
+        _joinPool(poolTokenAmounts, userData);
 
         _mint(
             beneficiary,
@@ -48,22 +48,27 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function userDepositExactInForAnyOut(
-        uint256[] memory amountsIn,
-        uint256 minBPTAmountOut
-    ) external {
+    function deposit(uint256[] memory poolTokenAmounts, uint256 minAssetAmount)
+        external
+    {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-            amountsIn,
-            minBPTAmountOut
+            poolTokenAmounts,
+            minAssetAmount
         );
 
         IERC20[] memory tokens = l.tokens;
-        uint256 tokensLength = tokens.length;
-        for (uint256 i; i < tokensLength; ) {
-            tokens[i].safeTransferFrom(msg.sender, address(this), amountsIn[i]);
+
+        uint256 length = tokens.length;
+
+        for (uint256 i; i < length; ) {
+            tokens[i].safeTransferFrom(
+                msg.sender,
+                address(this),
+                poolTokenAmounts[i]
+            );
             unchecked {
                 ++i;
             }
@@ -71,7 +76,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         uint256 oldSupply = _totalSupply();
 
-        _joinPool(amountsIn, userData);
+        _joinPool(poolTokenAmounts, userData);
 
         uint256 newSupply = IERC20(_asset()).balanceOf(address(this));
 
@@ -81,34 +86,33 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function userWithdrawExactForAll(
-        uint256 sharesOut,
-        uint256[] calldata minAmountsOut
-    ) external {
+    function redeem(uint256 assetAmount, uint256[] calldata minPoolTokenAmounts)
+        external
+    {
         IndexStorage.Layout storage l = IndexStorage.layout();
         IVault.ExitPoolRequest
             memory request = _constructExitExactForAllRequest(
                 l,
-                sharesOut,
-                minAmountsOut
+                assetAmount,
+                minPoolTokenAmounts
             );
 
-        _performExitAndWithdraw(sharesOut, request);
+        _performExitAndWithdraw(assetAmount, request);
     }
 
     /**
      * @inheritdoc IIndexIO
      */
-    function userWithdrawExactForSingle(
-        uint256 bptAmountIn,
-        uint256[] memory amountsOut,
+    function redeem(
+        uint256 assetAmount,
+        uint256[] memory minPoolTokenAmounts,
         uint256 tokenId
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         (uint256 feeBpt, uint256 remainingBPTIn) = _applyFee(
             l.exitFee,
-            bptAmountIn
+            assetAmount
         );
 
         bytes memory userData = abi.encode(
@@ -119,7 +123,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         IVault.ExitPoolRequest memory request = _constructExitRequest(
             l.tokens,
-            amountsOut,
+            minPoolTokenAmounts,
             userData
         );
 
@@ -130,6 +134,6 @@ contract IndexIO is IndexInternal, IIndexIO {
             request
         );
 
-        _withdraw(bptAmountIn, msg.sender, msg.sender);
+        _withdraw(assetAmount, msg.sender, msg.sender);
     }
 }
