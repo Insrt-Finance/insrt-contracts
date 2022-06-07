@@ -50,7 +50,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] memory poolTokenAmounts,
         uint256 minShareAmount,
         address receiver
-    ) external returns (uint256 assetAmount) {
+    ) external returns (uint256 shareAmount) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         bytes memory userData = abi.encode(
@@ -74,15 +74,20 @@ contract IndexIO is IndexInternal, IIndexIO {
             }
         }
 
-        uint256 oldSupply = _totalSupply();
-
         _joinPool(poolTokenAmounts, userData);
 
-        uint256 newSupply = IERC20(_asset()).balanceOf(address(this));
+        shareAmount =
+            IERC20(_asset()).balanceOf(address(this)) -
+            _totalSupply();
 
-        assetAmount = newSupply - oldSupply;
-
-        _mint(receiver, assetAmount);
+        _deposit(
+            msg.sender,
+            receiver,
+            shareAmount,
+            shareAmount,
+            shareAmount,
+            0
+        );
     }
 
     /**
@@ -95,19 +100,28 @@ contract IndexIO is IndexInternal, IIndexIO {
     ) external returns (uint256[] memory poolTokenAmounts) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
+        (uint256 feeBpt, uint256 shareAmountOut) = _applyFee(
             l.exitFee,
             shareAmount
         );
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
-            remainingSharesOut
+            shareAmountOut
         );
 
         _exitPool(l, minPoolTokenAmounts, userData, receiver);
 
-        _withdraw(msg.sender, msg.sender, msg.sender, 0, shareAmount, 0, 0);
+        _withdraw(
+            msg.sender,
+            receiver,
+            msg.sender,
+            shareAmountOut,
+            shareAmountOut,
+            shareAmountOut,
+            0
+        );
+
         // TODO: set poolTokenAmounts values
     }
 
@@ -122,20 +136,28 @@ contract IndexIO is IndexInternal, IIndexIO {
     ) external returns (uint256[] memory poolTokenAmounts) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 feeBpt, uint256 remainingShares) = _applyFee(
+        (uint256 feeBpt, uint256 shareAmountOut) = _applyFee(
             l.exitFee,
             shareAmount
         );
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-            remainingShares,
+            shareAmountOut,
             tokenId
         );
 
         _exitPool(l, minPoolTokenAmounts, userData, receiver);
 
-        _withdraw(msg.sender, msg.sender, msg.sender, 0, shareAmount, 0, 0);
+        _withdraw(
+            msg.sender,
+            receiver,
+            msg.sender,
+            shareAmountOut,
+            shareAmountOut,
+            shareAmountOut,
+            0
+        );
 
         // TODO: set poolTokenAmounts values
     }
