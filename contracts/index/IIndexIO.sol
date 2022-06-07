@@ -29,22 +29,6 @@ interface IIndexIO {
     ) external;
 
     /**
-     * @notice function to deposit a single token for shares in the Insrt-index
-     * @dev takes a single investment pool token from the user, deposits into investment pool,
-     * Insrt-index receives an exact (known) amount of BPT in exchange, user receives insrt-index
-     * shares proportionally.
-     * @param amounts the amounts of underlying tokens in Balancer InvestmentPool deposited -
-     * could be a single token however call requests []
-     * @param bptAmountOut the exact amount of BPT wanted by the user (translated to Insrt-index shares)
-     * @param tokenIndex the index of the deposited token in the array of Assets.
-     */
-    function userDepositSingleForExactOut(
-        uint256[] memory amounts,
-        uint256 bptAmountOut,
-        uint256 tokenIndex
-    ) external;
-
-    /**
      * @notice function which burns insrt-index shares and returns underlying tokens in Balancer InvestmentPool
      * @dev applies a fee on the shares, and sends an amount of `remainingShares` of BPT from insrt-index
      * to Balancer InvestmentPool in exchange for tokens, sent to the user. Shares are burnt.

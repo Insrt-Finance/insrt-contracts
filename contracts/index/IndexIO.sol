@@ -80,35 +80,6 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function userDepositSingleForExactOut(
-        uint256[] memory amountsIn,
-        uint256 bptAmountOut,
-        uint256 tokenIndex
-    ) external {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        bytes memory userData = abi.encode(
-            IInvestmentPool.JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT,
-            bptAmountOut,
-            tokenIndex
-        );
-
-        IERC20 depositToken = l.tokens[tokenIndex];
-        depositToken.safeTransferFrom(
-            msg.sender,
-            address(this),
-            amountsIn[tokenIndex]
-        ); //perhaps input may be a single value
-
-        _joinPool(amountsIn, userData);
-
-        //Mint shares to joining user
-        _mint(msg.sender, _previewDeposit(bptAmountOut));
-    }
-
-    /**
-     * @inheritdoc IIndexIO
-     */
     function userWithdrawExactForAll(
         uint256 sharesOut,
         uint256[] calldata minAmountsOut

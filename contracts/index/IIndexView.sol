@@ -20,21 +20,6 @@ interface IIndexView {
     ) external returns (uint256 bptOut, uint256[] memory amountsIn);
 
     /**
-     * @notice function to return the BPT given for a certain amount of underlying Balancer InvesmentPool tokens
-     * @dev particular to JoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT
-     * @param amounts an array comprised of the amounts of each underlying token deposited
-     * @param bptAmountOut the minimum amount of BPT accepted as a return
-     * @param tokenIndex the index of the deposited underlying token
-     * @return bptOut the BPT returned
-     * @return amountsIn the amounts to be taken in by Balancer InvestmentPool for the BPT returned
-     */
-    function queryUserDepositSingleForExactOut(
-        uint256[] memory amounts,
-        uint256 bptAmountOut,
-        uint256 tokenIndex
-    ) external returns (uint256 bptOut, uint256[] memory amountsIn);
-
-    /**
      * @notice function to return the amounts return for a certain BPT, and the BPT expected in for those amounts
      * @dev specific to ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT
      * @param sharesOut the amount of insrt-index shares a user wants to redeem

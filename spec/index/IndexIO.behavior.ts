@@ -111,39 +111,6 @@ export function describeBehaviorOfIndexIO(
   });
 
   describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
-    it('mints shares to user at 1:1 for BPT received,', async () => {
-      const bptAmountWanted = ethers.utils.parseUnits('1000000', 'gwei');
-      const [bptOut, amountsRequired] = await instance.callStatic[
-        'queryUserDepositSingleForExactOut(uint256[],uint256,uint256)'
-      ](amountsIn, bptAmountWanted, 0);
-
-      console.log('BPT Out: ', bptOut);
-      console.log('IT Out: ', await instance.previewDeposit(bptAmountWanted));
-
-      await expect(() =>
-        instance
-          .connect(depositor)
-          ['userDepositSingleForExactOut(uint256[],uint256,uint256)'](
-            amountsIn,
-            bptAmountWanted,
-            0,
-          ),
-      ).to.changeTokenBalance(
-        instance,
-        depositor,
-        await instance.previewDeposit(bptAmountWanted),
-      );
-    });
-
-    it('query test', async () => {
-      const [bptOut, amountsInned] = await instance.callStatic[
-        'queryUserDepositSingleForExactOut(uint256[],uint256,uint256)'
-      ](amountsIn, ethers.utils.parseUnits('1', 'wei'), 0);
-      console.log(bptOut, amountsInned);
-    });
-  });
-
-  describe('#userDepositExactInForAnyOut(uint256[],uint256)', () => {
     it('it transfers all tokens from the user', async () => {
       const [bptOut, amountsInned] = await instance.callStatic[
         'queryUserDepositExactInForAnyOut(uint256[],uint256)'
