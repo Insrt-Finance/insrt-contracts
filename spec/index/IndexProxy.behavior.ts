@@ -9,6 +9,10 @@ import {
   describeBehaviorOfIndexIO,
   IndexIOBehaviorArgs,
 } from './IndexIO.behavior';
+import {
+  describeBehaviorOfIndexView,
+  IndexViewBehaviorArgs,
+} from './IndexView.behavior';
 
 import { IIndex } from '../../typechain-types';
 
@@ -31,5 +35,6 @@ export function describeBehaviorOfIndexProxy(
       tokens: args.tokens,
       weights: args.weights,
     });
+    describeBehaviorOfIndexView(deploy, args);
   });
 }

@@ -7,16 +7,14 @@ pragma solidity ^0.8.0;
  */
 interface IIndexView {
     /**
-     * @notice function to return the id of the Balancer Investment Pool corresponding to a target index
-     * @dev useful for querying properties of the Investment Pool underlying the index
-     * @return poolId
+     * @notice get the address of the underlying Balancer pool
+     * @return Balancer pool address
      */
-    function getPoolId() external view returns (bytes32);
+    function getPool() external view returns (address);
 
     /**
-     * @notice function to return the address of the underlying Balancer Investment Pool
-     * corresponding to the Insrt-Index
-     * @return poolAddress the address of the Balancer Investment Pool
+     * @notice get the ID of the underlying Balancer pool
+     * @return Balancer pool ID
      */
-    function getPool() external view returns (address poolAddress);
+    function getPoolId() external view returns (bytes32);
 }
