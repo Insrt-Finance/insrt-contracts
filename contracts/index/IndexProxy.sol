@@ -45,7 +45,7 @@ contract IndexProxy is Proxy {
                 metadata,
                 tokens,
                 weights,
-                0.02 ether, // swapFeePercentage: 2%
+                0.015 ether, // swapFeePercentage: 1.5%
                 address(this),
                 // TODO: implications of swapEnabledOnStart?
                 true,
