@@ -54,101 +54,33 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
     }
 
     /**
-     * @notice function to call exitPool in Balancer vault, and withdraw/burn Insrt-index shares of user
-     * @dev used for all exits as the functionality is common
-     * @param sharesOut the amounts
+     * @notice construct Balancer exit request, exchange BPT for underlying pool token(s) and burn user shares
+     * @param l index layout struct
+     * @param sharesOut the insrt-index shares to withdraw
+     * @param minAmountsOut minimum amounts to be returned by Balancer
+     * @param userData encoded exit parameters
      */
-    function _performExitAndWithdraw(
+    function _exitPool(
+        IndexStorage.Layout storage l,
         uint256 sharesOut,
-        IVault.ExitPoolRequest memory request
+        uint256[] memory minAmountsOut,
+        bytes memory userData
     ) internal {
+        IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
+            _tokensToAssets(l.tokens),
+            minAmountsOut,
+            userData,
+            false
+        );
+
         IVault(BALANCER_VAULT).exitPool(
-            _poolId(),
+            l.poolId,
             address(this),
             payable(msg.sender),
             request
         );
 
         _withdraw(sharesOut, msg.sender, msg.sender);
-    }
-
-    /**
-     * @notice function to construct the request needed for a user to withdraw shares of
-     * the Insrt-Index, for a single token returned
-     * @dev only works for ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
-     * @param l the index layout
-     * @param amountsOut the amounts of each underlying token returned | perhaps not needed
-     * @param bptAmountIn the BPT withdrawn from the pool
-     * @param tokenId the tokenId of the token to be returned
-     * @return request an ExitPoolRequest constructed for EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
-     */
-    function _constructExitExactForSingleRequest(
-        IndexStorage.Layout storage l,
-        uint256[] memory amountsOut, //perhaps not needed
-        uint256 bptAmountIn,
-        uint256 tokenId
-    ) internal view returns (IVault.ExitPoolRequest memory request) {
-        IInvestmentPool.ExitKind kind = IInvestmentPool
-            .ExitKind
-            .BPT_IN_FOR_EXACT_TOKENS_OUT;
-
-        (uint256 feeBpt, uint256 remainingBPTIn) = _applyFee(
-            l.exitFee,
-            bptAmountIn
-        );
-
-        bytes memory userData = abi.encode(kind, remainingBPTIn, tokenId);
-
-        request = _constructExitRequest(l.tokens, amountsOut, userData);
-    }
-
-    /**
-     * @notice function to construct the request needed for a user to redeem a certain amount of insrt-index shares
-     * @dev only works for ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT
-     * @param sharesOut the amount of insrt-index shares a user wants to redeem
-     * @param minAmountsOut the minimum amount of each token the user is willing to accept
-     * @return request an ExitPoolRequest constructed for EXACT_BPT_IN_FOR_TOKENS_OUT
-     */
-    function _constructExitExactForAllRequest(
-        IndexStorage.Layout storage l,
-        uint256 sharesOut,
-        uint256[] memory minAmountsOut
-    ) internal view returns (IVault.ExitPoolRequest memory request) {
-        //Maybe this should be accounted for somewhere? Automatically done by balanceOf bpt tokens?
-        (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
-            l.exitFee,
-            sharesOut
-        );
-        IInvestmentPool.ExitKind kind = IInvestmentPool
-            .ExitKind
-            .EXACT_BPT_IN_FOR_TOKENS_OUT;
-        //To perform an Exit of kind `EXACT_BPT_IN_FOR_TOKENS_OUT` the `userData` variable
-        //must contain the encoded "kind" of exit, and the amount of BPT to "exit" from the
-        //pool.
-        bytes memory userData = abi.encode(kind, remainingSharesOut);
-
-        request = _constructExitRequest(l.tokens, minAmountsOut, userData);
-    }
-
-    /**
-     * @notice function to construct an arbitrary exit request
-     * @dev fromInternalBalance always set to false as the assumption is made that the user will not
-     * seek to send/keep tokens elsewhere in Balancer Vault.
-     * Ref: https://github.com/balancer-labs/balancer-v2-monorepo/blob/a9b1e969a19c4f93c14cd19fba45aaa25b015d12/pkg/vault/contracts/interfaces/IVault.sol#L410
-     * @param tokens the array of tokens to convert to assets
-     * @param minAmountsOut the minimum amounts of tokens expected to be returned, for the BPT provided
-     * @param userData the userData for the exit request
-     * @return exitRequest the constructed ExitPoolRequest
-     */
-    function _constructExitRequest(
-        IERC20[] memory tokens,
-        uint256[] memory minAmountsOut,
-        bytes memory userData
-    ) internal pure returns (IVault.ExitPoolRequest memory exitRequest) {
-        exitRequest.assets = _tokensToAssets(tokens);
-        exitRequest.minAmountsOut = minAmountsOut;
-        exitRequest.userData = userData;
-        exitRequest.toInternalBalance = false;
     }
 
     /**

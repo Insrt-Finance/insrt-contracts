@@ -90,14 +90,17 @@ contract IndexIO is IndexInternal, IIndexIO {
         external
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        IVault.ExitPoolRequest
-            memory request = _constructExitExactForAllRequest(
-                l,
-                assetAmount,
-                minPoolTokenAmounts
-            );
 
-        _performExitAndWithdraw(assetAmount, request);
+        (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
+            l.exitFee,
+            assetAmount
+        );
+        bytes memory userData = abi.encode(
+            IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
+            remainingSharesOut
+        );
+
+        _exitPool(l, assetAmount, minPoolTokenAmounts, userData);
     }
 
     /**
@@ -110,30 +113,17 @@ contract IndexIO is IndexInternal, IIndexIO {
     ) external {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 feeBpt, uint256 remainingBPTIn) = _applyFee(
+        (uint256 feeBpt, uint256 remainingShares) = _applyFee(
             l.exitFee,
             assetAmount
         );
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-            remainingBPTIn,
+            remainingShares,
             tokenId
         );
 
-        IVault.ExitPoolRequest memory request = _constructExitRequest(
-            l.tokens,
-            minPoolTokenAmounts,
-            userData
-        );
-
-        IVault(BALANCER_VAULT).exitPool(
-            l.poolId,
-            address(this),
-            payable(address(this)),
-            request
-        );
-
-        _withdraw(assetAmount, msg.sender, msg.sender);
+        _exitPool(l, assetAmount, minPoolTokenAmounts, userData);
     }
 }
