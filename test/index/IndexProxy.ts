@@ -14,6 +14,7 @@ import {
   IndexProxy__factory,
   IndexIO__factory,
   SolidStateERC20Mock__factory,
+  IVault,
   IVault__factory,
   IndexView__factory,
 } from '../../typechain-types';
@@ -23,30 +24,35 @@ import { BigNumber, ContractTransaction } from 'ethers';
 
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
 
+const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
+
 describe('IndexProxy', () => {
   let snapshotId: number;
 
+  let balancerVault: IVault;
   let core: ICore;
   let instance: IIndex;
+
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
   const amountsArg: BigNumber[] = [];
-  let BALANCER_VAULT = '';
-  let INVESTMENT_POOL_FACTORY = '';
-  let BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
 
   before(async () => {
     const [deployer] = await ethers.getSigners();
-    BALANCER_VAULT = await getBalancerContractAddress(
+
+    const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
       'Vault',
       'arbitrum',
     );
-    INVESTMENT_POOL_FACTORY = await getBalancerContractAddress(
+
+    const investmentPoolFactoryAddress = await getBalancerContractAddress(
       '20210907-investment-pool',
       'InvestmentPoolFactory',
       'arbitrum',
     );
+
+    balancerVault = IVault__factory.connect(balancerVaultAddress, deployer);
 
     const coreDiamond = await new Core__factory(deployer).deploy();
 
@@ -55,8 +61,8 @@ describe('IndexProxy', () => {
     const coreFacetCuts = [
       await new IndexManager__factory(deployer).deploy(
         indexDiamond.address,
-        INVESTMENT_POOL_FACTORY,
-        BALANCER_VAULT,
+        investmentPoolFactoryAddress,
+        balancerVault.address,
       ),
     ].map(function (f) {
       return {
@@ -70,15 +76,15 @@ describe('IndexProxy', () => {
 
     const indexFacetCuts = [
       await new IndexBase__factory(deployer).deploy(
-        BALANCER_VAULT,
+        balancerVault.address,
         BALANCER_HELPERS,
       ),
       await new IndexIO__factory(deployer).deploy(
-        BALANCER_VAULT,
+        balancerVault.address,
         BALANCER_HELPERS,
       ),
       await new IndexView__factory(deployer).deploy(
-        BALANCER_VAULT,
+        balancerVault.address,
         BALANCER_HELPERS,
       ),
     ].map(function (f) {
