@@ -85,7 +85,7 @@ export function describeBehaviorOfIndexIO(
       '\nExpect total BPT supply to be greater than what was received by the pool, ' +
         'and for the depositor to have an equal amount of Insrt-Index tokens as the balance of BPT in the Insrt-Index.\n',
     );
-    const investmentPoolAddress = await instance.getPool();
+    const investmentPoolAddress = await instance.asset();
     investmentPoolToken = SolidStateERC20Mock__factory.connect(
       investmentPoolAddress,
       depositor,
