@@ -24,17 +24,12 @@ export interface IndexProxyBehaviorArgs
 export function describeBehaviorOfIndexProxy(
   deploy: () => Promise<IIndex>,
   args: IndexProxyBehaviorArgs,
+  skips?: string[],
 ) {
   describe('::IndexProxy', () => {
-    describeBehaviorOfProxy(deploy, args);
-
-    // TODO: facet behaviors
-
-    describeBehaviorOfIndexBase(deploy, args);
-    describeBehaviorOfIndexIO(deploy, {
-      tokens: args.tokens,
-      weights: args.weights,
-    });
-    describeBehaviorOfIndexView(deploy, args);
+    describeBehaviorOfProxy(deploy, args, skips);
+    describeBehaviorOfIndexBase(deploy, args, skips);
+    describeBehaviorOfIndexIO(deploy, args, skips);
+    describeBehaviorOfIndexView(deploy, args, skips);
   });
 }

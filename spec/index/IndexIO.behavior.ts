@@ -22,6 +22,7 @@ export interface IndexIOBehaviorArgs {
 export function describeBehaviorOfIndexIO(
   deploy: () => Promise<IIndex>,
   args: IndexIOBehaviorArgs,
+  skips?: string[],
 ) {
   let depositor: SignerWithAddress;
   let instance: IIndex;

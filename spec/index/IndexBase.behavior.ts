@@ -12,8 +12,9 @@ export interface IndexBaseBehaviorArgs extends SolidStateERC4626BehaviorArgs {}
 export function describeBehaviorOfIndexBase(
   deploy: () => Promise<IIndexBase>,
   args: IndexBaseBehaviorArgs,
+  skips?: string[],
 ) {
   describe('::IndexBase', () => {
-    describeBehaviorOfSolidStateERC4626(deploy, args);
+    describeBehaviorOfSolidStateERC4626(deploy, args, skips);
   });
 }

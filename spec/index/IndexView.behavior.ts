@@ -8,6 +8,7 @@ export interface IndexViewBehaviorArgs {}
 export function describeBehaviorOfIndexView(
   deploy: () => Promise<IIndex>,
   args: IndexViewBehaviorArgs,
+  skips?: string[],
 ) {
   let instance: IIndex;
   let balancerVault: IVault;
