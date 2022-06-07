@@ -85,7 +85,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             }
         }
 
-        uint256 preJoinBPT = _totalSupply();
+        uint256 oldSupply = _totalSupply();
 
         IVault(BALANCER_VAULT).joinPool(
             l.poolId,
@@ -94,9 +94,9 @@ contract IndexIO is IndexInternal, IIndexIO {
             request
         );
 
-        uint256 postJoinBPT = _totalSupply();
+        uint256 newSupply = IERC20(_asset()).balanceOf(address(this));
 
-        _mint(msg.sender, _previewDeposit(postJoinBPT - preJoinBPT));
+        _mint(msg.sender, _previewDeposit(newSupply - oldSupply));
     }
 
     /**
