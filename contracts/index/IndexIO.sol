@@ -96,7 +96,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         uint256 newSupply = IERC20(_asset()).balanceOf(address(this));
 
-        _mint(msg.sender, _previewDeposit(newSupply - oldSupply));
+        _mint(msg.sender, newSupply - oldSupply);
     }
 
     /**
