@@ -89,7 +89,7 @@ contract IndexIO is IndexInternal, IIndexIO {
      * @inheritdoc IIndexIO
      */
     function redeem(
-        uint256 assetAmount,
+        uint256 shareAmount,
         uint256[] calldata minPoolTokenAmounts,
         address beneficiary
     ) external returns (uint256[] memory poolTokenAmounts) {
@@ -97,7 +97,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         (uint256 feeBpt, uint256 remainingSharesOut) = _applyFee(
             l.exitFee,
-            assetAmount
+            shareAmount
         );
 
         bytes memory userData = abi.encode(
@@ -105,8 +105,9 @@ contract IndexIO is IndexInternal, IIndexIO {
             remainingSharesOut
         );
 
-        _exitPool(l, assetAmount, minPoolTokenAmounts, userData, beneficiary);
+        _exitPool(l, minPoolTokenAmounts, userData, beneficiary);
 
+        _withdraw(msg.sender, msg.sender, msg.sender, 0, shareAmount, 0, 0);
         // TODO: set poolTokenAmounts values
     }
 
@@ -114,7 +115,7 @@ contract IndexIO is IndexInternal, IIndexIO {
      * @inheritdoc IIndexIO
      */
     function redeem(
-        uint256 assetAmount,
+        uint256 shareAmount,
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address beneficiary
@@ -123,7 +124,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         (uint256 feeBpt, uint256 remainingShares) = _applyFee(
             l.exitFee,
-            assetAmount
+            shareAmount
         );
 
         bytes memory userData = abi.encode(
@@ -132,7 +133,9 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         );
 
-        _exitPool(l, assetAmount, minPoolTokenAmounts, userData, beneficiary);
+        _exitPool(l, minPoolTokenAmounts, userData, beneficiary);
+
+        _withdraw(msg.sender, msg.sender, msg.sender, 0, shareAmount, 0, 0);
 
         // TODO: set poolTokenAmounts values
     }
