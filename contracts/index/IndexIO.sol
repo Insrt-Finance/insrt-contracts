@@ -30,8 +30,6 @@ contract IndexIO is IndexInternal, IIndexIO {
     function initialize(uint256[] memory poolTokenAmounts, address beneficiary)
         external
     {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.INIT,
             poolTokenAmounts
