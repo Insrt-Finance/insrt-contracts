@@ -366,7 +366,6 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      * @inheritdoc ERC4626BaseInternal
      */
     function _totalAssets() internal view override returns (uint256) {
-        // TODO: check all positions
         return IERC20(_asset()).balanceOf(address(this));
     }
 }
