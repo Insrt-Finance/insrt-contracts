@@ -91,9 +91,7 @@ describe('IndexProxy', () => {
         balancerVault.address,
         BALANCER_HELPERS,
       ),
-      await new SolidStateERC20Mock__factory(deployer).deploy(
-        ethers.constants.Zero,
-      ),
+      await new SolidStateERC20Mock__factory(deployer).deploy(),
     ].map(function (f) {
       return {
         target: f.address,
@@ -119,12 +117,8 @@ describe('IndexProxy', () => {
     core = ICore__factory.connect(coreDiamond.address, ethers.provider);
 
     const tokens = [
-      await new SolidStateERC20Mock__factory(deployer).deploy(
-        ethers.utils.parseEther('10000'),
-      ),
-      await new SolidStateERC20Mock__factory(deployer).deploy(
-        ethers.utils.parseEther('10000'),
-      ),
+      await new SolidStateERC20Mock__factory(deployer).deploy(),
+      await new SolidStateERC20Mock__factory(deployer).deploy(),
     ];
 
     const tokenAddresses = tokens
@@ -149,6 +143,9 @@ describe('IndexProxy', () => {
     }
 
     for (let i = 0; i < tokens.length; i++) {
+      await tokens[i]
+        .connect(deployer)
+        .__mint(deployer.address, ethers.utils.parseUnits('10000', 18));
       await tokens[i]
         .connect(deployer)
         .approve(core.address, ethers.constants.MaxUint256);
