@@ -100,11 +100,11 @@ export function describeBehaviorOfIndexIO(
 
   describe('#deposit(uint256[],uint256)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
-      const minShareAmount = ethers.utils.parseUnits('1', 'gwei');
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256[]', 'uint256'],
-        [ethers.BigNumber.from('1'), poolTokenAmounts, minShareAmount],
+        [ethers.BigNumber.from('1'), poolTokenAmounts, minBptOut],
       );
 
       const request = {
@@ -133,7 +133,7 @@ export function describeBehaviorOfIndexIO(
           .connect(depositor)
           ['deposit(uint256[],uint256,address)'](
             poolTokenAmounts,
-            minShareAmount,
+            minBptOut,
             depositor.address,
           ),
       ).to.changeTokenBalance(instance, depositor, bptOut);
@@ -150,7 +150,7 @@ export function describeBehaviorOfIndexIO(
     });
 
     it('transfers all of the deposited token amounts from user to Balancer Vault', async () => {
-      const minShareAmount = ethers.utils.parseUnits('1', 'gwei');
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       const oldVaultBalances = [];
       for (let i = 0; i < assets.length; i++) {
@@ -161,7 +161,7 @@ export function describeBehaviorOfIndexIO(
         .connect(depositor)
         ['deposit(uint256[],uint256,address)'](
           poolTokenAmounts,
-          minShareAmount,
+          minBptOut,
           depositor.address,
         );
 
@@ -180,21 +180,21 @@ export function describeBehaviorOfIndexIO(
 
   describe('#redeem(uint256,uint256[],address)', () => {
     it('burns BPT at 1:1, for shares - fee', async () => {
-      // const minShareAmount = ethers.utils.parseUnits('1', 'gwei');
+      // const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       // await instance
       // .connect(depositor)
       // ['deposit(uint256[],uint256,address)'](
       // poolTokenAmounts,
-      // minShareAmount,
+      // minBptOut,
       // depositor.address,
       // );
 
       // const oldUserBalance = await instance.balanceOf(depositor.address);
       // const oldBptSupply = await investmentPoolToken.totalSupply();
       // const minPoolTokenAmounts = [
-      // minShareAmount,
-      // minShareAmount
+      // minBptOut,
+      // minBptOut
       // ];
 
       // await instance.connect(depositor)['redeem(uint256,uint256[],address)']
@@ -210,13 +210,13 @@ export function describeBehaviorOfIndexIO(
       // const bptDelta = newBptSupply.sub(oldBptSupply);
       // const userDelta = newUserBalance.sub(oldUserBalance);
       // expect(bptDelta).to.eq(userDelta.mul(feeScaling));
-      const minShareAmount = ethers.utils.parseUnits('1', 'gwei');
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       await instance
         .connect(depositor)
         ['deposit(uint256[],uint256,address)'](
           poolTokenAmounts,
-          minShareAmount,
+          minBptOut,
           depositor.address,
         );
 
@@ -227,7 +227,7 @@ export function describeBehaviorOfIndexIO(
         [ethers.BigNumber.from('1'), userBalance],
       );
 
-      const minPoolTokenAmounts = [minShareAmount, minShareAmount];
+      const minPoolTokenAmounts = [minBptOut, minBptOut];
 
       const request = {
         assets: args.tokens,
@@ -265,13 +265,13 @@ export function describeBehaviorOfIndexIO(
     });
 
     it('returns tokens to user', async () => {
-      const minShareAmount = ethers.utils.parseUnits('1', 'gwei');
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       await instance
         .connect(depositor)
         ['deposit(uint256[],uint256,address)'](
           poolTokenAmounts,
-          minShareAmount,
+          minBptOut,
           depositor.address,
         );
 
@@ -282,7 +282,7 @@ export function describeBehaviorOfIndexIO(
         [ethers.BigNumber.from('1'), userBalance],
       );
 
-      const minPoolTokenAmounts = [minShareAmount, minShareAmount];
+      const minPoolTokenAmounts = [minBptOut, minBptOut];
 
       const request = {
         assets: args.tokens,
@@ -327,19 +327,19 @@ export function describeBehaviorOfIndexIO(
 
   describe('#redeem(uint256,uint256[],uint256,address)', () => {
     it('burns BPT at 1:1 for shares - fee', async () => {
-      const minShareAmount = ethers.utils.parseUnits('1', 'gwei');
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       await instance
         .connect(depositor)
         ['deposit(uint256[],uint256,address)'](
           poolTokenAmounts,
-          minShareAmount,
+          minBptOut,
           depositor.address,
         );
 
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256', 'uint256'],
-        [ethers.constants.Zero, minShareAmount, ethers.constants.Zero],
+        [ethers.constants.Zero, minBptOut, ethers.constants.Zero],
       );
 
       const minPoolTokenAmounts = [
@@ -371,7 +371,7 @@ export function describeBehaviorOfIndexIO(
         instance
           .connect(depositor)
           ['redeem(uint256,uint256[],uint256,address)'](
-            minShareAmount,
+            minBptOut,
             minPoolTokenAmounts,
             ethers.constants.Zero,
             depositor.address,
