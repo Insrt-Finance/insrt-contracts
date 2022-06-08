@@ -7,7 +7,7 @@ import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
-import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
+import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
 import { IInvestmentPoolFactory } from '../balancer/IInvestmentPoolFactory.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
@@ -17,7 +17,7 @@ import { IndexStorage } from './IndexStorage.sol';
  * @title Upgradeable proxy with externally controlled Index implementation
  */
 contract IndexProxy is Proxy {
-    using AddressUtils for address;
+    using UintUtils for uint256;
 
     address private immutable INDEX_DIAMOND;
 
@@ -35,7 +35,7 @@ contract IndexProxy is Proxy {
         OwnableStorage.layout().owner = msg.sender;
 
         string memory metadata = string(
-            abi.encodePacked('INSRT-INDEX-', address(this).toString())
+            abi.encodePacked('IFII-BPT-', id.toString())
         );
 
         // deploy Balancer pool
