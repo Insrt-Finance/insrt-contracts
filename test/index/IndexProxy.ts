@@ -3,7 +3,9 @@ import {
   ICore,
   ICore__factory,
   Core__factory,
+  IERC20,
   IERC20__factory,
+  IERC20Metadata__factory,
   IIndex,
   IIndex__factory,
   IndexDiamond,
@@ -22,6 +24,7 @@ import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
 import { BigNumber, ContractTransaction } from 'ethers';
 
+import { describeBehaviorOfERC20Metadata } from '@solidstate/spec';
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
 
 const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
@@ -34,6 +37,7 @@ describe('IndexProxy', () => {
   let balancerVault: IVault;
   let core: ICore;
   let instance: IIndex;
+  let balancerPool: IERC20;
 
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
@@ -164,6 +168,11 @@ describe('IndexProxy', () => {
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
 
     instance = IIndex__factory.connect(deployment, deployer);
+
+    balancerPool = IERC20__factory.connect(
+      await instance.callStatic.asset(),
+      deployer,
+    );
   });
 
   beforeEach(async () => {
@@ -222,10 +231,7 @@ describe('IndexProxy', () => {
           request,
         );
 
-      return await IERC20__factory.connect(
-        await instance.callStatic.asset(),
-        deployer,
-      ).transfer(recipient, amount);
+      return await balancerPool.transfer(recipient, amount);
     },
     name: `Insrt Finance InfraIndex #${id}`,
     symbol: `IFII-${id}`,
@@ -237,5 +243,17 @@ describe('IndexProxy', () => {
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],
+  });
+
+  describe('base BPT asset', () => {
+    describeBehaviorOfERC20Metadata(
+      async () =>
+        IERC20Metadata__factory.connect(balancerPool.address, ethers.provider),
+      {
+        name: `IFII-BPT-${id}`,
+        symbol: `IFII-BPT-${id}`,
+        decimals: ethers.BigNumber.from('18'),
+      },
+    );
   });
 });
