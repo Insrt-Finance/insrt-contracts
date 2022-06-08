@@ -2,8 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-//Cannot import contracts from balancer-labs, hence new interfaces. Delete comment code once confirmed.
-//import { IVault } from '@balancer-labs/v2-vault/contracts/interfaces/IVault.sol';
+import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
@@ -32,6 +31,8 @@ contract IndexProxy is Proxy {
         uint16 exitFee
     ) {
         INDEX_DIAMOND = indexDiamond;
+
+        OwnableStorage.layout().owner = msg.sender;
 
         string memory metadata = string(
             abi.encodePacked('INSRT-INDEX-', address(this).toString())

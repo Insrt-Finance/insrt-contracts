@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
@@ -16,7 +17,11 @@ import { IAsset, IVault } from '../balancer/IVault.sol';
  * @title Infra Index internal functions
  * @dev inherited by all Index implementation contracts
  */
-abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
+abstract contract IndexInternal is
+    ERC4626BaseInternal,
+    ERC20MetadataInternal,
+    OwnableInternal
+{
     using UintUtils for uint256;
 
     address internal immutable BALANCER_VAULT;
@@ -90,10 +95,13 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      */
     function _applyFee(uint16 fee, uint256 amount)
         internal
-        pure
+        view
         returns (uint256 totalFee, uint256 remainder)
     {
-        totalFee = (fee * amount) / FEE_BASIS;
+        if (msg.sender != _owner()) {
+            totalFee = (fee * amount) / FEE_BASIS;
+        }
+
         remainder = amount - totalFee;
     }
 
@@ -157,5 +165,67 @@ abstract contract IndexInternal is ERC4626BaseInternal, ERC20MetadataInternal {
      */
     function _totalAssets() internal view override returns (uint256) {
         return IERC20(_asset()).balanceOf(address(this));
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewDeposit
+     */
+    function _previewMint(uint256 shareAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assetAmount)
+    {
+        assetAmount = _previewDeposit(shareAmount);
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewRedeem
+     */
+    function _previewWithdraw(uint256 assetAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 shareAmount)
+    {
+        shareAmount = _previewRedeem(assetAmount);
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev apply exit fee to amount out
+     */
+    function _previewRedeem(uint256 shareAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assetAmount)
+    {
+        (, assetAmount) = _applyFee(
+            IndexStorage.layout().exitFee,
+            _convertToAssets(shareAmount)
+        );
+    }
+
+    function _beforeWithdraw(
+        address owner,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal virtual override {
+        super._afterDeposit(owner, assetAmount, shareAmount);
+
+        (uint256 feeAmount, ) = _applyFee(
+            IndexStorage.layout().exitFee,
+            _convertToAssets(shareAmount)
+        );
+
+        if (feeAmount > 0) {
+            _transfer(owner, _owner(), feeAmount);
+        }
     }
 }

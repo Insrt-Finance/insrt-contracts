@@ -100,10 +100,8 @@ contract IndexIO is IndexInternal, IIndexIO {
     ) external returns (uint256[] memory poolTokenAmounts) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 feeBpt, uint256 shareAmountOut) = _applyFee(
-            l.exitFee,
-            shareAmount
-        );
+        // because assets and shares are pegged 1:1, output can be treated as share amount
+        uint256 shareAmountOut = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
@@ -136,10 +134,8 @@ contract IndexIO is IndexInternal, IIndexIO {
     ) external returns (uint256[] memory poolTokenAmounts) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 feeBpt, uint256 shareAmountOut) = _applyFee(
-            l.exitFee,
-            shareAmount
-        );
+        // because assets and shares are pegged 1:1, output can be treated as share amount
+        uint256 shareAmountOut = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
