@@ -134,7 +134,7 @@ abstract contract IndexInternal is
      * @notice get the exit fee in basis points
      * @return exitFee
      */
-    function _exitFee() internal view virtual returns (uint256) {
+    function _exitFee() internal view virtual returns (uint16) {
         return IndexStorage.layout().exitFee;
     }
 
