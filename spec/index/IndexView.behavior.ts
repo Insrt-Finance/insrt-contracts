@@ -37,4 +37,8 @@ export function describeBehaviorOfIndexView(
       expect(pool).to.equal(await instance.callStatic.asset());
     });
   });
+
+  describe('#getExitFee()', () => {
+    it('todo', async () => {});
+  });
 }

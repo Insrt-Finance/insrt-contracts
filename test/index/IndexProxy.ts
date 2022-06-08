@@ -192,7 +192,7 @@ describe('IndexProxy', () => {
     allowance: (holder, spender) =>
       instance.callStatic.allowance(holder, spender),
     mintAsset: async (recipient, amount) => {
-      // use JoinKind EXACT_TOKENS_IN_FOR_BPT_OUT
+      // use JoinKind ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256'],
         [ethers.BigNumber.from('3'), amount],
