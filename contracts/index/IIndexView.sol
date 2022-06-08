@@ -11,4 +11,10 @@ interface IIndexView {
      * @return Balancer pool ID
      */
     function getPoolId() external view returns (bytes32);
+
+    /**
+     * @notice get the exit fee in basis points
+     * @return exitFee of the Index
+     */
+    function getExitFee() external view returns (uint256);
 }

@@ -26,4 +26,11 @@ contract IndexView is IndexInternal, IIndexView {
     function getPoolId() external view returns (bytes32) {
         return _poolId();
     }
+
+    /**
+     * @inheritdoc IIndexView
+     */
+    function getExitFee() external view returns (uint256) {
+        return _exitFee();
+    }
 }
