@@ -337,15 +337,9 @@ export function describeBehaviorOfIndexIO(
           depositor.address,
         );
 
-      const userBalance = await instance.balanceOf(depositor.address);
-
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256', 'uint256'],
-        [
-          userBalance.mul(BigNumber.from('0')),
-          minShareAmount,
-          ethers.constants.Zero,
-        ],
+        [ethers.constants.Zero, minShareAmount, ethers.constants.Zero],
       );
 
       const minPoolTokenAmounts = [
