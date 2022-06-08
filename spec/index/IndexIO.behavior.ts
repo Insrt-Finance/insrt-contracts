@@ -338,19 +338,20 @@ export function describeBehaviorOfIndexIO(
         );
 
       const userBalance = await instance.balanceOf(depositor.address);
-      console.log(userBalance.toBigInt());
-      console.log((await investmentPoolToken['totalSupply()']()).toBigInt());
 
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256', 'uint256'],
         [
-          ethers.constants.Zero,
-          userBalance.mul(BigNumber.from('3')),
-          ethers.constants.Zero,
+          userBalance.mul(BigNumber.from('0')),
+          minShareAmount,
+          ethers.constants.One,
         ],
       );
 
-      const minPoolTokenAmounts = [minShareAmount, minShareAmount];
+      const minPoolTokenAmounts = [
+        ethers.constants.Zero,
+        ethers.constants.Zero,
+      ];
 
       const request = {
         assets: args.tokens,
@@ -368,16 +369,11 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      console.log('query ran');
-      const fee = await instance.getExitFee();
-      const feeBasis = BigNumber.from('10000');
-      const feeScaling = feeBasis.sub(fee).div(feeBasis);
-
       await expect(() =>
         instance
           .connect(depositor)
           ['redeem(uint256,uint256[],uint256,address)'](
-            userBalance.div(BigNumber.from('10')),
+            minShareAmount,
             minPoolTokenAmounts,
             ethers.constants.Zero,
             depositor.address,
