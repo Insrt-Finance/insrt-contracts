@@ -344,7 +344,7 @@ export function describeBehaviorOfIndexIO(
         [
           userBalance.mul(BigNumber.from('0')),
           minShareAmount,
-          ethers.constants.One,
+          ethers.constants.Zero,
         ],
       );
 
@@ -368,6 +368,10 @@ export function describeBehaviorOfIndexIO(
           depositor.address,
           request,
         );
+
+      const fee = await instance.getExitFee();
+      const feeBasis = BigNumber.from('10000');
+      const feeScaling = feeBasis.sub(fee).div(feeBasis);
 
       await expect(() =>
         instance
