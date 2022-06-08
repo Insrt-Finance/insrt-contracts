@@ -39,6 +39,8 @@ describe('IndexProxy', () => {
   const weightsArg: BigNumber[] = [];
   const amountsArg: BigNumber[] = [];
 
+  const id = 1;
+
   before(async () => {
     [deployer] = await ethers.getSigners();
 
@@ -225,8 +227,8 @@ describe('IndexProxy', () => {
         deployer,
       ).transfer(recipient, amount);
     },
-    name: 'string',
-    symbol: 'string',
+    name: `Insrt Finance InfraIndex #${id}`,
+    symbol: `IFII-${id}`,
     decimals: ethers.BigNumber.from('18'),
     supply: ethers.constants.Zero,
 
