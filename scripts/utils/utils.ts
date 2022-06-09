@@ -8,6 +8,23 @@ export interface CoreAddresses {
   IndexIOFacet: string;
   IndexViewFacet: string;
 }
+
+export interface Index {
+  Index: string;
+}
+
+export function readFile(filePath: string): any {
+  if (fs.existsSync(filePath)) {
+    try {
+      return fs.readFileSync(filePath, 'utf8');
+    } catch (error) {
+      console.error(`An error occured: `, error);
+    }
+  } else {
+    return [];
+  }
+}
+
 export function createDir(_dirPath: string): void {
   if (!fs.existsSync(_dirPath)) {
     try {
