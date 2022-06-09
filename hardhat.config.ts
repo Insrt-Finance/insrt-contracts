@@ -1,5 +1,6 @@
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
+import 'hardhat-abi-exporter';
 import 'hardhat-dependency-compiler';
 import 'hardhat-docgen';
 import 'hardhat-gas-reporter';
@@ -59,6 +60,10 @@ export default {
       url: NODE_URL_TESTNET,
       accounts: [PKEY_TESTNET],
     },
+  },
+
+  abiExporter: {
+    clear: true,
   },
 
   docgen: {
