@@ -87,13 +87,17 @@ async function main() {
     },
   );
 
-  await coreDiamond
+  const coreCutTx = await coreDiamond
     .connect(deployer)
     .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x');
 
-  await indexDiamond
+  await coreCutTx.wait();
+
+  const indexCutTx = await indexDiamond
     .connect(deployer)
     .diamondCut(indexFacetCuts, ethers.constants.AddressZero, '0x');
+
+  await indexCutTx.wait();
 
   console.log(`\n\nCore Diamond Address: ${coreDiamond.address}`);
   console.log('Facet Addresses for Core Diamond: ');
