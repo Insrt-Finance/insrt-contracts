@@ -16,10 +16,16 @@ import {
   IndexBase,
   Core,
 } from '../typechain-types';
+import { core } from '../typechain-types/contracts';
+import { createDir, createFile, CoreAddresses } from './utils/utils';
 
 async function main() {
   const ethers = hre.ethers;
   const [deployer] = await ethers.getSigners();
+
+  const dirPath = `data`;
+  const network = `arbitrum`;
+  createDir(`/${dirPath}/${network}`);
 
   const balancerVaultAddress = await getBalancerContractAddress(
     '20210418-vault',
@@ -98,6 +104,20 @@ async function main() {
     .diamondCut(indexFacetCuts, ethers.constants.AddressZero, '0x');
 
   await indexCutTx.wait();
+
+  const coreAddresses: CoreAddresses = {
+    CoreDiamond: coreDiamond.address,
+    IndexDiamond: indexDiamond.address,
+    IndexManagerFacet: indexManagerFacet.address,
+    IndexBaseFacet: indexBaseFacet.address,
+    IndexIOFacet: indexIOFacet.address,
+    IndexViewFacet: indexViewFacet.address,
+  };
+
+  createFile(
+    `${dirPath}/${network}/deployments.json`,
+    JSON.stringify(coreAddresses),
+  );
 
   console.log(`\n\nCore Diamond Address: ${coreDiamond.address}`);
   console.log('Facet Addresses for Core Diamond: ');
