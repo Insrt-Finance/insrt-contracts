@@ -5,9 +5,29 @@ pragma solidity ^0.8.0;
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 import { IVault } from '../balancer/IVault.sol';
 import { IndexInternal } from './IndexInternal.sol';
+import { IIndexSettings } from './IIndexSettings.sol';
 
-contract IndexSettings is IndexInternal {
+/**
+ * @title IndexSettings functions
+ * @dev deployed standalone and referenced by IndexProxy
+ */
+contract IndexSettings is IndexInternal, IIndexSettings {
     constructor(address balancerVault, address balancerHelpers)
         IndexInternal(balancerVault, balancerHelpers)
     {}
+
+    /**
+     * @inheritdoc IIndexSettings
+     */
+    function updateWeights(uint256[] calldata updatedWeights, uint256 endTime)
+        external
+        onlyOwner
+    {
+        (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(_poolId());
+        IInvestmentPool(investmentPool).updateWeightsGradually(
+            block.timestamp,
+            endTime,
+            updatedWeights
+        );
+    }
 }

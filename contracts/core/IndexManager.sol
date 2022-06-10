@@ -32,6 +32,9 @@ contract IndexManager is IIndexManager, OwnableInternal {
         BALANCER_VAULT = balancerVault;
     }
 
+    /**
+     * @inheritdoc IIndexManager
+     */
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
