@@ -18,17 +18,6 @@ interface IAsset {
  * @dev Critical functions for interacting with the balancer vault.  For more info: https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol
  */
 interface IVault {
-    function hasApprovedRelayer(address user, address relayer)
-        external
-        view
-        returns (bool);
-
-    function setRelayerApproval(
-        address sender,
-        address relayer,
-        bool approved
-    ) external;
-
     function joinPool(
         bytes32 poolId,
         address sender,

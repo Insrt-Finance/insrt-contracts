@@ -11,12 +11,6 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
  */
 interface IInvestmentPool {
     /**
-     * @notice fetches pool id from balancer vault
-     * @return bytes32 the poolId
-     */
-    function getPoolId() external view returns (bytes32);
-
-    /**
      * @notice struct for different types of joins for weighted pools
      * @dev used when executing _doJoin and _onJoin in Balancer's InvestmentPool
      */
