@@ -19,6 +19,7 @@ import {
   IVault,
   IVault__factory,
   IndexView__factory,
+  IndexSettings__factory,
 } from '../../typechain-types';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
@@ -94,6 +95,10 @@ describe('IndexProxy', () => {
         BALANCER_HELPERS,
       ),
       await new IndexView__factory(deployer).deploy(
+        balancerVault.address,
+        BALANCER_HELPERS,
+      ),
+      await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
       ),
