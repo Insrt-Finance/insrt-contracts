@@ -7,5 +7,6 @@ import { IProxy } from '@solidstate/contracts/proxy/IProxy.sol';
 import { IIndexBase } from './IIndexBase.sol';
 import { IIndexIO } from './IIndexIO.sol';
 import { IIndexView } from './IIndexView.sol';
+import { IIndexSettings } from './IIndexSettings.sol';
 
-interface IIndex is IProxy, IIndexBase, IIndexIO, IIndexView {}
+interface IIndex is IProxy, IIndexBase, IIndexIO, IIndexView, IIndexSettings {}

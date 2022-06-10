@@ -21,7 +21,7 @@ contract IndexSettings is IndexInternal, IIndexSettings {
      */
     function updateWeights(uint256[] calldata updatedWeights, uint256 endTime)
         external
-        onlyOwner
+        onlyProtocolOwner
     {
         (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(_poolId());
         IInvestmentPool(investmentPool).updateWeightsGradually(

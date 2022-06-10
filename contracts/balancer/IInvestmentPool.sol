@@ -93,6 +93,12 @@ interface IInvestmentPool {
         );
 
     /**
+     * @notice function to return the Balancer Investment Pool's current token weights
+     * @return weights of the Balancer Investment Pool's underlying tokens
+     */
+    function getNormalizedWeights() external view returns (uint256[] memory);
+
+    /**
      * @notice function to return the total fees for management, earned via swaps
      * @return tokens the underlying Balancer InvestmentPool tokens
      * @return collectedFees the collected fees per token
