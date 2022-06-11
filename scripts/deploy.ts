@@ -16,7 +16,6 @@ import {
   IndexBase,
   Core,
 } from '../typechain-types';
-import { core } from '../typechain-types/contracts';
 import { createDir, createFile, CoreAddresses } from './utils/utils';
 
 async function main() {
