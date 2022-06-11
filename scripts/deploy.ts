@@ -93,17 +93,29 @@ async function main() {
     },
   );
 
-  const coreCutTx = await coreDiamond
-    .connect(deployer)
-    .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x');
+  console.log('\n\nCutting core facets into core diamond...');
+  try {
+    const coreCutTx = await coreDiamond
+      .connect(deployer)
+      .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x');
+    await coreCutTx.wait();
 
-  await coreCutTx.wait();
+    console.log('\n\nSuccessfully cut core facets into core diamond!');
+  } catch (err) {
+    console.log('\n\nAn error occurred: ', err);
+  }
 
-  const indexCutTx = await indexDiamond
-    .connect(deployer)
-    .diamondCut(indexFacetCuts, ethers.constants.AddressZero, '0x');
+  console.log('\n\nCutting index facets into index diamond...');
+  try {
+    const indexCutTx = await indexDiamond
+      .connect(deployer)
+      .diamondCut(indexFacetCuts, ethers.constants.AddressZero, '0x');
 
-  await indexCutTx.wait();
+    await indexCutTx.wait();
+    console.log('\n\nSuccessfully cut index facets into index diamond!');
+  } catch (err) {
+    console.log('\n\nAn error occurred: ', err);
+  }
 
   const coreAddresses: CoreAddresses = {
     CoreDiamond: coreDiamond.address,
@@ -120,16 +132,18 @@ async function main() {
   );
 
   console.log(`\n\nCore Diamond Address: ${coreDiamond.address}`);
-  console.log('Facet Addresses for Core Diamond: ');
   console.log('----------------------------------------------');
+  console.log('Facet Addresses for Core Diamond: ');
   console.log(`IndexManager Facet: ${indexManagerFacet.address}`);
+  console.log('----------------------------------------------');
 
   console.log(`\n\nIndex Diamond Address: ${indexDiamond.address}`);
-  console.log('Facet Addresses for Index Diamond: ');
   console.log('----------------------------------------------');
+  console.log('Facet Addresses for Index Diamond: ');
   console.log(`IndexBase Facet: ${indexBaseFacet.address}`);
   console.log(`IndexView Facet: ${indexViewFacet.address}`);
   console.log(`IndexIO Facet: ${indexIOFacet.address}`);
+  console.log('----------------------------------------------');
 }
 
 main()
