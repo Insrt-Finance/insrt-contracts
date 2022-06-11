@@ -31,10 +31,7 @@ export function describeBehaviorOfIndexSettings(
         ethers.utils.parseEther('0.6'),
       ];
       const endTime = BigNumber.from('86460'); //1 day + 1 minute in seconds
-      const latestBlock = await ethers.provider.getBlock(
-        await ethers.provider.getBlockNumber(),
-      );
-      const currentTimeStamp = latestBlock.timestamp;
+      const { currentTimeStamp } = await ethers.provider.getBlock('latest');
 
       const investmentPool = IInvestmentPool__factory.connect(
         await instance.asset(),
