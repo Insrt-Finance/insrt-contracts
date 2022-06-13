@@ -97,7 +97,10 @@ describe('IndexProxy', () => {
         balancerVault.address,
         BALANCER_HELPERS,
       ),
-      await new SolidStateERC20Mock__factory(deployer).deploy(),
+      await new SolidStateERC20Mock__factory(deployer).deploy(
+        'test token',
+        'TT',
+      ),
     ].map(function (f) {
       return {
         target: f.address,
@@ -123,8 +126,14 @@ describe('IndexProxy', () => {
     core = ICore__factory.connect(coreDiamond.address, ethers.provider);
 
     const tokens = [
-      await new SolidStateERC20Mock__factory(deployer).deploy(),
-      await new SolidStateERC20Mock__factory(deployer).deploy(),
+      await new SolidStateERC20Mock__factory(deployer).deploy(
+        'test token one',
+        'TT1',
+      ),
+      await new SolidStateERC20Mock__factory(deployer).deploy(
+        'test token two',
+        'TT2',
+      ),
     ];
 
     const tokenAddresses = tokens
