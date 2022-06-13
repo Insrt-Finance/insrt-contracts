@@ -50,7 +50,7 @@ async function main() {
     deployer,
   ).deploy();
 
-  const indexManagerFacet: IndexManager = await new IndexManager__factory(
+  const indexManagerImpl: IndexManager = await new IndexManager__factory(
     deployer,
   ).deploy(
     indexDiamond.address,
@@ -58,7 +58,7 @@ async function main() {
     balancerVault.address,
   );
 
-  const coreFacetCuts = [indexManagerFacet].map((facet) => {
+  const coreFacetCuts = [indexManagerImpl].map((facet) => {
     return {
       target: facet.address,
       action: 0,
@@ -70,17 +70,17 @@ async function main() {
 
   const indexSelectors = new Set();
 
-  const indexBaseFacet: IndexBase = await new IndexBase__factory(
+  const indexBaseImpl: IndexBase = await new IndexBase__factory(
     deployer,
   ).deploy(balancerVault.address, BALANCER_HELPERS);
-  const indexIOFacet: IndexIO = await new IndexIO__factory(deployer).deploy(
+  const indexIOImpl: IndexIO = await new IndexIO__factory(deployer).deploy(
     balancerVault.address,
     BALANCER_HELPERS,
   );
-  const indexViewFacet: IndexView = await new IndexView__factory(
+  const indexViewImpl: IndexView = await new IndexView__factory(
     deployer,
   ).deploy(balancerVault.address, BALANCER_HELPERS);
-  const indexFacetCuts = [indexBaseFacet, indexIOFacet, indexViewFacet].map(
+  const indexFacetCuts = [indexBaseImpl, indexIOImpl, indexViewImpl].map(
     (facet) => {
       return {
         target: facet.address,
@@ -119,10 +119,10 @@ async function main() {
   const coreAddresses: CoreAddresses = {
     CoreDiamond: coreDiamond.address,
     IndexDiamond: indexDiamond.address,
-    IndexManagerFacet: indexManagerFacet.address,
-    IndexBaseFacet: indexBaseFacet.address,
-    IndexIOFacet: indexIOFacet.address,
-    IndexViewFacet: indexViewFacet.address,
+    IndexManager: indexManagerImpl.address,
+    IndexBase: indexBaseImpl.address,
+    IndexIO: indexIOImpl.address,
+    IndexView: indexViewImpl.address,
   };
 
   createFile(
@@ -133,15 +133,15 @@ async function main() {
   console.log(`\n\nCore Diamond Address: ${coreDiamond.address}`);
   console.log('----------------------------------------------');
   console.log('Facet Addresses for Core Diamond: ');
-  console.log(`IndexManager Facet: ${indexManagerFacet.address}`);
+  console.log(`IndexManager Facet: ${indexManagerImpl.address}`);
   console.log('----------------------------------------------');
 
   console.log(`\n\nIndex Diamond Address: ${indexDiamond.address}`);
   console.log('----------------------------------------------');
   console.log('Facet Addresses for Index Diamond: ');
-  console.log(`IndexBase Facet: ${indexBaseFacet.address}`);
-  console.log(`IndexView Facet: ${indexViewFacet.address}`);
-  console.log(`IndexIO Facet: ${indexIOFacet.address}`);
+  console.log(`IndexBase Facet: ${indexBaseImpl.address}`);
+  console.log(`IndexView Facet: ${indexViewImpl.address}`);
+  console.log(`IndexIO Facet: ${indexIOImpl.address}`);
   console.log('----------------------------------------------');
 }
 
