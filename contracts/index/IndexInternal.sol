@@ -37,7 +37,7 @@ abstract contract IndexInternal is
 
     modifier onlyProtocolOwner() {
         require(
-            msg.sender == IERC173(OwnableStorage.layout().owner).owner(),
+            msg.sender == IERC173(_owner()).owner(),
             'Not protocol owner'
         );
         _;
