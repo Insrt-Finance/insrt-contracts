@@ -28,7 +28,7 @@ async function main() {
   let tokens: MockToken[];
 
   const dirPath = `data`;
-  const network = `arbitrum`;
+  const network = hre.network.name;
   createDir(`/${dirPath}/${network}`);
 
   const mockNFTX: SolidStateERC20Mock = await new SolidStateERC20Mock__factory(
