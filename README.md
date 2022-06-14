@@ -33,7 +33,6 @@ The Hardhat environment relies on the following environment variables. The `dote
 | `REPORT_GAS`                 | if `true`, a gas report will be generated after running tests |
 | `TENDERLY_URL_ARBITRUM`      | JSON-RPC node URL for `tenderly arbitrum` fork                |
 | `TENDERLY_CHAIN_ID`          | chainID for tenderly network (arbitrum fork)                  |
-| `PKEY_TENDERLY`              | PK of account to use for tenderly tx signing (arbitrum fork)  |
 | `ARBITRUM_FORK_BLOCK_NUMBER` | Block number from where tenderly forked arbitrum              |
 
 ### Networks

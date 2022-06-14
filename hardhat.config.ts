@@ -20,7 +20,6 @@ const {
   REPORT_GAS,
   TENDERLY_URL_ARBITRUM,
   ARBITRUM_FORK_BLOCK_NUMBER,
-  PKEY_TENDERLY,
 } = process.env;
 
 export default {
@@ -67,7 +66,7 @@ export default {
 
     tenderly: {
       url: TENDERLY_URL_ARBITRUM,
-      accounts: [PKEY_TENDERLY],
+      accounts: [PKEY_TESTNET],
       blockNumber: ARBITRUM_FORK_BLOCK_NUMBER,
     },
   },
