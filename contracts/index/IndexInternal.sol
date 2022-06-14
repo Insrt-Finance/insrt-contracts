@@ -36,10 +36,7 @@ abstract contract IndexInternal is
     }
 
     modifier onlyProtocolOwner() {
-        require(
-            msg.sender == IERC173(_owner()).owner(),
-            'Not protocol owner'
-        );
+        require(msg.sender == IERC173(_owner()).owner(), 'Not protocol owner');
         _;
     }
 
@@ -235,7 +232,7 @@ abstract contract IndexInternal is
         uint256 assetAmount,
         uint256 shareAmount
     ) internal virtual override {
-        super._afterDeposit(owner, assetAmount, shareAmount);
+        super._beforeWithdraw(owner, assetAmount, shareAmount);
 
         (uint256 feeAmount, ) = _applyFee(
             IndexStorage.layout().exitFee,
