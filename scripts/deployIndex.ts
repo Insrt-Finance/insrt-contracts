@@ -7,7 +7,7 @@ async function main() {
   const coreDiamondAddress = '0xFeC91feBEBB9fbb4D519137E2FE7B9a347666C2d';
 
   const dirPath = `data`;
-  const network = `arbitrum`;
+  const network = hre.network.name;
   const indexManager = await ethers.getContractAt(
     'IndexManager',
     coreDiamondAddress,

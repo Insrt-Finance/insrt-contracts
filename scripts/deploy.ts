@@ -23,7 +23,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   const dirPath = `data`;
-  const network = `arbitrum`;
+  const network = hre.network.name;
   createDir(`/${dirPath}/${network}`);
 
   const balancerVaultAddress = await getBalancerContractAddress(
