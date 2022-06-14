@@ -31,7 +31,7 @@ export function describeBehaviorOfIndexSettings(
         ethers.utils.parseEther('0.6'),
       ];
       const endTime = BigNumber.from('86460'); //1 day + 1 minute in seconds
-      const { currentTimeStamp } = await ethers.provider.getBlock('latest');
+      const { timestamp } = await ethers.provider.getBlock('latest');
 
       const investmentPool = IInvestmentPool__factory.connect(
         await instance.asset(),
@@ -42,11 +42,11 @@ export function describeBehaviorOfIndexSettings(
         .connect(owner)
         .updateWeights(
           newWeights,
-          BigNumber.from(currentTimeStamp.toString()).add(endTime),
+          BigNumber.from(timestamp.toString()).add(endTime),
         );
 
       await hre.network.provider.send('evm_setNextBlockTimestamp', [
-        BigNumber.from(currentTimeStamp.toString())
+        BigNumber.from(timestamp.toString())
           .add(endTime.div(ethers.constants.Two))
           .toNumber(),
       ]);
@@ -59,7 +59,7 @@ export function describeBehaviorOfIndexSettings(
       }
 
       await hre.network.provider.send('evm_setNextBlockTimestamp', [
-        BigNumber.from(currentTimeStamp.toString()).add(endTime).toNumber(),
+        BigNumber.from(timestamp.toString()).add(endTime).toNumber(),
       ]);
       await hre.network.provider.send('evm_mine');
 
