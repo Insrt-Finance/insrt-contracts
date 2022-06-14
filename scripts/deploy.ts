@@ -16,7 +16,6 @@ import {
   IndexBase,
   Core,
 } from '../typechain-types';
-import { core } from '../typechain-types/contracts';
 import { createDir, createFile, CoreAddresses } from './utils/utils';
 
 async function main() {
@@ -24,7 +23,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   const dirPath = `data`;
-  const network = `arbitrum`;
+  const network = hre.network.name;
   createDir(`/${dirPath}/${network}`);
 
   const balancerVaultAddress = await getBalancerContractAddress(
@@ -51,7 +50,7 @@ async function main() {
     deployer,
   ).deploy();
 
-  const indexManagerFacet: IndexManager = await new IndexManager__factory(
+  const indexManagerImpl: IndexManager = await new IndexManager__factory(
     deployer,
   ).deploy(
     indexDiamond.address,
@@ -59,7 +58,7 @@ async function main() {
     balancerVault.address,
   );
 
-  const coreFacetCuts = [indexManagerFacet].map((facet) => {
+  const coreFacetCuts = [indexManagerImpl].map((facet) => {
     return {
       target: facet.address,
       action: 0,
@@ -71,17 +70,17 @@ async function main() {
 
   const indexSelectors = new Set();
 
-  const indexBaseFacet: IndexBase = await new IndexBase__factory(
+  const indexBaseImpl: IndexBase = await new IndexBase__factory(
     deployer,
   ).deploy(balancerVault.address, BALANCER_HELPERS);
-  const indexIOFacet: IndexIO = await new IndexIO__factory(deployer).deploy(
+  const indexIOImpl: IndexIO = await new IndexIO__factory(deployer).deploy(
     balancerVault.address,
     BALANCER_HELPERS,
   );
-  const indexViewFacet: IndexView = await new IndexView__factory(
+  const indexViewImpl: IndexView = await new IndexView__factory(
     deployer,
   ).deploy(balancerVault.address, BALANCER_HELPERS);
-  const indexFacetCuts = [indexBaseFacet, indexIOFacet, indexViewFacet].map(
+  const indexFacetCuts = [indexBaseImpl, indexIOImpl, indexViewImpl].map(
     (facet) => {
       return {
         target: facet.address,
@@ -93,25 +92,37 @@ async function main() {
     },
   );
 
-  const coreCutTx = await coreDiamond
-    .connect(deployer)
-    .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x');
+  console.log('\n\nCutting core facets into core diamond...');
+  try {
+    const coreCutTx = await coreDiamond
+      .connect(deployer)
+      .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x');
+    await coreCutTx.wait();
 
-  await coreCutTx.wait();
+    console.log('\n\nSuccessfully cut core facets into core diamond!');
+  } catch (err) {
+    console.log('\n\nAn error occurred: ', err);
+  }
 
-  const indexCutTx = await indexDiamond
-    .connect(deployer)
-    .diamondCut(indexFacetCuts, ethers.constants.AddressZero, '0x');
+  console.log('\n\nCutting index facets into index diamond...');
+  try {
+    const indexCutTx = await indexDiamond
+      .connect(deployer)
+      .diamondCut(indexFacetCuts, ethers.constants.AddressZero, '0x');
 
-  await indexCutTx.wait();
+    await indexCutTx.wait();
+    console.log('\n\nSuccessfully cut index facets into index diamond!');
+  } catch (err) {
+    console.log('\n\nAn error occurred: ', err);
+  }
 
   const coreAddresses: CoreAddresses = {
     CoreDiamond: coreDiamond.address,
     IndexDiamond: indexDiamond.address,
-    IndexManagerFacet: indexManagerFacet.address,
-    IndexBaseFacet: indexBaseFacet.address,
-    IndexIOFacet: indexIOFacet.address,
-    IndexViewFacet: indexViewFacet.address,
+    IndexManager: indexManagerImpl.address,
+    IndexBase: indexBaseImpl.address,
+    IndexIO: indexIOImpl.address,
+    IndexView: indexViewImpl.address,
   };
 
   createFile(
@@ -120,16 +131,18 @@ async function main() {
   );
 
   console.log(`\n\nCore Diamond Address: ${coreDiamond.address}`);
-  console.log('Facet Addresses for Core Diamond: ');
   console.log('----------------------------------------------');
-  console.log(`IndexManager Facet: ${indexManagerFacet.address}`);
+  console.log('Facet Addresses for Core Diamond: ');
+  console.log(`IndexManager Facet: ${indexManagerImpl.address}`);
+  console.log('----------------------------------------------');
 
   console.log(`\n\nIndex Diamond Address: ${indexDiamond.address}`);
-  console.log('Facet Addresses for Index Diamond: ');
   console.log('----------------------------------------------');
-  console.log(`IndexBase Facet: ${indexBaseFacet.address}`);
-  console.log(`IndexView Facet: ${indexViewFacet.address}`);
-  console.log(`IndexIO Facet: ${indexIOFacet.address}`);
+  console.log('Facet Addresses for Index Diamond: ');
+  console.log(`IndexBase Facet: ${indexBaseImpl.address}`);
+  console.log(`IndexView Facet: ${indexViewImpl.address}`);
+  console.log(`IndexIO Facet: ${indexIOImpl.address}`);
+  console.log('----------------------------------------------');
 }
 
 main()

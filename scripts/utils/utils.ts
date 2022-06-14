@@ -3,14 +3,20 @@ import fs from 'fs';
 export interface CoreAddresses {
   CoreDiamond: string;
   IndexDiamond: string;
-  IndexManagerFacet: string;
-  IndexBaseFacet: string;
-  IndexIOFacet: string;
-  IndexViewFacet: string;
+  IndexManager: string;
+  IndexBase: string;
+  IndexIO: string;
+  IndexView: string;
 }
 
 export interface Index {
   Index: string;
+}
+
+export interface MockToken {
+  name: string;
+  symbol: string;
+  address: string;
 }
 
 export function readFile(filePath: string): any {
