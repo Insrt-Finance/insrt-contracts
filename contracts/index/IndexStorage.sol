@@ -2,9 +2,14 @@
 
 pragma solidity ^0.8.11;
 
+import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+
 library IndexStorage {
     struct Layout {
         uint256 id;
+        uint16 exitFee;
+        bytes32 poolId;
+        IERC20[] tokens;
     }
 
     bytes32 internal constant STORAGE_SLOT =

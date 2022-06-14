@@ -1,9 +1,5 @@
 {
   "compilerOptions": {
-    "resolveJsonModule": true,
-    "moduleResolution": "node",
     "esModuleInterop": true
-  },
-  "exclude": ["node_modules", "specification_docs"],
-  "files": ["./hardhat.config.ts"]
+  }
 }

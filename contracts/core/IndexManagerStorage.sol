@@ -2,6 +2,9 @@
 
 pragma solidity ^0.8.11;
 
+/**
+ * @title IndexManagerStorage library
+ */
 library IndexManagerStorage {
     struct Layout {
         uint256 count;

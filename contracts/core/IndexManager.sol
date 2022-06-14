@@ -2,9 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { OwnableInternal } from '@solidstate/contracts/access/OwnableInternal.sol';
+import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 
+import { IIndex } from '../index/IIndex.sol';
 import { IndexProxy } from '../index/IndexProxy.sol';
 import { IIndexManager } from './IIndexManager.sol';
 import { IndexManagerStorage } from './IndexManagerStorage.sol';
@@ -14,29 +16,53 @@ import { IndexManagerStorage } from './IndexManagerStorage.sol';
  * @dev deployed standalone and connected to core as diamond facet
  */
 contract IndexManager is IIndexManager, OwnableInternal {
+    using SafeERC20 for IERC20;
+
     address public immutable INDEX_DIAMOND;
     address public immutable INVESTMENT_POOL_FACTORY;
+    address public immutable BALANCER_VAULT;
 
-    constructor(address indexDiamond, address balancerInvestmentPoolFactory) {
+    constructor(
+        address indexDiamond,
+        address balancerInvestmentPoolFactory,
+        address balancerVault
+    ) {
         INDEX_DIAMOND = indexDiamond;
-
         INVESTMENT_POOL_FACTORY = balancerInvestmentPoolFactory;
+        BALANCER_VAULT = balancerVault;
     }
 
-    function deployIndex(IERC20[] calldata tokens, uint256[] calldata weights)
-        external
-        onlyOwner
-        returns (address deployment)
-    {
+    /**
+     * @inheritdoc IIndexManager
+     */
+    function deployIndex(
+        IERC20[] calldata tokens,
+        uint256[] calldata weights,
+        uint256[] calldata amounts,
+        uint16 exitFee
+    ) external onlyOwner returns (address deployment) {
         deployment = address(
             new IndexProxy(
                 INDEX_DIAMOND,
                 INVESTMENT_POOL_FACTORY,
+                BALANCER_VAULT,
                 tokens,
                 weights,
-                ++IndexManagerStorage.layout().count
+                ++IndexManagerStorage.layout().count,
+                exitFee
             )
         );
+
+        uint256 length = tokens.length;
+
+        for (uint256 i; i < length; ) {
+            tokens[i].safeTransferFrom(msg.sender, deployment, amounts[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
+        IIndex(payable(deployment)).initialize(amounts, msg.sender);
 
         emit IndexDeployed(deployment);
     }

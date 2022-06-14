@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.11;
 
-import { SafeOwnable } from '@solidstate/contracts/access/SafeOwnable.sol';
+import { OwnableStorage } from '@solidstate/contracts/access/ownable/Ownable.sol';
+import { SafeOwnable } from '@solidstate/contracts/access/ownable/SafeOwnable.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { OwnableStorage } from '@solidstate/contracts/access/Ownable.sol';
 import { StakingPoolProxy } from './StakingPoolProxy.sol';
 import { IStakingPool } from './IStakingPool.sol';
 import { StakingPoolFundStorage } from './StakingPoolFundStorage.sol';

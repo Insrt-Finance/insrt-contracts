@@ -5,7 +5,7 @@ import {
   StakedInsrtTokenMock,
   StakedInsrtTokenMock__factory,
 } from '../../typechain-types';
-import { describeBehaviorOfERC4626 } from '@solidstate/spec';
+import { describeBehaviorOfSolidStateERC4626 } from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ethers } from 'hardhat';
 import { BigNumber } from 'ethers';
@@ -31,12 +31,13 @@ describe('StakedInsrtToken', () => {
     );
   });
 
-  describeBehaviorOfERC4626({
-    deploy: async () => instance,
+  describeBehaviorOfSolidStateERC4626(async () => instance, {
     mint: async (recipient, amount) =>
       await instance['__mint(address,uint256)'](recipient, amount),
     burn: async (recipient, amount) =>
       await instance['__burn(address,uint256)'](recipient, amount),
+    allowance: (holder, spender) =>
+      instance.callStatic.allowance(holder, spender),
     getAsset: async () =>
       ethers.getContractAt(
         '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
