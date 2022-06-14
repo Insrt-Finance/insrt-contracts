@@ -8,18 +8,16 @@ import { createDir, createFile, MockToken } from './utils/utils';
 async function tokensToMockTokens(
   tokens: SolidStateERC20Mock[],
 ): Promise<MockToken[]> {
-  const MockTokens: MockToken[] = [];
-
-  for (let i = 0; i < tokens.length; i++) {
-    let MockToken = {
-      name: await tokens[i].name(),
-      symbol: await tokens[i].symbol(),
-      address: tokens[i].address,
-    };
-    MockTokens.push(MockToken);
-  }
-
-  return MockTokens;
+  return await Promise.all(
+    tokens.map(async (token) => {
+      let mockToken: MockToken = {
+        name: await token.name(),
+        symbol: await token.symbol(),
+        address: token.address,
+      };
+      return mockToken;
+    }),
+  );
 }
 
 async function main() {
