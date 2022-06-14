@@ -24,17 +24,20 @@ yarn run hardhat compile
 
 The Hardhat environment relies on the following environment variables. The `dotenv` package will attempt to read them from the `.env` and `.env.secret` files, if they are present.
 
-| Key                | Description                                                   |
-| ------------------ | ------------------------------------------------------------- |
-| `NODE_URL_MAINNET` | JSON-RPC node URL for `mainnet` network                       |
-| `NODE_URL_TESTNET` | JSON-RPC node URL for `testnet` network                       |
-| `PKEY_TESTNET`     | private key for test/development use on `testnet` network     |
-| `PKEY_MAINNET`     | private key for production use on `mainnet` network           |
-| `REPORT_GAS`       | if `true`, a gas report will be generated after running tests |
+| Key                          | Description                                                   |
+| ---------------------------- | ------------------------------------------------------------- |
+| `NODE_URL_MAINNET`           | JSON-RPC node URL for `mainnet` network                       |
+| `NODE_URL_TESTNET`           | JSON-RPC node URL for `testnet` network                       |
+| `PKEY_TESTNET`               | private key for test/development use on `testnet` network     |
+| `PKEY_MAINNET`               | private key for production use on `mainnet` network           |
+| `REPORT_GAS`                 | if `true`, a gas report will be generated after running tests |
+| `TENDERLY_URL_ARBITRUM`      | JSON-RPC node URL for `tenderly arbitrum` fork                |
+| `TENDERLY_CHAIN_ID`          | chainID for tenderly network (arbitrum fork)                  |
+| `ARBITRUM_FORK_BLOCK_NUMBER` | Block number from where tenderly forked arbitrum              |
 
 ### Networks
 
-By default, Hardhat uses the Hardhat Network in-process. Two additional networks, `mainnet` and `testnet` are available, and their behavior is determined by the configuration of environment variables.
+By default, Hardhat uses the Hardhat Network in-process. Three additional networks, `mainnet`, `testnet` and `tenderly` are available, and their behavior is determined by the configuration of environment variables.
 
 ### Testing
 

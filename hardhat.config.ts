@@ -1,5 +1,6 @@
 import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
+import '@tenderly/hardhat-tenderly';
 import 'hardhat-abi-exporter';
 import 'hardhat-dependency-compiler';
 import 'hardhat-docgen';
@@ -17,6 +18,8 @@ const {
   PKEY_MAINNET,
   PKEY_TESTNET,
   REPORT_GAS,
+  TENDERLY_URL_ARBITRUM,
+  ARBITRUM_FORK_BLOCK_NUMBER,
 } = process.env;
 
 export default {
@@ -59,6 +62,12 @@ export default {
     testnet: {
       url: NODE_URL_TESTNET,
       accounts: [PKEY_TESTNET],
+    },
+
+    tenderly: {
+      url: TENDERLY_URL_ARBITRUM,
+      accounts: [PKEY_TESTNET],
+      blockNumber: ARBITRUM_FORK_BLOCK_NUMBER,
     },
   },
 
