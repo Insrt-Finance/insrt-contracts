@@ -19,6 +19,7 @@ import {
   IVault,
   IVault__factory,
   IndexView__factory,
+  IndexSettings__factory,
 } from '../../typechain-types';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
@@ -97,10 +98,11 @@ describe('IndexProxy', () => {
         balancerVault.address,
         BALANCER_HELPERS,
       ),
-      await new SolidStateERC20Mock__factory(deployer).deploy(
-        'test token',
-        'TT',
+      await new IndexSettings__factory(deployer).deploy(
+        balancerVault.address,
+        BALANCER_HELPERS,
       ),
+      await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
     ].map(function (f) {
       return {
         target: f.address,

@@ -2,7 +2,9 @@
 
 pragma solidity ^0.8.0;
 
+import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
+import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
@@ -31,6 +33,11 @@ abstract contract IndexInternal is
     constructor(address balancerVault, address balancerHelpers) {
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
+    }
+
+    modifier onlyProtocolOwner() {
+        require(msg.sender == IERC173(_owner()).owner(), 'Not protocol owner');
+        _;
     }
 
     /**
@@ -225,7 +232,7 @@ abstract contract IndexInternal is
         uint256 assetAmount,
         uint256 shareAmount
     ) internal virtual override {
-        super._afterDeposit(owner, assetAmount, shareAmount);
+        super._beforeWithdraw(owner, assetAmount, shareAmount);
 
         (uint256 feeAmount, ) = _applyFee(
             IndexStorage.layout().exitFee,

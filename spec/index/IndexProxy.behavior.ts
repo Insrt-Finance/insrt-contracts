@@ -13,13 +13,18 @@ import {
   describeBehaviorOfIndexView,
   IndexViewBehaviorArgs,
 } from './IndexView.behavior';
+import {
+  describeBehaviorOfIndexSettings,
+  IndexSettingsBehaviorArgs,
+} from './IndexSettings.behavior';
 
 import { IIndex } from '../../typechain-types';
 
 export interface IndexProxyBehaviorArgs
   extends ProxyBehaviorArgs,
     IndexBaseBehaviorArgs,
-    IndexIOBehaviorArgs {}
+    IndexIOBehaviorArgs,
+    IndexSettingsBehaviorArgs {}
 
 export function describeBehaviorOfIndexProxy(
   deploy: () => Promise<IIndex>,
@@ -31,5 +36,6 @@ export function describeBehaviorOfIndexProxy(
     describeBehaviorOfIndexBase(deploy, args, skips);
     describeBehaviorOfIndexIO(deploy, args, skips);
     describeBehaviorOfIndexView(deploy, args, skips);
+    describeBehaviorOfIndexSettings(deploy, args, skips);
   });
 }
