@@ -26,6 +26,7 @@ async function main() {
   const network = hre.network.name;
   createDir(`/${dirPath}/${network}`);
 
+  const EXIT_FEE = ethers.constants.Zero;
   const balancerVaultAddress = await getBalancerContractAddress(
     '20210418-vault',
     'Vault',
@@ -72,14 +73,15 @@ async function main() {
 
   const indexBaseImpl: IndexBase = await new IndexBase__factory(
     deployer,
-  ).deploy(balancerVault.address, BALANCER_HELPERS);
+  ).deploy(balancerVault.address, BALANCER_HELPERS, EXIT_FEE);
   const indexIOImpl: IndexIO = await new IndexIO__factory(deployer).deploy(
     balancerVault.address,
     BALANCER_HELPERS,
+    EXIT_FEE,
   );
   const indexViewImpl: IndexView = await new IndexView__factory(
     deployer,
-  ).deploy(balancerVault.address, BALANCER_HELPERS);
+  ).deploy(balancerVault.address, BALANCER_HELPERS, EXIT_FEE);
   const indexFacetCuts = [indexBaseImpl, indexIOImpl, indexViewImpl].map(
     (facet) => {
       return {
