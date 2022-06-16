@@ -49,6 +49,8 @@ describe('IndexProxy', () => {
   before(async () => {
     [deployer] = await ethers.getSigners();
 
+    const EXIT_FEE = ethers.constants.Zero;
+
     const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
       'Vault',
@@ -89,18 +91,22 @@ describe('IndexProxy', () => {
       await new IndexBase__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        EXIT_FEE,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        EXIT_FEE,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        EXIT_FEE,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        EXIT_FEE,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
     ].map(function (f) {
@@ -173,7 +179,7 @@ describe('IndexProxy', () => {
 
     const deployIndexTx = await core
       .connect(deployer)
-      .deployIndex(tokensArg, weightsArg, amountsArg, ethers.constants.Zero);
+      .deployIndex(tokensArg, weightsArg, amountsArg, EXIT_FEE);
 
     const { events } = await deployIndexTx.wait();
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
