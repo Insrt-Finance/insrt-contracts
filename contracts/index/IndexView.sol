@@ -16,9 +16,11 @@ import { IVault, IAsset } from '../balancer/IVault.sol';
 contract IndexView is IndexInternal, IIndexView {
     using IndexStorage for IndexStorage.Layout;
 
-    constructor(address balancerVault, address balancerHelpers)
-        IndexInternal(balancerVault, balancerHelpers)
-    {}
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        uint256 exitFee
+    ) IndexInternal(balancerVault, balancerHelpers, exitFee) {}
 
     /**
      * @inheritdoc IIndexView
@@ -30,7 +32,7 @@ contract IndexView is IndexInternal, IIndexView {
     /**
      * @inheritdoc IIndexView
      */
-    function getExitFee() external view returns (uint16) {
+    function getExitFee() external view returns (uint256) {
         return _exitFee();
     }
 }

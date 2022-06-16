@@ -28,11 +28,17 @@ abstract contract IndexInternal is
 
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
+    uint256 internal immutable EXIT_FEE;
     uint256 internal constant FEE_BASIS = 10000;
 
-    constructor(address balancerVault, address balancerHelpers) {
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        uint256 exitFee
+    ) {
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
+        EXIT_FEE = exitFee;
     }
 
     modifier onlyProtocolOwner() {
@@ -100,7 +106,7 @@ abstract contract IndexInternal is
      * @return totalFee the actual value of the fee (not percent)
      * @return remainder the remaining amount after the fee has been subtracted from it
      */
-    function _applyFee(uint16 fee, uint256 amount)
+    function _applyFee(uint256 fee, uint256 amount)
         internal
         view
         returns (uint256 totalFee, uint256 remainder)
@@ -141,8 +147,8 @@ abstract contract IndexInternal is
      * @notice get the exit fee in basis points
      * @return exitFee
      */
-    function _exitFee() internal view virtual returns (uint16) {
-        return IndexStorage.layout().exitFee;
+    function _exitFee() internal view virtual returns (uint256) {
+        return EXIT_FEE;
     }
 
     /**
@@ -221,10 +227,7 @@ abstract contract IndexInternal is
         override
         returns (uint256 assetAmount)
     {
-        (, assetAmount) = _applyFee(
-            IndexStorage.layout().exitFee,
-            _convertToAssets(shareAmount)
-        );
+        (, assetAmount) = _applyFee(EXIT_FEE, _convertToAssets(shareAmount));
     }
 
     function _beforeWithdraw(
@@ -235,7 +238,7 @@ abstract contract IndexInternal is
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
         (uint256 feeAmount, ) = _applyFee(
-            IndexStorage.layout().exitFee,
+            EXIT_FEE,
             _convertToAssets(shareAmount)
         );
 

@@ -20,9 +20,11 @@ contract IndexIO is IndexInternal, IIndexIO {
     using IndexStorage for IndexStorage.Layout;
     using SafeERC20 for IERC20;
 
-    constructor(address balancerVault, address balancerHelpers)
-        IndexInternal(balancerVault, balancerHelpers)
-    {}
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        uint256 exitFee
+    ) IndexInternal(balancerVault, balancerHelpers, exitFee) {}
 
     /**
      * @inheritdoc IIndexIO

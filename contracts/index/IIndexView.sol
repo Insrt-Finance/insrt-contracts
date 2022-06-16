@@ -16,5 +16,5 @@ interface IIndexView {
      * @notice get the exit fee in basis points
      * @return exitFee of the Index
      */
-    function getExitFee() external view returns (uint16);
+    function getExitFee() external view returns (uint256);
 }
