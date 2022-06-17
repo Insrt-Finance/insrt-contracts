@@ -20,7 +20,6 @@ contract IndexProxy is Proxy {
     using UintUtils for uint256;
 
     address private immutable INDEX_DIAMOND;
-    uint256 private immutable EXIT_FEE;
 
     constructor(
         address indexDiamond,
@@ -28,11 +27,9 @@ contract IndexProxy is Proxy {
         address balancerVault,
         IERC20[] memory tokens,
         uint256[] memory weights,
-        uint256 id,
-        uint16 exitFee
+        uint256 id
     ) {
         INDEX_DIAMOND = indexDiamond;
-        EXIT_FEE = exitFee;
 
         OwnableStorage.layout().owner = msg.sender;
 
