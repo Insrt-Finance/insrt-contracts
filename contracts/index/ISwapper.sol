@@ -7,13 +7,15 @@ pragma solidity ^0.8.0;
  */
 interface ISwapper {
     /**
-     * @notice function to execute an arbitrary swap on an arbitrary target
+     * @notice execute an arbitrary swap on an arbitrary target
+     * @param inputToken the token to be given for the swap
      * @param outputToken the expected token to be received after the swap
      * @param outputTokenAmountMin the minimum amount of outputToken to be received from the swap
      * @param target the address of the contract to perform the swap
      * @param data the calldata required for the swap
      */
     function swap(
+        address inputToken,
         address outputToken,
         uint256 outputTokenAmountMin,
         address target,

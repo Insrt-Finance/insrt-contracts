@@ -107,12 +107,18 @@ contract IndexIO is IndexInternal, IIndexIO {
         bytes calldata data,
         address receiver
     ) external returns (uint256 shareAmount) {
-        IERC20(inputToken).approve(SWAPPER, inputTokenAmount);
-        ISwapper(SWAPPER).swap(outputToken, outputTokenAmountMin, target, data);
+        IERC20(inputToken).transferFrom(msg.sender, SWAPPER, inputTokenAmount);
+
+        ISwapper(SWAPPER).swap(
+            inputToken,
+            outputToken,
+            outputTokenAmountMin,
+            target,
+            data
+        );
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        uint256 tokensLength = l.tokens.length;
-        uint256[] memory poolTokenAmounts = new uint256[](tokensLength);
+        uint256[] memory poolTokenAmounts = new uint256[](l.tokens.length);
         poolTokenAmounts[outputTokenIndex] = IERC20(outputToken).balanceOf(
             address(this)
         );

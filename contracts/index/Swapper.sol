@@ -10,11 +10,17 @@ contract Swapper is ISwapper {
      * @inheritdoc ISwapper
      */
     function swap(
+        address inputToken,
         address outputToken,
         uint256 outputTokenAmountMin,
         address target,
         bytes calldata data
     ) external {
+        IERC20(inputToken).approve(
+            target,
+            IERC20(inputToken).balanceOf(address(this))
+        );
+
         (bool success, ) = target.call(data);
         require(success, 'External swap failed');
 
