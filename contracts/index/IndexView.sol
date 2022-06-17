@@ -16,9 +16,11 @@ import { IVault, IAsset } from '../balancer/IVault.sol';
 contract IndexView is IndexInternal, IIndexView {
     using IndexStorage for IndexStorage.Layout;
 
-    constructor(address balancerVault, address balancerHelpers)
-        IndexInternal(balancerVault, balancerHelpers)
-    {}
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        address swapper
+    ) IndexInternal(balancerVault, balancerHelpers, swapper) {}
 
     /**
      * @inheritdoc IIndexView

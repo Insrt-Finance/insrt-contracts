@@ -28,11 +28,17 @@ abstract contract IndexInternal is
 
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
+    address internal immutable SWAPPER;
     uint256 internal constant FEE_BASIS = 10000;
 
-    constructor(address balancerVault, address balancerHelpers) {
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        address swapper
+    ) {
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
+        SWAPPER = swapper;
     }
 
     modifier onlyProtocolOwner() {

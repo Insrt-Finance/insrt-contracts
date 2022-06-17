@@ -12,9 +12,11 @@ import { IIndexSettings } from './IIndexSettings.sol';
  * @dev deployed standalone and referenced by IndexProxy
  */
 contract IndexSettings is IndexInternal, IIndexSettings {
-    constructor(address balancerVault, address balancerHelpers)
-        IndexInternal(balancerVault, balancerHelpers)
-    {}
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        address swapper
+    ) IndexInternal(balancerVault, balancerHelpers, swapper) {}
 
     /**
      * @inheritdoc IIndexSettings

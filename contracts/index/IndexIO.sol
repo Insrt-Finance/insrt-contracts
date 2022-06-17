@@ -21,11 +21,11 @@ contract IndexIO is IndexInternal, IIndexIO {
     using IndexStorage for IndexStorage.Layout;
     using SafeERC20 for IERC20;
 
-    address internal constant SWAPPER = address(0);
-
-    constructor(address balancerVault, address balancerHelpers)
-        IndexInternal(balancerVault, balancerHelpers)
-    {}
+    constructor(
+        address balancerVault,
+        address balancerHelpers,
+        address swapper
+    ) IndexInternal(balancerVault, balancerHelpers, swapper) {}
 
     /**
      * @inheritdoc IIndexIO
