@@ -19,7 +19,7 @@ contract Swapper is ISwapper {
         address target,
         bytes calldata data
     ) external {
-        IERC20(inputToken).approve(
+        IERC20(inputToken).safeApprove(
             target,
             IERC20(inputToken).balanceOf(address(this))
         );
