@@ -32,7 +32,8 @@ interface IIndexIO {
     ) external returns (uint256 shareAmount);
 
     /**
-     * @notice function to deposit an arbitrary ERC20 token into the Insrt-Index
+     * @notice performs an arbitrary swap of an ERC20 token for an underlying token of the Insrt-Index, deposit underlying token
+     *  into the Insrt-Index
      * @dev takes a desired ERC20 input token, swaps it for an underlying outputToken which
      * is an underlying token of Insrt-Index and deposits it, returning Insrt-Index shares to
      * user
