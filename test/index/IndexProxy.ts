@@ -179,7 +179,7 @@ describe('IndexProxy', () => {
 
     const deployIndexTx = await core
       .connect(deployer)
-      .deployIndex(tokensArg, weightsArg, amountsArg, EXIT_FEE);
+      .deployIndex(tokensArg, weightsArg, amountsArg);
 
     const { events } = await deployIndexTx.wait();
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
