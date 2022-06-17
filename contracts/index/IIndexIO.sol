@@ -32,6 +32,34 @@ interface IIndexIO {
     ) external returns (uint256 shareAmount);
 
     /**
+     * @notice function to deposit an arbitrary ERC20 token into the Insrt-Index
+     * @dev takes a desired ERC20 input token, swaps it for an underlying outputToken which
+     * is an underlying token of Insrt-Index and deposits it, returning Insrt-Index shares to
+     * user
+     * @param inputToken the desired ERC20 to deposit
+     * @param inputTokenAmount the amount of inputToken to be deposited
+     * @param outputToken an underlying token of the Insrt-Index and the token to be swapped to
+     * @param outputTokenAmountMin the minimum amount of returned output token after the swap
+     * @param outputTokenIndex the index of the outputToken in the tokens array in storage layout
+     * @param minShareAmount the minimum amount of shares Insrt-Index to be received by the user
+     * @param target the address of the contract to perform the swapping
+     * @param data the calldata to execute in the low-level call
+     * @param receiver the address of the user receiving the shares
+     * @return shareAmount the amount of shares returned for the deposit
+     */
+    function deposit(
+        address inputToken,
+        uint256 inputTokenAmount,
+        address outputToken,
+        uint256 outputTokenAmountMin,
+        uint256 outputTokenIndex,
+        uint256 minShareAmount,
+        address target,
+        bytes calldata data,
+        address receiver
+    ) external returns (uint256 shareAmount);
+
+    /**
      * @notice function which burns insrt-index shares and returns underlying tokens in Balancer InvestmentPool
      * @dev applies a fee on the shares, and sends an amount of `remainingShares` of BPT from insrt-index
      * to Balancer InvestmentPool in exchange for tokens, sent to the user. Shares are burnt.
