@@ -25,13 +25,13 @@ contract Swapper is ISwapper {
         );
 
         (bool success, ) = target.call(data);
-        require(success, 'External swap failed');
+        require(success, 'Swapper: external swap failed');
 
         uint256 outputAmount = IERC20(outputToken).balanceOf(address(this));
 
         require(
             outputAmount >= outputTokenAmountMin,
-            'Output token amount received too small'
+            'Swapper: output token amount received too small'
         );
         IERC20(outputToken).safeTransfer(msg.sender, outputAmount);
     }
