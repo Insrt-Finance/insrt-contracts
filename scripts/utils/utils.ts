@@ -7,6 +7,7 @@ export interface CoreAddresses {
   IndexBase: string;
   IndexIO: string;
   IndexView: string;
+  IndexSettings: string;
 }
 
 export interface Index {

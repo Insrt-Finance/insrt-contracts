@@ -27,8 +27,7 @@ contract IndexProxy is Proxy {
         address balancerVault,
         IERC20[] memory tokens,
         uint256[] memory weights,
-        uint256 id,
-        uint16 exitFee
+        uint256 id
     ) {
         INDEX_DIAMOND = indexDiamond;
 
@@ -59,7 +58,6 @@ contract IndexProxy is Proxy {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         l.id = id;
-        l.exitFee = exitFee;
         l.poolId = IInvestmentPool(balancerPool).getPoolId();
         l.tokens = tokens;
 
