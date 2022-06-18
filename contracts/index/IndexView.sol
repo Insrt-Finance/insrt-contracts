@@ -19,8 +19,9 @@ contract IndexView is IndexInternal, IIndexView {
     constructor(
         address balancerVault,
         address balancerHelpers,
-        address swapper
-    ) IndexInternal(balancerVault, balancerHelpers, swapper) {}
+        address swapper,
+        uint256 exitFee
+    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
 
     /**
      * @inheritdoc IIndexView
@@ -32,7 +33,7 @@ contract IndexView is IndexInternal, IIndexView {
     /**
      * @inheritdoc IIndexView
      */
-    function getExitFee() external view returns (uint16) {
+    function getExitFee() external view returns (uint256) {
         return _exitFee();
     }
 }
