@@ -116,6 +116,11 @@ contract IndexIO is IndexInternal, IIndexIO {
             target,
             data
         );
+        IERC20(inputToken).safeTransfer(
+            msg.sender,
+            IERC20(inputToken).balanceOf(address(this))
+        );
+
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         uint256[] memory poolTokenAmounts = new uint256[](l.tokens.length);

@@ -34,5 +34,9 @@ contract Swapper is ISwapper {
             'Swapper: output token amount received too small'
         );
         IERC20(outputToken).safeTransfer(msg.sender, outputAmount);
+        IERC20(inputToken).safeTransfer(
+            msg.sender,
+            IERC20(inputToken).balanceOf(address(this))
+        );
     }
 }
