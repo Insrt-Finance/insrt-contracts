@@ -15,6 +15,8 @@ import {
   IndexIO,
   IndexBase,
   Core,
+  IndexSettings,
+  IndexSettings__factory,
 } from '../typechain-types';
 import { createDir, createFile, CoreAddresses } from './utils/utils';
 
@@ -26,6 +28,7 @@ async function main() {
   const network = hre.network.name;
   createDir(`/${dirPath}/${network}`);
 
+  const EXIT_FEE = ethers.constants.Zero;
   const balancerVaultAddress = await getBalancerContractAddress(
     '20210418-vault',
     'Vault',
@@ -72,25 +75,32 @@ async function main() {
 
   const indexBaseImpl: IndexBase = await new IndexBase__factory(
     deployer,
-  ).deploy(balancerVault.address, BALANCER_HELPERS);
+  ).deploy(balancerVault.address, BALANCER_HELPERS, EXIT_FEE);
   const indexIOImpl: IndexIO = await new IndexIO__factory(deployer).deploy(
     balancerVault.address,
     BALANCER_HELPERS,
+    EXIT_FEE,
   );
   const indexViewImpl: IndexView = await new IndexView__factory(
     deployer,
-  ).deploy(balancerVault.address, BALANCER_HELPERS);
-  const indexFacetCuts = [indexBaseImpl, indexIOImpl, indexViewImpl].map(
-    (facet) => {
-      return {
-        target: facet.address,
-        action: 0,
-        selectors: Object.keys(facet.interface.functions)
-          .filter((fn) => !indexSelectors.has(fn) && indexSelectors.add(fn))
-          .map((fn) => facet.interface.getSighash(fn)),
-      };
-    },
-  );
+  ).deploy(balancerVault.address, BALANCER_HELPERS, EXIT_FEE);
+  const indexSettingsImpl: IndexSettings = await new IndexSettings__factory(
+    deployer,
+  ).deploy(balancerVault.address, BALANCER_HELPERS, EXIT_FEE);
+  const indexFacetCuts = [
+    indexBaseImpl,
+    indexIOImpl,
+    indexViewImpl,
+    indexSettingsImpl,
+  ].map((facet) => {
+    return {
+      target: facet.address,
+      action: 0,
+      selectors: Object.keys(facet.interface.functions)
+        .filter((fn) => !indexSelectors.has(fn) && indexSelectors.add(fn))
+        .map((fn) => facet.interface.getSighash(fn)),
+    };
+  });
 
   console.log('\n\nCutting core facets into core diamond...');
   try {
@@ -123,6 +133,7 @@ async function main() {
     IndexBase: indexBaseImpl.address,
     IndexIO: indexIOImpl.address,
     IndexView: indexViewImpl.address,
+    IndexSettings: indexSettingsImpl.address,
   };
 
   createFile(
@@ -142,6 +153,7 @@ async function main() {
   console.log(`IndexBase Facet: ${indexBaseImpl.address}`);
   console.log(`IndexView Facet: ${indexViewImpl.address}`);
   console.log(`IndexIO Facet: ${indexIOImpl.address}`);
+  console.log(`IndexSettings Facet: ${indexSettingsImpl.address}`);
   console.log('----------------------------------------------');
 }
 

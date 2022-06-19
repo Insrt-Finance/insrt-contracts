@@ -17,8 +17,9 @@ contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
     constructor(
         address balancerVault,
         address balancerHelpers,
-        address swapper
-    ) IndexInternal(balancerVault, balancerHelpers, swapper) {}
+        address swapper,
+        uint256 exitFee
+    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
 
     /**
      * @inheritdoc IndexInternal

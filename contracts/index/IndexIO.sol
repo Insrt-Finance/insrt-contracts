@@ -24,8 +24,9 @@ contract IndexIO is IndexInternal, IIndexIO {
     constructor(
         address balancerVault,
         address balancerHelpers,
-        address swapper
-    ) IndexInternal(balancerVault, balancerHelpers, swapper) {}
+        address swapper,
+        uint256 exitFee
+    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
 
     /**
      * @inheritdoc IIndexIO

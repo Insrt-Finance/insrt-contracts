@@ -32,13 +32,11 @@ interface IIndexManager {
      * @param weights the weights of the underlying tokens of the Insrt-Index
      * @param amounts the amount of each underlying token given for the intialization of the underlying
      * Balancer Investment Pool
-     * @param exitFee the fee to be applied on redeem of Insrt-Index shares
      * @return deployment the address of the Insrt-Index proxy
      */
     function deployIndex(
         IERC20[] calldata tokens,
         uint256[] calldata weights,
-        uint256[] calldata amounts,
-        uint16 exitFee
+        uint256[] calldata amounts
     ) external returns (address deployment);
 }
