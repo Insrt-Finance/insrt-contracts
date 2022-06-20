@@ -91,21 +91,25 @@ describe('IndexProxy', () => {
       await new IndexBase__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        ethers.constants.AddressZero,
         EXIT_FEE,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        ethers.constants.AddressZero,
         EXIT_FEE,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        ethers.constants.AddressZero,
         EXIT_FEE,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        ethers.constants.AddressZero,
         EXIT_FEE,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
