@@ -17,8 +17,9 @@ contract Swapper is ISwapper {
         address outputToken,
         uint256 outputTokenAmountMin,
         address target,
+        address receiver,
         bytes calldata data
-    ) external {
+    ) external returns (uint256 outputAmount) {
         IERC20(inputToken).safeApprove(
             target,
             IERC20(inputToken).balanceOf(address(this))
@@ -27,7 +28,7 @@ contract Swapper is ISwapper {
         (bool success, ) = target.call(data);
         require(success, 'Swapper: external swap failed');
 
-        uint256 outputAmount = IERC20(outputToken).balanceOf(address(this));
+        outputAmount = IERC20(outputToken).balanceOf(address(this));
 
         require(
             outputAmount >= outputTokenAmountMin,
@@ -35,7 +36,7 @@ contract Swapper is ISwapper {
         );
         IERC20(outputToken).safeTransfer(msg.sender, outputAmount);
         IERC20(inputToken).safeTransfer(
-            msg.sender,
+            receiver,
             IERC20(inputToken).balanceOf(address(this))
         );
     }
