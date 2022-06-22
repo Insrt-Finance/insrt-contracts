@@ -17,6 +17,7 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
+import { Interface } from '@ethersproject/abi';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
@@ -31,9 +32,15 @@ export function describeBehaviorOfIndexIO(
   let depositor: SignerWithAddress;
   let instance: IIndex;
   let investmentPoolToken: SolidStateERC20Mock;
+  let arbitraryERC20: SolidStateERC20Mock;
   const assets: SolidStateERC20Mock[] = [];
   const poolTokenAmounts: BigNumber[] = [];
   const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab';
+  const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506';
+  const uniSwapV2RouterABI = new Interface([
+    'function addLiquidity(address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) returns (uint amountA, uint amountB, uint liquidity)',
+    'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] path, address to, uint deadline) returns (uint[] amounts)',
+  ]);
   let BALANCER_VAULT = '';
   let balVaultInstance: IVault;
   let balancerHelpers: IBalancerHelpers;
@@ -66,6 +73,14 @@ export function describeBehaviorOfIndexIO(
         .div(totalWeight);
       poolTokenAmounts.push(depositAmount);
     }
+    arbitraryERC20 = await new SolidStateERC20Mock__factory(depositor).deploy(
+      'ArbERC20',
+      'AERC20',
+    );
+    await arbitraryERC20['__mint(address,uint256)'](
+      depositor.address,
+      ethers.utils.parseEther('1000000'),
+    );
   });
 
   beforeEach(async () => {
@@ -173,6 +188,82 @@ export function describeBehaviorOfIndexIO(
           newVaultBalances[i].sub(poolTokenAmounts[i]),
         );
       }
+    });
+  });
+
+  describe.only('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
+    it('mints shares to user at 1:1 for BPT received', async () => {
+      const uniswapV2Router = new ethers.Contract(
+        uniswapV2RouterAddress,
+        uniSwapV2RouterABI,
+        depositor,
+      );
+      const { timestamp } = await ethers.provider.getBlock('latest');
+      const liquidityAmount = ethers.utils.parseEther('100');
+      const deadline = BigNumber.from(timestamp.toString()).add(
+        BigNumber.from('86000'),
+      );
+      await arbitraryERC20.approve(uniswapV2RouterAddress, liquidityAmount);
+      await assets[0].approve(uniswapV2RouterAddress, liquidityAmount);
+      await uniswapV2Router
+        .connect(depositor)
+        .addLiquidity(
+          assets[0].address,
+          arbitraryERC20.address,
+          liquidityAmount,
+          liquidityAmount,
+          ethers.utils.parseEther('1'),
+          ethers.utils.parseEther('1'),
+          depositor.address,
+          deadline,
+        );
+
+      const amountIn = ethers.utils.parseEther('1.0');
+      const amountOutMin = ethers.utils.parseEther('0.1');
+      await arbitraryERC20
+        .connect(depositor)
+        .approve(instance.address, amountIn);
+      const swapper = await instance.getSwapper();
+      const data = uniSwapV2RouterABI.encodeFunctionData(
+        'swapExactTokensForTokens',
+        [
+          amountIn,
+          amountOutMin,
+          [arbitraryERC20.address, assets[0].address],
+          swapper,
+          deadline,
+        ],
+      );
+      const target = uniswapV2RouterAddress;
+
+      const oldUserBalance = await instance.balanceOf(depositor.address);
+      const oldIndexBalance = await investmentPoolToken.balanceOf(
+        instance.address,
+      );
+
+      await instance
+        .connect(depositor)
+        [
+          'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+        ](
+          arbitraryERC20.address,
+          amountIn,
+          assets[0].address,
+          amountOutMin,
+          ethers.constants.Zero,
+          amountOutMin,
+          target,
+          data,
+          depositor.address,
+        );
+      const newUserBalance = await instance.balanceOf(depositor.address);
+      const newIndexBalance = await investmentPoolToken.balanceOf(
+        instance.address,
+      );
+
+      const mintedShares = newUserBalance.sub(oldUserBalance);
+      const receivedBPT = newIndexBalance.sub(oldIndexBalance);
+      expect(mintedShares).to.eq(receivedBPT);
     });
   });
 
