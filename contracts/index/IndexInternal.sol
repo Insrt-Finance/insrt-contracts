@@ -147,6 +147,14 @@ abstract contract IndexInternal is
     }
 
     /**
+     * @notice get the address of swapper contract
+     * @return swapper address
+     */
+    function _swapper() internal view virtual returns (address) {
+        return SWAPPER;
+    }
+
+    /**
      * @notice get the exit fee in basis points
      * @return exitFee
      */

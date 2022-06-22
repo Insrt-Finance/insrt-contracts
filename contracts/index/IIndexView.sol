@@ -17,4 +17,10 @@ interface IIndexView {
      * @return exitFee of the Index
      */
     function getExitFee() external view returns (uint256);
+
+    /**
+     * @notice get the swapper address
+     * @return swapper address
+     */
+    function getSwapper() external view returns (address);
 }

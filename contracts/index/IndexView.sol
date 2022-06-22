@@ -36,4 +36,11 @@ contract IndexView is IndexInternal, IIndexView {
     function getExitFee() external view returns (uint256) {
         return _exitFee();
     }
+
+    /**
+     * @inheritdoc IIndexView
+     */
+    function getSwapper() external view returns (address) {
+        return _swapper();
+    }
 }
