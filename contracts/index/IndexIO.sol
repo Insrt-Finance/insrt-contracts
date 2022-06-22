@@ -110,8 +110,9 @@ contract IndexIO is IndexInternal, IIndexIO {
     ) external returns (uint256 shareAmount) {
         IERC20(inputToken).transferFrom(msg.sender, SWAPPER, inputTokenAmount);
 
-        uint256 outputAmount = ISwapper(SWAPPER).swap(
+        uint256 swapOutputAmount = ISwapper(SWAPPER).swap(
             inputToken,
+            inputTokenAmount,
             outputToken,
             outputTokenAmountMin,
             target,
@@ -122,7 +123,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         uint256[] memory poolTokenAmounts = new uint256[](l.tokens.length);
-        poolTokenAmounts[outputTokenIndex] = outputAmount;
+        poolTokenAmounts[outputTokenIndex] = swapOutputAmount;
 
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
