@@ -20,6 +20,7 @@ import {
   IVault__factory,
   IndexView__factory,
   IndexSettings__factory,
+  Swapper__factory,
 } from '../../typechain-types';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
@@ -65,6 +66,8 @@ describe('IndexProxy', () => {
 
     balancerVault = IVault__factory.connect(balancerVaultAddress, deployer);
 
+    const swapper = await new Swapper__factory(deployer).deploy();
+
     const coreDiamond = await new Core__factory(deployer).deploy();
 
     const indexDiamond = await new IndexDiamond__factory(deployer).deploy();
@@ -91,21 +94,25 @@ describe('IndexProxy', () => {
       await new IndexBase__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
