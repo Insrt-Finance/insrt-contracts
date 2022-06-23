@@ -28,6 +28,7 @@ import { BigNumber, ContractTransaction } from 'ethers';
 
 import { describeBehaviorOfERC20Metadata } from '@solidstate/spec';
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
+import { defaultAbiCoder } from 'ethers/lib/utils';
 
 const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
 
@@ -175,7 +176,7 @@ describe('IndexProxy', () => {
     for (let i = 0; i < tokens.length; i++) {
       await tokens[i]
         .connect(deployer)
-        .__mint(deployer.address, ethers.utils.parseUnits('10000', 18));
+        .__mint(deployer.address, ethers.utils.parseEther('10000'));
       await tokens[i]
         .connect(deployer)
         .approve(core.address, ethers.constants.MaxUint256);
@@ -227,22 +228,23 @@ describe('IndexProxy', () => {
     allowance: (holder, spender) =>
       instance.callStatic.allowance(holder, spender),
     mintAsset: async (recipient, amount) => {
-      // use JoinKind ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
-      const userData = ethers.utils.solidityPack(
-        ['uint256', 'uint256'],
-        [ethers.BigNumber.from('3'), amount],
+      const maxAmountsIn = await Promise.all(
+        tokensArg.map((t) =>
+          IERC20__factory.connect(t, ethers.provider).callStatic.balanceOf(
+            deployer.address,
+          ),
+        ),
+      );
+      // use JoinKind EXACT_TOKENS_IN_FOR_BPT_OUT
+      const userData = defaultAbiCoder.encode(
+        ['uint256', 'uint256[]', 'uint256'],
+        [ethers.BigNumber.from('1'), maxAmountsIn, amount],
       );
 
       const request = {
         assets: tokensArg,
-        maxAmountsIn: await Promise.all(
-          tokensArg.map((t) =>
-            IERC20__factory.connect(t, ethers.provider).callStatic.balanceOf(
-              deployer.address,
-            ),
-          ),
-        ),
-        userData,
+        maxAmountsIn: maxAmountsIn,
+        userData: userData,
         fromInternalBalance: false,
       };
 
@@ -255,7 +257,7 @@ describe('IndexProxy', () => {
           request,
         );
 
-      return await balancerPool.transfer(recipient, amount);
+      return await balancerPool.connect(deployer).transfer(recipient, amount);
     },
     name: `Insrt Finance InfraIndex #${id}`,
     symbol: `IFII-${id}`,
