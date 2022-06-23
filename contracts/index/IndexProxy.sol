@@ -49,7 +49,7 @@ contract IndexProxy is Proxy {
                 address(this),
                 // TODO: implications of swapEnabledOnStart?
                 true,
-                1 ether
+                0
             );
 
         // set balancer pool as base ERC4626 asset
