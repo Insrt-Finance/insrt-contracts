@@ -16,11 +16,5 @@ interface IIndexView {
      * @notice get the exit fee in basis points
      * @return exitFee of the Index
      */
-    function getExitFee() external view returns (uint256);
-
-    /**
-     * @notice get the swapper address
-     * @return swapper address
-     */
-    function getSwapper() external view returns (address);
+    function exitFee() external view returns (uint256);
 }
