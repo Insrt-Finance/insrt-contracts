@@ -18,6 +18,7 @@ import { defaultAbiCoder } from 'ethers/lib/utils';
 export interface IndexIOBehaviorArgs {
   tokens: string[];
   weights: BigNumber[];
+  swapper: string[];
 }
 
 export function describeBehaviorOfIndexIO(
@@ -110,7 +111,7 @@ export function describeBehaviorOfIndexIO(
     );
   });
 
-  describe.only('#deposit(uint256[],uint256)', () => {
+  describe('#deposit(uint256[],uint256)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
@@ -207,7 +208,8 @@ export function describeBehaviorOfIndexIO(
       await arbitraryERC20
         .connect(depositor)
         .approve(instance.address, amountIn);
-      const swapper = await instance.getSwapper();
+
+      const swapper = args.swapper[0];
       const data = uniSwapV2RouterABI.encodeFunctionData(
         'swapExactTokensForTokens',
         [

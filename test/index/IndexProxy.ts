@@ -21,6 +21,7 @@ import {
   IndexView__factory,
   IndexSettings__factory,
   Swapper__factory,
+  Swapper,
 } from '../../typechain-types';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
@@ -45,6 +46,8 @@ describe('IndexProxy', () => {
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
   const amountsArg: BigNumber[] = [];
+  //workaround for visibility
+  const swapperArg: string[] = [];
 
   const id = 1;
 
@@ -68,6 +71,7 @@ describe('IndexProxy', () => {
     balancerVault = IVault__factory.connect(balancerVaultAddress, deployer);
 
     const swapper = await new Swapper__factory(deployer).deploy();
+    swapperArg.push(swapper.address);
 
     const coreDiamond = await new Core__factory(deployer).deploy();
 
@@ -266,6 +270,7 @@ describe('IndexProxy', () => {
 
     tokens: tokensArg,
     weights: weightsArg,
+    swapper: swapperArg,
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],
