@@ -2,7 +2,6 @@ import { ethers } from 'hardhat';
 import {
   IBalancerHelpers,
   IBalancerHelpers__factory,
-  IERC20__factory,
   IIndex,
   IVault,
   IVault__factory,
@@ -10,14 +9,11 @@ import {
   SolidStateERC20Mock__factory,
 } from '../../typechain-types';
 import { BigNumber } from 'ethers';
-import {
-  describeBehaviorOfSolidStateERC4626,
-  SolidStateERC4626BehaviorArgs,
-} from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 import { Interface } from '@ethersproject/abi';
+import { defaultAbiCoder } from 'ethers/lib/utils';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
@@ -85,6 +81,7 @@ export function describeBehaviorOfIndexIO(
 
   beforeEach(async () => {
     instance = await deploy();
+
     BALANCER_VAULT = await getBalancerContractAddress(
       '20210418-vault',
       'Vault',
@@ -113,53 +110,40 @@ export function describeBehaviorOfIndexIO(
     );
   });
 
-  describe('#deposit(uint256[],uint256)', () => {
+  describe.only('#deposit(uint256[],uint256)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
-      // const userData = ethers.utils.solidityPack(
-      // ['uint256', 'uint256[]', 'uint256'],
-      // [ethers.BigNumber.from('1'), poolTokenAmounts, minBptOut],
-      // );
-
-      // const request = {
-      // assets: args.tokens,
-      // maxAmountsIn: poolTokenAmounts,
-      // userData,
-      // fromInternalBalance: false,
-      // };
-
-      // const [bptOut, requiredAmounts] = await balancerHelpers
-      // .connect(depositor)
-      // .callStatic.queryJoin(
-      // await instance.callStatic.getPoolId(),
-      // instance.address,
-      // instance.address,
-      // request,
-      // );
-
-      const oldUserBalance = await instance.balanceOf(depositor.address);
-      const oldIndexBalance = await investmentPoolToken.balanceOf(
-        instance.address,
+      const userData = defaultAbiCoder.encode(
+        ['uint256', 'uint256[]', 'uint256'],
+        [ethers.BigNumber.from('1'), poolTokenAmounts, minBptOut],
       );
 
-      await instance
+      const request = {
+        assets: args.tokens,
+        maxAmountsIn: poolTokenAmounts,
+        userData: userData,
+        fromInternalBalance: false,
+      };
+
+      const [bptOut, requiredAmounts] = await balancerHelpers
         .connect(depositor)
-        ['deposit(uint256[],uint256,address)'](
-          poolTokenAmounts,
-          minBptOut,
-          depositor.address,
+        .callStatic.queryJoin(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          instance.address,
+          request,
         );
 
-      const newUserBalance = await instance.balanceOf(depositor.address);
-      const newIndexBalance = await investmentPoolToken.balanceOf(
-        instance.address,
-      );
-
-      const mintedShares = newUserBalance.sub(oldUserBalance);
-      const receivedBPT = newIndexBalance.sub(oldIndexBalance);
-
-      expect(mintedShares).to.eq(receivedBPT);
+      await expect(() =>
+        instance
+          .connect(depositor)
+          ['deposit(uint256[],uint256,address)'](
+            poolTokenAmounts,
+            minBptOut,
+            depositor.address,
+          ),
+      ).to.changeTokenBalance(instance, depositor, bptOut);
     });
 
     it('transfers all of the deposited token amounts from user to Balancer Vault', async () => {
@@ -191,7 +175,7 @@ export function describeBehaviorOfIndexIO(
     });
   });
 
-  describe.only('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
+  describe('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
       const uniswapV2Router = new ethers.Contract(
         uniswapV2RouterAddress,
