@@ -165,7 +165,12 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmountOut
         );
 
-        _exitPool(l, minPoolTokenAmounts, userData, receiver);
+        poolTokenAmounts = _exitPool(
+            l,
+            minPoolTokenAmounts,
+            userData,
+            receiver
+        );
 
         _withdraw(
             msg.sender,
@@ -188,7 +193,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address receiver
-    ) external returns (uint256[] memory poolTokenAmounts) {
+    ) external returns (uint256 poolTokenAmount) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         // because assets and shares are pegged 1:1, output can be treated as share amount
@@ -200,7 +205,13 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         );
 
-        _exitPool(l, minPoolTokenAmounts, userData, receiver);
+        uint256[] memory poolTokenAmounts = _exitPool(
+            l,
+            minPoolTokenAmounts,
+            userData,
+            receiver
+        );
+        poolTokenAmount = poolTokenAmounts[tokenId];
 
         _withdraw(
             msg.sender,

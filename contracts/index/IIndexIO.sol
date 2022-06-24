@@ -83,12 +83,12 @@ interface IIndexIO {
      * @param minPoolTokenAmounts the amounts of underlying token received in exchange for shares
      * @param tokenId the id of the token to be received
      * @param receiver recipient of withdrawn pool tokens
-     * @return poolTokenAmounts quantities of underlying pool tokens yielded
+     * @return poolTokenAmount quantitiy of underlying pool token with tokenId returned
      */
     function redeem(
         uint256 shareAmount,
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address receiver
-    ) external returns (uint256[] memory poolTokenAmounts);
+    ) external returns (uint256 poolTokenAmount);
 }
