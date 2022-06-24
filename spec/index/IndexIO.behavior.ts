@@ -206,9 +206,52 @@ export function describeBehaviorOfIndexIO(
         .connect(depositor)
         .approve(instance.address, amountIn);
 
+      //for query
+      await arbitraryERC20
+        .connect(depositor)
+        .approve(uniswapV2RouterAddress, amountIn);
+
       const swapper = args.swapper[0];
 
-      const data = uniswapV2Router.interface.encodeFunctionData(
+      const queriedSwapAmounts = await uniswapV2Router
+        .connect(depositor)
+        .callStatic.swapExactTokensForTokens(
+          amountIn,
+          amountOutMin,
+          [arbitraryERC20.address, assets[0].address],
+          swapper,
+          deadline,
+        );
+
+      //position of output token amount
+      const queriedSwapAmountOut = queriedSwapAmounts[1];
+
+      //filling inputAmounts array for balancer query
+      const inputAmounts = [queriedSwapAmountOut];
+      for (let i = 1; i < assets.length; i++) {
+        inputAmounts[i] = ethers.constants.Zero;
+      }
+
+      const userData = defaultAbiCoder.encode(
+        ['uint256', 'uint256[]', 'uint256'],
+        [ethers.BigNumber.from('1'), inputAmounts, amountOutMin],
+      );
+      const request = {
+        assets: args.tokens,
+        maxAmountsIn: poolTokenAmounts,
+        userData: userData,
+        fromInternalBalance: false,
+      };
+      const [bptOut, requiredAmounts] = await balancerHelpers
+        .connect(depositor)
+        .callStatic.queryJoin(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          instance.address,
+          request,
+        );
+
+      const swapData = uniswapV2Router.interface.encodeFunctionData(
         'swapExactTokensForTokens',
         [
           amountIn,
@@ -220,34 +263,23 @@ export function describeBehaviorOfIndexIO(
       );
       const target = uniswapV2RouterAddress;
 
-      const oldUserBalance = await instance.balanceOf(depositor.address);
-      const oldIndexBalance = await investmentPoolToken.balanceOf(
-        instance.address,
-      );
-
-      await instance
-        .connect(depositor)
-        [
-          'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
-        ](
-          arbitraryERC20.address,
-          amountIn,
-          assets[0].address,
-          amountOutMin,
-          ethers.constants.Zero,
-          amountOutMin,
-          target,
-          data,
-          depositor.address,
-        );
-      const newUserBalance = await instance.balanceOf(depositor.address);
-      const newIndexBalance = await investmentPoolToken.balanceOf(
-        instance.address,
-      );
-
-      const mintedShares = newUserBalance.sub(oldUserBalance);
-      const receivedBPT = newIndexBalance.sub(oldIndexBalance);
-      expect(mintedShares).to.eq(receivedBPT);
+      await expect(() =>
+        instance
+          .connect(depositor)
+          [
+            'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+          ](
+            arbitraryERC20.address,
+            amountIn,
+            assets[0].address,
+            amountOutMin,
+            ethers.constants.Zero,
+            amountOutMin,
+            target,
+            swapData,
+            depositor.address,
+          ),
+      ).to.changeTokenBalance(instance, depositor, bptOut);
     });
   });
 
