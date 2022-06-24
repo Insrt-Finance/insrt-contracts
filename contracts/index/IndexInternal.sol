@@ -50,6 +50,14 @@ abstract contract IndexInternal is
     }
 
     /**
+     * @notice returns the protocol owner
+     * @return address of the protocol owner
+     */
+    function _protocolOwner() internal view returns (address) {
+        return IERC173(_owner()).owner();
+    }
+
+    /**
      * @notice construct Balancer join request and exchange underlying pool tokens for BPT
      * @param amounts token quantities to deposit, in asset-sorted order
      * @param userData encoded join parameters
