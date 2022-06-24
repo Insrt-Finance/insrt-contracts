@@ -3,16 +3,16 @@ import {
   IBalancerHelpers,
   IBalancerHelpers__factory,
   IIndex,
-  IVault,
   IVault__factory,
   SolidStateERC20Mock,
   SolidStateERC20Mock__factory,
+  UniswapV2Router02,
+  UniswapV2Router02__factory,
 } from '../../typechain-types';
 import { BigNumber } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
-import { Interface } from '@ethersproject/abi';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 
 export interface IndexIOBehaviorArgs {
