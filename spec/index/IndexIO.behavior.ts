@@ -3,7 +3,6 @@ import {
   IBalancerHelpers,
   IBalancerHelpers__factory,
   IIndex,
-  IVault__factory,
   SolidStateERC20Mock,
   SolidStateERC20Mock__factory,
   UniswapV2Router02,
@@ -80,6 +79,26 @@ export function describeBehaviorOfIndexIO(
       uniswapV2RouterAddress,
       depositor,
     );
+
+    const { timestamp } = await ethers.provider.getBlock('latest');
+    const liquidityAmount = ethers.utils.parseEther('100');
+    const deadline = BigNumber.from(timestamp.toString()).add(
+      BigNumber.from('86000'),
+    );
+    await arbitraryERC20.approve(uniswapV2RouterAddress, liquidityAmount);
+    await assets[0].approve(uniswapV2RouterAddress, liquidityAmount);
+    await uniswapV2Router
+      .connect(depositor)
+      .addLiquidity(
+        assets[0].address,
+        arbitraryERC20.address,
+        liquidityAmount,
+        liquidityAmount,
+        ethers.utils.parseEther('1'),
+        ethers.utils.parseEther('1'),
+        depositor.address,
+        deadline,
+      );
   });
 
   beforeEach(async () => {
@@ -180,32 +199,17 @@ export function describeBehaviorOfIndexIO(
   describe('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
       const { timestamp } = await ethers.provider.getBlock('latest');
-      const liquidityAmount = ethers.utils.parseEther('100');
       const deadline = BigNumber.from(timestamp.toString()).add(
         BigNumber.from('86000'),
       );
-      await arbitraryERC20.approve(uniswapV2RouterAddress, liquidityAmount);
-      await assets[0].approve(uniswapV2RouterAddress, liquidityAmount);
-      await uniswapV2Router
-        .connect(depositor)
-        .addLiquidity(
-          assets[0].address,
-          arbitraryERC20.address,
-          liquidityAmount,
-          liquidityAmount,
-          ethers.utils.parseEther('1'),
-          ethers.utils.parseEther('1'),
-          depositor.address,
-          deadline,
-        );
-
       const amountIn = ethers.utils.parseEther('1.0');
-      const amountOutMin = ethers.utils.parseEther('0.1');
+      const amountOutMin = ethers.constants.Zero;
       await arbitraryERC20
         .connect(depositor)
         .approve(instance.address, amountIn);
 
       const swapper = args.swapper[0];
+
       const data = uniswapV2Router.interface.encodeFunctionData(
         'swapExactTokensForTokens',
         [
