@@ -471,6 +471,15 @@ export function describeBehaviorOfIndexIO(
       for (let i = 0; i < assets.length; i++) {
         oldUserBalances.push(await assets[i].balanceOf(depositor.address));
       }
+
+      const returnedPoolTokenAmounts = await instance
+        .connect(depositor)
+        .callStatic['redeem(uint256,uint256[],address)'](
+          userBalance,
+          minPoolTokenAmounts,
+          depositor.address,
+        );
+
       await instance
         .connect(depositor)
         ['redeem(uint256,uint256[],address)'](
@@ -488,6 +497,7 @@ export function describeBehaviorOfIndexIO(
         expect(returnedAmounts[i]).to.eq(
           newUserBalances[i].sub(oldUserBalances[i]),
         );
+        expect(returnedAmounts[i]).to.eq(returnedPoolTokenAmounts[i]);
       }
     });
   });
@@ -534,13 +544,28 @@ export function describeBehaviorOfIndexIO(
       const feeBasis = BigNumber.from('10000');
       const feeScaling = feeBasis.sub(fee).div(feeBasis);
 
+      const tokenId = ethers.constants.Zero;
+
+      const returnedPoolTokenAmount = await instance
+        .connect(depositor)
+        .callStatic['redeem(uint256,uint256[],uint256,address)'](
+          minBptOut,
+          minPoolTokenAmounts,
+          tokenId,
+          depositor.address,
+        );
+
+      const oldUserBalance = await assets[tokenId.toNumber()].balanceOf(
+        depositor.address,
+      );
+
       await expect(() =>
         instance
           .connect(depositor)
           ['redeem(uint256,uint256[],uint256,address)'](
             minBptOut,
             minPoolTokenAmounts,
-            ethers.constants.Zero,
+            tokenId,
             depositor.address,
           ),
       ).to.changeTokenBalance(
@@ -548,6 +573,12 @@ export function describeBehaviorOfIndexIO(
         depositor,
         bptIn.mul(feeScaling).mul(ethers.constants.NegativeOne),
       );
+
+      const newUserBalance = await assets[tokenId.toNumber()].balanceOf(
+        depositor.address,
+      );
+
+      expect(returnedPoolTokenAmount).to.eq(newUserBalance.sub(oldUserBalance));
     });
   });
 }
