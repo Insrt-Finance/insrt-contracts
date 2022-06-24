@@ -281,40 +281,102 @@ export function describeBehaviorOfIndexIO(
           ),
       ).to.changeTokenBalance(instance, depositor, bptOut);
     });
+
+    describe('reverts if', () => {
+      it('swapper: amount of output token returned is less than minimum  expected', async () => {
+        const amountIn = ethers.utils.parseEther('1.0');
+        const amountOutMin = ethers.utils.parseEther('100000');
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(instance.address, amountIn);
+
+        //for query
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(uniswapV2RouterAddress, amountIn);
+
+        const swapper = args.swapper[0];
+
+        const swapData = uniswapV2Router.interface.encodeFunctionData(
+          'swapExactTokensForTokens',
+          [
+            amountIn,
+            ethers.constants.Zero,
+            [arbitraryERC20.address, assets[0].address],
+            swapper,
+            deadline,
+          ],
+        );
+        const target = uniswapV2RouterAddress;
+
+        await expect(
+          instance
+            .connect(depositor)
+            [
+              'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+            ](
+              arbitraryERC20.address,
+              amountIn,
+              assets[0].address,
+              amountOutMin,
+              ethers.constants.Zero,
+              amountOutMin,
+              target,
+              swapData,
+              depositor.address,
+            ),
+        ).to.be.revertedWith('Swapper: output token amount received too small');
+      });
+
+      it('swapper: external call fails', async () => {
+        const amountIn = ethers.utils.parseEther('1.0');
+        const amountOutMin = ethers.utils.parseEther('100000');
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(instance.address, amountIn);
+
+        //for query
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(uniswapV2RouterAddress, amountIn);
+
+        const swapper = args.swapper[0];
+
+        const swapData = uniswapV2Router.interface.encodeFunctionData(
+          'swapExactTokensForTokens',
+          [
+            amountIn,
+            amountOutMin,
+            [arbitraryERC20.address, assets[0].address],
+            swapper,
+            deadline,
+          ],
+        );
+        const target = uniswapV2RouterAddress;
+
+        await expect(
+          instance
+            .connect(depositor)
+            [
+              'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+            ](
+              arbitraryERC20.address,
+              amountIn,
+              assets[0].address,
+              amountOutMin,
+              ethers.constants.Zero,
+              amountOutMin,
+              target,
+              swapData,
+              depositor.address,
+            ),
+        ).to.be.revertedWith('Swapper: external swap failed');
+      });
+    });
   });
 
   describe('#redeem(uint256,uint256[],address)', () => {
     it('burns BPT at 1:1, for shares - fee', async () => {
-      // const minBptOut = ethers.utils.parseUnits('1', 'gwei');
-
-      // await instance
-      // .connect(depositor)
-      // ['deposit(uint256[],uint256,address)'](
-      // poolTokenAmounts,
-      // minBptOut,
-      // depositor.address,
-      // );
-
-      // const oldUserBalance = await instance.balanceOf(depositor.address);
-      // const oldBptSupply = await investmentPoolToken.totalSupply();
-      // const minPoolTokenAmounts = [
-      // minBptOut,
-      // minBptOut
-      // ];
-
-      // await instance.connect(depositor)['redeem(uint256,uint256[],address)']
-      // (oldUserBalance, minPoolTokenAmounts, depositor.address);
-
-      // const newUserBalance = await instance.balanceOf(depositor.address);
-      // const newBptSupply = await investmentPoolToken.totalSupply();
-
-      // const fee = await instance.getExitFee();
-      // const feeBasis = BigNumber.from('10000');
-      // const feeScaling = (feeBasis.sub(fee)).div(feeBasis);
-
-      // const bptDelta = newBptSupply.sub(oldBptSupply);
-      // const userDelta = newUserBalance.sub(oldUserBalance);
-      // expect(bptDelta).to.eq(userDelta.mul(feeScaling));
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       await instance
