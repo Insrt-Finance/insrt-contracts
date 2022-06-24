@@ -36,6 +36,7 @@ export function describeBehaviorOfIndexIO(
   let BALANCER_VAULT = '';
   let balancerHelpers: IBalancerHelpers;
   let uniswapV2Router: UniswapV2Router02;
+  let deadline: BigNumber;
 
   before(async () => {
     [depositor] = await ethers.getSigners();
@@ -80,11 +81,12 @@ export function describeBehaviorOfIndexIO(
       depositor,
     );
 
-    const { timestamp } = await ethers.provider.getBlock('latest');
-    const liquidityAmount = ethers.utils.parseEther('100');
-    const deadline = BigNumber.from(timestamp.toString()).add(
+    let { timestamp } = await ethers.provider.getBlock('latest');
+    deadline = BigNumber.from(timestamp.toString()).add(
       BigNumber.from('86000'),
     );
+
+    const liquidityAmount = ethers.utils.parseEther('100');
     await arbitraryERC20.approve(uniswapV2RouterAddress, liquidityAmount);
     await assets[0].approve(uniswapV2RouterAddress, liquidityAmount);
     await uniswapV2Router
@@ -198,10 +200,6 @@ export function describeBehaviorOfIndexIO(
 
   describe('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
-      const { timestamp } = await ethers.provider.getBlock('latest');
-      const deadline = BigNumber.from(timestamp.toString()).add(
-        BigNumber.from('86000'),
-      );
       const amountIn = ethers.utils.parseEther('1.0');
       const amountOutMin = ethers.constants.Zero;
       await arbitraryERC20
