@@ -32,15 +32,11 @@ export function describeBehaviorOfIndexIO(
   let arbitraryERC20: SolidStateERC20Mock;
   const assets: SolidStateERC20Mock[] = [];
   const poolTokenAmounts: BigNumber[] = [];
-  const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab';
-  const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506';
-  const uniSwapV2RouterABI = new Interface([
-    'function addLiquidity(address tokenA, address tokenB, uint amountADesired, uint amountBDesired, uint amountAMin, uint amountBMin, address to, uint deadline) returns (uint amountA, uint amountB, uint liquidity)',
-    'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] path, address to, uint deadline) returns (uint[] amounts)',
-  ]);
+  const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
+  const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'; //arbitrum
   let BALANCER_VAULT = '';
-  let balVaultInstance: IVault;
   let balancerHelpers: IBalancerHelpers;
+  let uniswapV2Router: UniswapV2Router02;
 
   before(async () => {
     [depositor] = await ethers.getSigners();
@@ -70,6 +66,7 @@ export function describeBehaviorOfIndexIO(
         .div(totalWeight);
       poolTokenAmounts.push(depositAmount);
     }
+
     arbitraryERC20 = await new SolidStateERC20Mock__factory(depositor).deploy(
       'ArbERC20',
       'AERC20',
@@ -77,6 +74,11 @@ export function describeBehaviorOfIndexIO(
     await arbitraryERC20['__mint(address,uint256)'](
       depositor.address,
       ethers.utils.parseEther('1000000'),
+    );
+
+    uniswapV2Router = UniswapV2Router02__factory.connect(
+      uniswapV2RouterAddress,
+      depositor,
     );
   });
 
@@ -176,13 +178,8 @@ export function describeBehaviorOfIndexIO(
     });
   });
 
-  describe('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
+  describe.only('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
-      const uniswapV2Router = new ethers.Contract(
-        uniswapV2RouterAddress,
-        uniSwapV2RouterABI,
-        depositor,
-      );
       const { timestamp } = await ethers.provider.getBlock('latest');
       const liquidityAmount = ethers.utils.parseEther('100');
       const deadline = BigNumber.from(timestamp.toString()).add(
@@ -210,7 +207,7 @@ export function describeBehaviorOfIndexIO(
         .approve(instance.address, amountIn);
 
       const swapper = args.swapper[0];
-      const data = uniSwapV2RouterABI.encodeFunctionData(
+      const data = uniswapV2Router.interface.encodeFunctionData(
         'swapExactTokensForTokens',
         [
           amountIn,
@@ -320,7 +317,7 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const fee = await instance.getExitFee();
+      const fee = await instance.exitFee();
       const feeBasis = BigNumber.from('10000');
       const feeScaling = feeBasis.sub(fee).div(feeBasis);
 
@@ -438,7 +435,7 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const fee = await instance.getExitFee();
+      const fee = await instance.exitFee();
       const feeBasis = BigNumber.from('10000');
       const feeScaling = feeBasis.sub(fee).div(feeBasis);
 
