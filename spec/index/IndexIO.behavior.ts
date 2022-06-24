@@ -90,7 +90,6 @@ export function describeBehaviorOfIndexIO(
       'Vault',
       'arbitrum',
     );
-    balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
     balancerHelpers = IBalancerHelpers__factory.connect(
       BALANCER_HELPERS,
       depositor,
@@ -178,7 +177,7 @@ export function describeBehaviorOfIndexIO(
     });
   });
 
-  describe.only('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
+  describe('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
       const { timestamp } = await ethers.provider.getBlock('latest');
       const liquidityAmount = ethers.utils.parseEther('100');
