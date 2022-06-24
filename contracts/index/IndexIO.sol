@@ -8,6 +8,7 @@ import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 import { IIndexIO } from './IIndexIO.sol';
 import { IndexInternal } from './IndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
+import { ISwapper } from './ISwapper.sol';
 import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 import { IVault } from '../balancer/IVault.sol';
@@ -23,8 +24,9 @@ contract IndexIO is IndexInternal, IIndexIO {
     constructor(
         address balancerVault,
         address balancerHelpers,
+        address swapper,
         uint256 exitFee
-    ) IndexInternal(balancerVault, balancerHelpers, exitFee) {}
+    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
 
     /**
      * @inheritdoc IIndexIO
@@ -75,6 +77,59 @@ contract IndexIO is IndexInternal, IIndexIO {
                 ++i;
             }
         }
+
+        _joinPool(poolTokenAmounts, userData);
+
+        shareAmount =
+            IERC20(_asset()).balanceOf(address(this)) -
+            _totalSupply();
+
+        _deposit(
+            msg.sender,
+            receiver,
+            shareAmount,
+            shareAmount,
+            shareAmount,
+            0
+        );
+    }
+
+    /**
+     * @inheritdoc IIndexIO
+     */
+    function deposit(
+        address inputToken,
+        uint256 inputTokenAmount,
+        address outputToken,
+        uint256 outputTokenAmountMin,
+        uint256 outputTokenIndex,
+        uint256 minShareAmount,
+        address target,
+        bytes calldata data,
+        address receiver
+    ) external returns (uint256 shareAmount) {
+        IERC20(inputToken).transferFrom(msg.sender, SWAPPER, inputTokenAmount);
+
+        uint256 swapOutputAmount = ISwapper(SWAPPER).swap(
+            inputToken,
+            inputTokenAmount,
+            outputToken,
+            outputTokenAmountMin,
+            target,
+            msg.sender,
+            data
+        );
+
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        uint256[] memory poolTokenAmounts = new uint256[](l.tokens.length);
+        poolTokenAmounts[outputTokenIndex] = swapOutputAmount;
+
+        bytes memory userData = abi.encode(
+            IInvestmentPool.JoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+            poolTokenAmounts,
+            minShareAmount
+        );
 
         _joinPool(poolTokenAmounts, userData);
 

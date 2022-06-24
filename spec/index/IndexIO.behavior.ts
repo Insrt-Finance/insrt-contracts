@@ -2,25 +2,22 @@ import { ethers } from 'hardhat';
 import {
   IBalancerHelpers,
   IBalancerHelpers__factory,
-  IERC20__factory,
   IIndex,
-  IVault,
-  IVault__factory,
   SolidStateERC20Mock,
   SolidStateERC20Mock__factory,
+  UniswapV2Router02,
+  UniswapV2Router02__factory,
 } from '../../typechain-types';
 import { BigNumber } from 'ethers';
-import {
-  describeBehaviorOfSolidStateERC4626,
-  SolidStateERC4626BehaviorArgs,
-} from '@solidstate/spec';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
+import { defaultAbiCoder } from 'ethers/lib/utils';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
   weights: BigNumber[];
+  swapper: string[];
 }
 
 export function describeBehaviorOfIndexIO(
@@ -31,12 +28,15 @@ export function describeBehaviorOfIndexIO(
   let depositor: SignerWithAddress;
   let instance: IIndex;
   let investmentPoolToken: SolidStateERC20Mock;
+  let arbitraryERC20: SolidStateERC20Mock;
   const assets: SolidStateERC20Mock[] = [];
   const poolTokenAmounts: BigNumber[] = [];
-  const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab';
+  const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
+  const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'; //arbitrum
   let BALANCER_VAULT = '';
-  let balVaultInstance: IVault;
   let balancerHelpers: IBalancerHelpers;
+  let uniswapV2Router: UniswapV2Router02;
+  let deadline: BigNumber;
 
   before(async () => {
     [depositor] = await ethers.getSigners();
@@ -66,16 +66,51 @@ export function describeBehaviorOfIndexIO(
         .div(totalWeight);
       poolTokenAmounts.push(depositAmount);
     }
+
+    arbitraryERC20 = await new SolidStateERC20Mock__factory(depositor).deploy(
+      'ArbERC20',
+      'AERC20',
+    );
+    await arbitraryERC20['__mint(address,uint256)'](
+      depositor.address,
+      ethers.utils.parseEther('1000000'),
+    );
+
+    uniswapV2Router = UniswapV2Router02__factory.connect(
+      uniswapV2RouterAddress,
+      depositor,
+    );
+
+    let { timestamp } = await ethers.provider.getBlock('latest');
+    deadline = BigNumber.from(timestamp.toString()).add(
+      BigNumber.from('86000'),
+    );
+
+    const liquidityAmount = ethers.utils.parseEther('100');
+    await arbitraryERC20.approve(uniswapV2RouterAddress, liquidityAmount);
+    await assets[0].approve(uniswapV2RouterAddress, liquidityAmount);
+    await uniswapV2Router
+      .connect(depositor)
+      .addLiquidity(
+        assets[0].address,
+        arbitraryERC20.address,
+        liquidityAmount,
+        liquidityAmount,
+        ethers.utils.parseEther('1'),
+        ethers.utils.parseEther('1'),
+        depositor.address,
+        deadline,
+      );
   });
 
   beforeEach(async () => {
     instance = await deploy();
+
     BALANCER_VAULT = await getBalancerContractAddress(
       '20210418-vault',
       'Vault',
       'arbitrum',
     );
-    balVaultInstance = IVault__factory.connect(BALANCER_VAULT, depositor);
     balancerHelpers = IBalancerHelpers__factory.connect(
       BALANCER_HELPERS,
       depositor,
@@ -102,49 +137,36 @@ export function describeBehaviorOfIndexIO(
     it('mints shares to user at 1:1 for BPT received', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
-      // const userData = ethers.utils.solidityPack(
-      // ['uint256', 'uint256[]', 'uint256'],
-      // [ethers.BigNumber.from('1'), poolTokenAmounts, minBptOut],
-      // );
-
-      // const request = {
-      // assets: args.tokens,
-      // maxAmountsIn: poolTokenAmounts,
-      // userData,
-      // fromInternalBalance: false,
-      // };
-
-      // const [bptOut, requiredAmounts] = await balancerHelpers
-      // .connect(depositor)
-      // .callStatic.queryJoin(
-      // await instance.callStatic.getPoolId(),
-      // instance.address,
-      // instance.address,
-      // request,
-      // );
-
-      const oldUserBalance = await instance.balanceOf(depositor.address);
-      const oldIndexBalance = await investmentPoolToken.balanceOf(
-        instance.address,
+      const userData = defaultAbiCoder.encode(
+        ['uint256', 'uint256[]', 'uint256'],
+        [ethers.BigNumber.from('1'), poolTokenAmounts, minBptOut],
       );
 
-      await instance
+      const request = {
+        assets: args.tokens,
+        maxAmountsIn: poolTokenAmounts,
+        userData: userData,
+        fromInternalBalance: false,
+      };
+
+      const [bptOut, requiredAmounts] = await balancerHelpers
         .connect(depositor)
-        ['deposit(uint256[],uint256,address)'](
-          poolTokenAmounts,
-          minBptOut,
-          depositor.address,
+        .callStatic.queryJoin(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          instance.address,
+          request,
         );
 
-      const newUserBalance = await instance.balanceOf(depositor.address);
-      const newIndexBalance = await investmentPoolToken.balanceOf(
-        instance.address,
-      );
-
-      const mintedShares = newUserBalance.sub(oldUserBalance);
-      const receivedBPT = newIndexBalance.sub(oldIndexBalance);
-
-      expect(mintedShares).to.eq(receivedBPT);
+      await expect(() =>
+        instance
+          .connect(depositor)
+          ['deposit(uint256[],uint256,address)'](
+            poolTokenAmounts,
+            minBptOut,
+            depositor.address,
+          ),
+      ).to.changeTokenBalance(instance, depositor, bptOut);
     });
 
     it('transfers all of the deposited token amounts from user to Balancer Vault', async () => {
@@ -176,38 +198,185 @@ export function describeBehaviorOfIndexIO(
     });
   });
 
+  describe('#deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)', () => {
+    it('mints shares to user at 1:1 for BPT received', async () => {
+      const amountIn = ethers.utils.parseEther('1.0');
+      const amountOutMin = ethers.constants.Zero;
+      await arbitraryERC20
+        .connect(depositor)
+        .approve(instance.address, amountIn);
+
+      //for query
+      await arbitraryERC20
+        .connect(depositor)
+        .approve(uniswapV2RouterAddress, amountIn);
+
+      const swapper = args.swapper[0];
+
+      const queriedSwapAmounts = await uniswapV2Router
+        .connect(depositor)
+        .callStatic.swapExactTokensForTokens(
+          amountIn,
+          amountOutMin,
+          [arbitraryERC20.address, assets[0].address],
+          swapper,
+          deadline,
+        );
+
+      //position of output token amount
+      const queriedSwapAmountOut = queriedSwapAmounts[1];
+
+      //filling inputAmounts array for balancer query
+      const inputAmounts = [queriedSwapAmountOut];
+      for (let i = 1; i < assets.length; i++) {
+        inputAmounts[i] = ethers.constants.Zero;
+      }
+
+      const userData = defaultAbiCoder.encode(
+        ['uint256', 'uint256[]', 'uint256'],
+        [ethers.BigNumber.from('1'), inputAmounts, amountOutMin],
+      );
+      const request = {
+        assets: args.tokens,
+        maxAmountsIn: poolTokenAmounts,
+        userData: userData,
+        fromInternalBalance: false,
+      };
+      const [bptOut, requiredAmounts] = await balancerHelpers
+        .connect(depositor)
+        .callStatic.queryJoin(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          instance.address,
+          request,
+        );
+
+      const swapData = uniswapV2Router.interface.encodeFunctionData(
+        'swapExactTokensForTokens',
+        [
+          amountIn,
+          amountOutMin,
+          [arbitraryERC20.address, assets[0].address],
+          swapper,
+          deadline,
+        ],
+      );
+      const target = uniswapV2RouterAddress;
+
+      await expect(() =>
+        instance
+          .connect(depositor)
+          [
+            'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+          ](
+            arbitraryERC20.address,
+            amountIn,
+            assets[0].address,
+            amountOutMin,
+            ethers.constants.Zero,
+            amountOutMin,
+            target,
+            swapData,
+            depositor.address,
+          ),
+      ).to.changeTokenBalance(instance, depositor, bptOut);
+    });
+
+    describe('reverts if', () => {
+      it('swapper: amount of output token returned is less than minimum  expected', async () => {
+        const amountIn = ethers.utils.parseEther('1.0');
+        const amountOutMin = ethers.utils.parseEther('100000');
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(instance.address, amountIn);
+
+        //for query
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(uniswapV2RouterAddress, amountIn);
+
+        const swapper = args.swapper[0];
+
+        const swapData = uniswapV2Router.interface.encodeFunctionData(
+          'swapExactTokensForTokens',
+          [
+            amountIn,
+            ethers.constants.Zero,
+            [arbitraryERC20.address, assets[0].address],
+            swapper,
+            deadline,
+          ],
+        );
+        const target = uniswapV2RouterAddress;
+
+        await expect(
+          instance
+            .connect(depositor)
+            [
+              'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+            ](
+              arbitraryERC20.address,
+              amountIn,
+              assets[0].address,
+              amountOutMin,
+              ethers.constants.Zero,
+              amountOutMin,
+              target,
+              swapData,
+              depositor.address,
+            ),
+        ).to.be.revertedWith('Swapper: output token amount received too small');
+      });
+
+      it('swapper: external call fails', async () => {
+        const amountIn = ethers.utils.parseEther('1.0');
+        const amountOutMin = ethers.utils.parseEther('100000');
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(instance.address, amountIn);
+
+        //for query
+        await arbitraryERC20
+          .connect(depositor)
+          .approve(uniswapV2RouterAddress, amountIn);
+
+        const swapper = args.swapper[0];
+
+        const swapData = uniswapV2Router.interface.encodeFunctionData(
+          'swapExactTokensForTokens',
+          [
+            amountIn,
+            amountOutMin,
+            [arbitraryERC20.address, assets[0].address],
+            swapper,
+            deadline,
+          ],
+        );
+        const target = uniswapV2RouterAddress;
+
+        await expect(
+          instance
+            .connect(depositor)
+            [
+              'deposit(address,uint256,address,uint256,uint256,uint256,address,bytes,address)'
+            ](
+              arbitraryERC20.address,
+              amountIn,
+              assets[0].address,
+              amountOutMin,
+              ethers.constants.Zero,
+              amountOutMin,
+              target,
+              swapData,
+              depositor.address,
+            ),
+        ).to.be.revertedWith('Swapper: external swap failed');
+      });
+    });
+  });
+
   describe('#redeem(uint256,uint256[],address)', () => {
     it('burns BPT at 1:1, for shares - fee', async () => {
-      // const minBptOut = ethers.utils.parseUnits('1', 'gwei');
-
-      // await instance
-      // .connect(depositor)
-      // ['deposit(uint256[],uint256,address)'](
-      // poolTokenAmounts,
-      // minBptOut,
-      // depositor.address,
-      // );
-
-      // const oldUserBalance = await instance.balanceOf(depositor.address);
-      // const oldBptSupply = await investmentPoolToken.totalSupply();
-      // const minPoolTokenAmounts = [
-      // minBptOut,
-      // minBptOut
-      // ];
-
-      // await instance.connect(depositor)['redeem(uint256,uint256[],address)']
-      // (oldUserBalance, minPoolTokenAmounts, depositor.address);
-
-      // const newUserBalance = await instance.balanceOf(depositor.address);
-      // const newBptSupply = await investmentPoolToken.totalSupply();
-
-      // const fee = await instance.getExitFee();
-      // const feeBasis = BigNumber.from('10000');
-      // const feeScaling = (feeBasis.sub(fee)).div(feeBasis);
-
-      // const bptDelta = newBptSupply.sub(oldBptSupply);
-      // const userDelta = newUserBalance.sub(oldUserBalance);
-      // expect(bptDelta).to.eq(userDelta.mul(feeScaling));
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       await instance
@@ -243,7 +412,7 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const fee = await instance.getExitFee();
+      const fee = await instance.exitFee();
       const feeBasis = BigNumber.from('10000');
       const feeScaling = feeBasis.sub(fee).div(feeBasis);
 
@@ -361,7 +530,7 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const fee = await instance.getExitFee();
+      const fee = await instance.exitFee();
       const feeBasis = BigNumber.from('10000');
       const feeScaling = feeBasis.sub(fee).div(feeBasis);
 

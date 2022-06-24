@@ -15,8 +15,9 @@ contract IndexSettings is IndexInternal, IIndexSettings {
     constructor(
         address balancerVault,
         address balancerHelpers,
+        address swapper,
         uint256 exitFee
-    ) IndexInternal(balancerVault, balancerHelpers, exitFee) {}
+    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
 
     /**
      * @inheritdoc IIndexSettings

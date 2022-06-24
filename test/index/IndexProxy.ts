@@ -20,6 +20,8 @@ import {
   IVault__factory,
   IndexView__factory,
   IndexSettings__factory,
+  Swapper__factory,
+  Swapper,
 } from '../../typechain-types';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
@@ -27,6 +29,7 @@ import { BigNumber, ContractTransaction } from 'ethers';
 
 import { describeBehaviorOfERC20Metadata } from '@solidstate/spec';
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
+import { defaultAbiCoder } from 'ethers/lib/utils';
 
 const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
 
@@ -43,6 +46,8 @@ describe('IndexProxy', () => {
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
   const amountsArg: BigNumber[] = [];
+  //workaround for visibility
+  const swapperArg: string[] = [];
 
   const id = 1;
 
@@ -64,6 +69,9 @@ describe('IndexProxy', () => {
     );
 
     balancerVault = IVault__factory.connect(balancerVaultAddress, deployer);
+
+    const swapper = await new Swapper__factory(deployer).deploy();
+    swapperArg.push(swapper.address);
 
     const coreDiamond = await new Core__factory(deployer).deploy();
 
@@ -91,21 +99,25 @@ describe('IndexProxy', () => {
       await new IndexBase__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
+        swapper.address,
         EXIT_FEE,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
@@ -168,7 +180,7 @@ describe('IndexProxy', () => {
     for (let i = 0; i < tokens.length; i++) {
       await tokens[i]
         .connect(deployer)
-        .__mint(deployer.address, ethers.utils.parseUnits('10000', 18));
+        .__mint(deployer.address, ethers.utils.parseEther('10000'));
       await tokens[i]
         .connect(deployer)
         .approve(core.address, ethers.constants.MaxUint256);
@@ -220,22 +232,23 @@ describe('IndexProxy', () => {
     allowance: (holder, spender) =>
       instance.callStatic.allowance(holder, spender),
     mintAsset: async (recipient, amount) => {
-      // use JoinKind ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
-      const userData = ethers.utils.solidityPack(
-        ['uint256', 'uint256'],
-        [ethers.BigNumber.from('3'), amount],
+      const maxAmountsIn = await Promise.all(
+        tokensArg.map((t) =>
+          IERC20__factory.connect(t, ethers.provider).callStatic.balanceOf(
+            deployer.address,
+          ),
+        ),
+      );
+      // use JoinKind EXACT_TOKENS_IN_FOR_BPT_OUT
+      const userData = defaultAbiCoder.encode(
+        ['uint256', 'uint256[]', 'uint256'],
+        [ethers.BigNumber.from('1'), maxAmountsIn, amount],
       );
 
       const request = {
         assets: tokensArg,
-        maxAmountsIn: await Promise.all(
-          tokensArg.map((t) =>
-            IERC20__factory.connect(t, ethers.provider).callStatic.balanceOf(
-              deployer.address,
-            ),
-          ),
-        ),
-        userData,
+        maxAmountsIn: maxAmountsIn,
+        userData: userData,
         fromInternalBalance: false,
       };
 
@@ -248,7 +261,7 @@ describe('IndexProxy', () => {
           request,
         );
 
-      return await balancerPool.transfer(recipient, amount);
+      return await balancerPool.connect(deployer).transfer(recipient, amount);
     },
     name: `Insrt Finance InfraIndex #${id}`,
     symbol: `IFII-${id}`,
@@ -257,6 +270,7 @@ describe('IndexProxy', () => {
 
     tokens: tokensArg,
     weights: weightsArg,
+    swapper: swapperArg,
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],
