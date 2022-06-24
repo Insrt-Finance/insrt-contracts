@@ -13,4 +13,10 @@ interface IIndexSettings {
      */
     function updateWeights(uint256[] calldata updatedWeights, uint256 endTime)
         external;
+
+    /**
+     * @notice function to withdraw all underlying BPT tokens and send them to protocol owner
+     * @dev callable in emergency situations, only by the protocol owner
+     */
+    function withdrawAllLiquidity() external;
 }
