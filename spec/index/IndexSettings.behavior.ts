@@ -83,4 +83,63 @@ export function describeBehaviorOfIndexSettings(
       });
     });
   });
+
+  describe('#setSwapEnabled(bool)', () => {
+    it('pauses swaps', async () => {
+      await instance.connect(owner).setSwapEnabled(false);
+
+      const investmentPool = IInvestmentPool__factory.connect(
+        await instance.asset(),
+        owner,
+      );
+
+      expect(await investmentPool.getSwapEnabled()).to.eq(false);
+    });
+
+    it('allows proportional exits whilst swaps are paused', async () => {
+      await instance.connect(owner).setSwapEnabled(false);
+      const minPoolTokenAmounts = [
+        ethers.constants.Zero,
+        ethers.constants.Zero,
+      ];
+      const shareAmount = ethers.constants.One;
+      await expect(
+        instance
+          .connect(owner)
+          ['redeem(uint256,uint256[],address)'](
+            shareAmount,
+            minPoolTokenAmounts,
+            owner.address,
+          ),
+      ).to.not.be.reverted;
+    });
+
+    it('forbids non-proportional exits', async () => {
+      await instance.connect(owner).setSwapEnabled(false);
+      const minPoolTokenAmounts = [
+        ethers.constants.Zero,
+        ethers.constants.Zero,
+      ];
+      const shareAmount = ethers.constants.One;
+      const tokenIndex = ethers.constants.Zero;
+      await expect(
+        instance
+          .connect(owner)
+          ['redeem(uint256,uint256[],uint256,address)'](
+            shareAmount,
+            minPoolTokenAmounts,
+            tokenIndex,
+            owner.address,
+          ),
+      ).to.be.revertedWith('BAL#330'); //refers to balancer error: INVALID_JOIN_EXIT_KIND_WHILE_SWAPS_DISABLED
+    });
+
+    describe('reverts if', () => {
+      it('caller is not protocol owner', async () => {
+        await expect(
+          instance.connect(nonOwner).setSwapEnabled(false),
+        ).to.be.revertedWith('Not protocol owner');
+      });
+    });
+  });
 }
