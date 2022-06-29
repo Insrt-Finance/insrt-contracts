@@ -43,6 +43,15 @@ export default {
           },
         },
       },
+      {
+        version: '0.6.6',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
   },
 
@@ -85,6 +94,7 @@ export default {
       '@balancer-labs/v2-pool-weighted/contracts/WeightedPoolFactory.sol',
       '@balancer-labs/v2-pool-weighted/contracts/smart/InvestmentPoolFactory.sol',
       '@balancer-labs/v2-vault/contracts/interfaces/IVault.sol',
+      '@uniswap/v2-periphery/contracts/UniswapV2Router02.sol',
     ],
   },
 
