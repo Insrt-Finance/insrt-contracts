@@ -37,7 +37,7 @@ contract IndexSettings is IndexInternal, IIndexSettings {
     /**
      * @inheritdoc IIndexSettings
      */
-    function setSwapPause(bool swapEnabled) external onlyProtocolOwner {
+    function setSwapEnabled(bool swapEnabled) external onlyProtocolOwner {
         (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(_poolId());
         IInvestmentPool(investmentPool).setSwapEnabled(swapEnabled);
     }

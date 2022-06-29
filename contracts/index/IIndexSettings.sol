@@ -18,5 +18,5 @@ interface IIndexSettings {
      * @notice enable/disable swaps with the underlying Balancer Investment Pool
      * @param swapEnabled determines whether swaps are paused
      */
-    function setSwapPause(bool swapEnabled) external;
+    function setSwapEnabled(bool swapEnabled) external;
 }
