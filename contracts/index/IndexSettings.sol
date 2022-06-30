@@ -41,6 +41,14 @@ contract IndexSettings is IndexInternal, IIndexSettings {
     /**
      * @inheritdoc IIndexSettings
      */
+    function setSwapEnabled(bool swapEnabled) external onlyProtocolOwner {
+        (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(_poolId());
+        IInvestmentPool(investmentPool).setSwapEnabled(swapEnabled);
+    }
+
+    /**
+     * @inheritdoc IIndexSettings
+     */
     function withdrawAllLiquidity() external onlyProtocolOwner {
         address asset = _asset();
         IERC20(asset).safeTransfer(
