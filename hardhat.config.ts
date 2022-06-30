@@ -2,6 +2,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import '@tenderly/hardhat-tenderly';
 import 'hardhat-abi-exporter';
+import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
 import 'hardhat-docgen';
 import 'hardhat-gas-reporter';
