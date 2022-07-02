@@ -159,13 +159,8 @@ export function describeBehaviorOfIndexSettings(
 
     describe('reverts if', () => {
       it('caller is not protocol owner', async () => {
-        const newWeights = [
-          ethers.utils.parseEther('0.4'),
-          ethers.utils.parseEther('0.6'),
-        ];
-        const endTime = BigNumber.from('86460'); //1 day + 1 minute in seconds
         await expect(
-          instance.connect(nonOwner).updateWeights(newWeights, endTime),
+          instance.connect(nonOwner)['withdrawAllLiquidity()'](),
         ).to.be.revertedWith('Not protocol owner');
       });
     });
