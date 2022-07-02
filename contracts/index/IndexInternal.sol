@@ -45,7 +45,7 @@ abstract contract IndexInternal is
     }
 
     modifier onlyProtocolOwner() {
-        require(msg.sender == IERC173(_owner()).owner(), 'Not protocol owner');
+        require(msg.sender == _protocolOwner(), 'Not protocol owner');
         _;
     }
 
