@@ -19,4 +19,10 @@ interface IIndexSettings {
      * @param swapEnabled determines whether swaps are paused
      */
     function setSwapEnabled(bool swapEnabled) external;
+
+    /**
+     * @notice function to withdraw all underlying BPT tokens and send them to protocol owner
+     * @dev callable in emergency situations, only by the protocol owner
+     */
+    function withdrawAllLiquidity() external;
 }
