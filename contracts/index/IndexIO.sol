@@ -92,6 +92,8 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             0
         );
+
+        l.userShareAcquisitionTimestamp[msg.sender] = block.timestamp;
     }
 
     /**
@@ -145,6 +147,8 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             0
         );
+
+        l.userShareAcquisitionTimestamp[msg.sender] = block.timestamp;
     }
 
     /**

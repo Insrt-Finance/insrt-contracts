@@ -9,6 +9,7 @@ library IndexStorage {
         uint256 id;
         bytes32 poolId;
         IERC20[] tokens;
+        mapping(address => uint256) userShareAcquisitionTimestamp;
     }
 
     bytes32 internal constant STORAGE_SLOT =
