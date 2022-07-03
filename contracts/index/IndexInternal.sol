@@ -94,12 +94,19 @@ abstract contract IndexInternal is
         uint256[] memory minAmountsOut,
         bytes memory userData,
         address receiver
-    ) internal {
+    ) internal returns (uint256[] memory poolTokenAmounts) {
         IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
             _tokensToAssets(l.tokens),
             minAmountsOut,
             userData,
             false
+        );
+
+        (, poolTokenAmounts) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
+            l.poolId,
+            address(this),
+            payable(receiver),
+            request
         );
 
         IVault(BALANCER_VAULT).exitPool(

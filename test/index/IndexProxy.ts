@@ -8,12 +8,9 @@ import {
   IERC20Metadata__factory,
   IIndex,
   IIndex__factory,
-  IndexDiamond,
   IndexDiamond__factory,
   IndexManager__factory,
   IndexBase__factory,
-  IndexProxy,
-  IndexProxy__factory,
   IndexIO__factory,
   SolidStateERC20Mock__factory,
   IVault,
@@ -21,7 +18,6 @@ import {
   IndexView__factory,
   IndexSettings__factory,
   Swapper__factory,
-  Swapper,
 } from '../../typechain-types';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 
