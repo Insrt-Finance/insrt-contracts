@@ -10,6 +10,7 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
+import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
@@ -25,23 +26,32 @@ abstract contract IndexInternal is
     OwnableInternal
 {
     using UintUtils for uint256;
+    using ABDKMath64x64 for uint256;
+    using ABDKMath64x64 for int256;
+    using ABDKMath64x64 for int128;
 
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
     uint256 internal immutable EXIT_FEE;
-    uint256 internal constant FEE_BASIS = 10000;
+    uint256 internal constant FEE_BASIS = 1 ether;
+    int128 internal immutable DECAY_FACTOR_64x64;
+    int128 internal constant ONE_64x64 = 0x10000000000000000; //64x64 representation of 1
 
     constructor(
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee
+        uint256 exitFee,
+        uint256 streamingFeeBP
     ) {
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
         SWAPPER = swapper;
         EXIT_FEE = exitFee;
+
+        int128 secondStreamingFee = streamingFeeBP.divu(31556736); // divided by seconds in a year = 365.25 * 24 * 3600
+        DECAY_FACTOR_64x64 = ONE_64x64.sub(secondStreamingFee);
     }
 
     modifier onlyProtocolOwner() {
@@ -263,5 +273,20 @@ abstract contract IndexInternal is
         if (feeAmount > 0) {
             _transfer(owner, _owner(), feeAmount);
         }
+    }
+
+    /**
+     * @notice returns the streaming fee on an amount for a given duration
+     * @dev uses exponential decay formula to calculate streaming fee over a given duration
+     * @param amount amount to apply streaming fee to
+     * @param duration duration in seconds to apply streaming fee over
+     * @return totalFee the total fee calculated on the amount
+     */
+    function _calculateStreamingFee(uint256 amount, uint256 duration)
+        internal
+        view
+        returns (uint256 totalFee)
+    {
+        totalFee = (DECAY_FACTOR_64x64.pow(duration)).mulu(amount);
     }
 }
