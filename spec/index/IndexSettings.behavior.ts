@@ -152,31 +152,9 @@ export function describeBehaviorOfIndexSettings(
       //pool initialized, so BPT already in Index => can avoid deposit
       const bpt = IERC20__factory.connect(await instance.asset(), owner);
       const indexBPT = await bpt.balanceOf(instance.address);
-
-      const oldIndexBalances = [];
-      const oldOwnerBalances = [];
-      for (let i = 0; i < args.tokens.length; i++) {
-        let asset = IERC20__factory.connect(args.tokens[i], owner);
-        oldIndexBalances.push(await asset.balanceOf(instance.address));
-        oldOwnerBalances.push(await asset.balanceOf(owner.address));
-      }
       await expect(() =>
         instance.connect(owner).withdrawAllLiquidity(),
       ).changeTokenBalance(bpt, owner, indexBPT);
-
-      const newIndexBalances = [];
-      const newOwnerBalances = [];
-      for (let i = 0; i < args.tokens.length; i++) {
-        let asset = IERC20__factory.connect(args.tokens[i], owner);
-        newIndexBalances.push(await asset.balanceOf(instance.address));
-        newOwnerBalances.push(await asset.balanceOf(owner.address));
-      }
-
-      for (let i = 0; i < args.tokens.length; i++) {
-        expect(oldIndexBalances[i].sub(newIndexBalances[i])).to.eq(
-          newOwnerBalances[i].sub(oldOwnerBalances[i]),
-        );
-      }
     });
 
     describe('reverts if', () => {

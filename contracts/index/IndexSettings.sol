@@ -51,22 +51,10 @@ contract IndexSettings is IndexInternal, IIndexSettings {
      * @inheritdoc IIndexSettings
      */
     function withdrawAllLiquidity() external onlyProtocolOwner {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
         address asset = _asset();
         IERC20(asset).safeTransfer(
             msg.sender,
             IERC20(asset).balanceOf(address(this))
         );
-
-        uint256 tokensLength = l.tokens.length;
-
-        for (uint256 i; i < tokensLength; ) {
-            IERC20(l.tokens[i]).safeTransfer(
-                msg.sender,
-                IERC20(l.tokens[i]).balanceOf(address(this))
-            );
-            ++i;
-        }
     }
 }
