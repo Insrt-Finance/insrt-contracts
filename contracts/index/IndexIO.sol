@@ -189,13 +189,11 @@ contract IndexIO is IndexInternal, IIndexIO {
             msg.sender,
             receiver,
             msg.sender,
-            shareAmountOut,
-            shareAmountOut,
-            shareAmountOut,
+            shareAmount,
+            shareAmount,
+            shareAmount,
             0
         );
-
-        // TODO: set poolTokenAmounts values
     }
 
     /**
@@ -230,12 +228,10 @@ contract IndexIO is IndexInternal, IIndexIO {
             msg.sender,
             receiver,
             msg.sender,
-            shareAmountOut,
-            shareAmountOut,
-            shareAmountOut,
+            shareAmount,
+            shareAmount,
+            shareAmount,
             0
         );
-
-        // TODO: set poolTokenAmounts values
     }
 }
