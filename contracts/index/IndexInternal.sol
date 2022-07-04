@@ -9,6 +9,7 @@ import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadat
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
+import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 
 import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
 import { IndexStorage } from './IndexStorage.sol';
@@ -29,6 +30,7 @@ abstract contract IndexInternal is
     using ABDKMath64x64 for uint256;
     using ABDKMath64x64 for int256;
     using ABDKMath64x64 for int128;
+    using SafeERC20 for IERC20;
 
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
@@ -270,8 +272,9 @@ abstract contract IndexInternal is
             _convertToAssets(shareAmount)
         );
 
+        //since shares are pegged 1:1 with BPT, simply transfer BPT
         if (feeAmount > 0) {
-            _transfer(owner, _owner(), feeAmount);
+            IERC20(_asset()).safeTransfer(_protocolOwner(), feeAmount);
         }
     }
 
