@@ -6,6 +6,7 @@ import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
+import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
@@ -300,6 +301,55 @@ abstract contract IndexInternal is
                 totalFeeAmount
             );
         }
+    }
+
+    function _transfer(
+        address holder,
+        address recipient,
+        uint256 amount
+    ) internal virtual override returns (bool) {
+        require(holder != address(0), 'ERC20: transfer from the zero address');
+        require(recipient != address(0), 'ERC20: transfer to the zero address');
+        _beforeTokenTransfer(holder, recipient, amount);
+        ERC20BaseStorage.Layout storage l = ERC20BaseStorage.layout();
+        IndexStorage.Layout storage indexLayout = IndexStorage.layout();
+        uint256 holderBalance = l.balances[holder];
+        require(
+            holderBalance >= amount,
+            'ERC20: transfer amount exceeds balance'
+        );
+        unchecked {
+            l.balances[holder] = holderBalance - amount;
+        }
+        uint256 currTimestamp = block.timestamp;
+        uint256 streamingFee = _calculateStreamingFee(
+            amount,
+            currTimestamp -
+                indexLayout
+                    .userStreamingFeeData[holder]
+                    .lastAcquisitionTimestamp
+        ) + indexLayout.userStreamingFeeData[holder].streamingFeeAccumulated;
+        if (streamingFee > 0) {
+            IERC20(address(this)).safeTransfer(_protocolOwner(), streamingFee);
+        }
+        indexLayout.userStreamingFeeData[holder].streamingFeeAccumulated = 0;
+
+        uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
+            _balanceOf(recipient),
+            currTimestamp -
+                indexLayout
+                    .userStreamingFeeData[recipient]
+                    .lastAcquisitionTimestamp
+        );
+        indexLayout
+            .userStreamingFeeData[recipient]
+            .streamingFeeAccumulated += recipientStreamingFeeAccumulation;
+        indexLayout
+            .userStreamingFeeData[recipient]
+            .lastAcquisitionTimestamp = currTimestamp;
+        l.balances[recipient] += amount - streamingFee;
+        emit Transfer(holder, recipient, amount - streamingFee);
+        return true;
     }
 
     /**
