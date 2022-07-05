@@ -300,10 +300,7 @@ abstract contract IndexInternal is
             l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
 
         if (totalFeeAmount > 0) {
-            IERC20(address(this)).safeTransfer(
-                _protocolOwner(),
-                totalFeeAmount
-            );
+            IERC20(_asset()).safeTransfer(_protocolOwner(), totalFeeAmount);
         }
     }
 
@@ -322,9 +319,12 @@ abstract contract IndexInternal is
     ) internal virtual override returns (bool) {
         require(holder != address(0), 'ERC20: transfer from the zero address');
         require(recipient != address(0), 'ERC20: transfer to the zero address');
+
         _beforeTokenTransfer(holder, recipient, amount);
+
         ERC20BaseStorage.Layout storage l = ERC20BaseStorage.layout();
         IndexStorage.Layout storage indexLayout = IndexStorage.layout();
+
         uint256 holderBalance = l.balances[holder];
         require(
             holderBalance >= amount,
@@ -333,6 +333,7 @@ abstract contract IndexInternal is
         unchecked {
             l.balances[holder] = holderBalance - amount;
         }
+
         uint256 currTimestamp = block.timestamp;
         uint256 streamingFee = _calculateStreamingFee(
             amount,
@@ -342,7 +343,7 @@ abstract contract IndexInternal is
                     .lastAcquisitionTimestamp
         ) + indexLayout.userStreamingFeeData[holder].streamingFeeAccumulated;
         if (streamingFee > 0) {
-            IERC20(address(this)).safeTransfer(_protocolOwner(), streamingFee);
+            l.balances[_protocolOwner()] += streamingFee;
         }
         indexLayout.userStreamingFeeData[holder].streamingFeeAccumulated = 0;
 
