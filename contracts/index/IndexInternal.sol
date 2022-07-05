@@ -360,6 +360,7 @@ abstract contract IndexInternal is
             .userStreamingFeeData[recipient]
             .lastAcquisitionTimestamp = currTimestamp;
         l.balances[recipient] += amount - streamingFee;
+
         emit Transfer(holder, recipient, amount - streamingFee);
         return true;
     }
@@ -376,6 +377,6 @@ abstract contract IndexInternal is
         view
         returns (uint256 totalFee)
     {
-        totalFee = (DECAY_FACTOR_64x64.pow(duration)).mulu(amount);
+        totalFee = amount - (DECAY_FACTOR_64x64.pow(duration)).mulu(amount);
     }
 }
