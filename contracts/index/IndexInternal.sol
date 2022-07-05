@@ -249,7 +249,7 @@ abstract contract IndexInternal is
 
     /**
      * @inheritdoc ERC4626BaseInternal
-     * @dev apply exit fee to amount out
+     * @dev apply exit fee and streaming fee to amount out
      */
     function _previewRedeem(uint256 shareAmount)
         internal
@@ -274,6 +274,10 @@ abstract contract IndexInternal is
             l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
     }
 
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev apply exit fee and streaming to shareAmount
+     */
     function _beforeWithdraw(
         address owner,
         uint256 assetAmount,
@@ -303,6 +307,14 @@ abstract contract IndexInternal is
         }
     }
 
+    /**
+     * @notice transfer tokens from holder to recipient
+     * @dev accounts for streaming fee on token transfers
+     * @param holder owner of tokens to be transferred
+     * @param recipient beneficiary of transfer
+     * @param amount quantity of tokens transferred
+     * @return success status (always true; otherwise function should revert)
+     */
     function _transfer(
         address holder,
         address recipient,

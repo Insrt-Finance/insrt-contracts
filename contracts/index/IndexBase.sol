@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+import { ERC20BaseInternal } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { SolidStateERC4626 } from '@solidstate/contracts/token/ERC4626/SolidStateERC4626.sol';
@@ -111,5 +112,16 @@ contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
         uint256 shareAmount
     ) internal override(ERC4626BaseInternal, IndexInternal) {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
+    }
+
+    /**
+     * @inheritdoc IndexInternal
+     */
+    function _transfer(
+        address holder,
+        address recipient,
+        uint256 amount
+    ) internal override(ERC20BaseInternal, IndexInternal) returns (bool) {
+        return super._transfer(holder, recipient, amount);
     }
 }
