@@ -257,7 +257,20 @@ abstract contract IndexInternal is
         override
         returns (uint256 assetAmount)
     {
-        (, assetAmount) = _applyFee(EXIT_FEE, _convertToAssets(shareAmount));
+        IndexStorage.Layout storage l = IndexStorage.layout();
+        (, uint256 assetAmountAfterExit) = _applyFee(
+            EXIT_FEE,
+            _convertToAssets(shareAmount)
+        );
+
+        assetAmount =
+            assetAmountAfterExit -
+            _calculateStreamingFee(
+                assetAmountAfterExit,
+                block.timestamp -
+                    l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp
+            ) -
+            l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
     }
 
     function _beforeWithdraw(
@@ -266,15 +279,26 @@ abstract contract IndexInternal is
         uint256 shareAmount
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
+        IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 feeAmount, ) = _applyFee(
+        (uint256 exitFeeAmount, uint256 amountAfterExitFee) = _applyFee(
             EXIT_FEE,
             _convertToAssets(shareAmount)
         );
 
-        //since shares are pegged 1:1 with BPT, simply transfer BPT
-        if (feeAmount > 0) {
-            IERC20(_asset()).safeTransfer(_protocolOwner(), feeAmount);
+        uint256 totalFeeAmount = exitFeeAmount +
+            _calculateStreamingFee(
+                amountAfterExitFee,
+                block.timestamp -
+                    l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp
+            ) +
+            l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
+
+        if (totalFeeAmount > 0) {
+            IERC20(address(this)).safeTransfer(
+                _protocolOwner(),
+                totalFeeAmount
+            );
         }
     }
 
