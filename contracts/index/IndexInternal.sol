@@ -142,7 +142,7 @@ abstract contract IndexInternal is
         view
         returns (uint256 totalFee, uint256 remainder)
     {
-        if (msg.sender != _owner()) {
+        if (msg.sender != _protocolOwner()) {
             totalFee = (fee * amount) / FEE_BASIS;
         }
 
@@ -259,10 +259,7 @@ abstract contract IndexInternal is
         returns (uint256 assetAmount)
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        (, uint256 assetAmountAfterExit) = _applyFee(
-            EXIT_FEE,
-            _convertToAssets(shareAmount)
-        );
+        (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE, shareAmount);
 
         assetAmount =
             assetAmountAfterExit -
@@ -288,7 +285,7 @@ abstract contract IndexInternal is
 
         (uint256 exitFeeAmount, uint256 amountAfterExitFee) = _applyFee(
             EXIT_FEE,
-            _convertToAssets(shareAmount)
+            shareAmount
         );
 
         uint256 totalFeeAmount = exitFeeAmount +
@@ -300,7 +297,7 @@ abstract contract IndexInternal is
             l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
 
         if (totalFeeAmount > 0) {
-            IERC20(_asset()).safeTransfer(_protocolOwner(), totalFeeAmount);
+            _transfer(msg.sender, _protocolOwner(), totalFeeAmount);
         }
     }
 
