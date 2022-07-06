@@ -332,31 +332,45 @@ abstract contract IndexInternal is
         }
 
         uint256 currTimestamp = block.timestamp;
-        uint256 streamingFee = _calculateStreamingFee(
-            amount,
-            currTimestamp -
+
+        uint256 streamingFee;
+
+        if (recipient == _protocolOwner()) {
+            streamingFee = 0;
+        } else {
+            streamingFee =
+                _calculateStreamingFee(
+                    amount,
+                    currTimestamp -
+                        indexLayout
+                            .userStreamingFeeData[holder]
+                            .lastAcquisitionTimestamp
+                ) +
                 indexLayout
                     .userStreamingFeeData[holder]
-                    .lastAcquisitionTimestamp
-        ) + indexLayout.userStreamingFeeData[holder].streamingFeeAccumulated;
+                    .streamingFeeAccumulated;
+            indexLayout
+                .userStreamingFeeData[holder]
+                .streamingFeeAccumulated = 0;
+            uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
+                _balanceOf(recipient),
+                currTimestamp -
+                    indexLayout
+                        .userStreamingFeeData[recipient]
+                        .lastAcquisitionTimestamp
+            );
+            indexLayout
+                .userStreamingFeeData[recipient]
+                .streamingFeeAccumulated += recipientStreamingFeeAccumulation;
+            indexLayout
+                .userStreamingFeeData[recipient]
+                .lastAcquisitionTimestamp = currTimestamp;
+        }
+
         if (streamingFee > 0) {
             l.balances[_protocolOwner()] += streamingFee;
         }
-        indexLayout.userStreamingFeeData[holder].streamingFeeAccumulated = 0;
 
-        uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
-            _balanceOf(recipient),
-            currTimestamp -
-                indexLayout
-                    .userStreamingFeeData[recipient]
-                    .lastAcquisitionTimestamp
-        );
-        indexLayout
-            .userStreamingFeeData[recipient]
-            .streamingFeeAccumulated += recipientStreamingFeeAccumulation;
-        indexLayout
-            .userStreamingFeeData[recipient]
-            .lastAcquisitionTimestamp = currTimestamp;
         l.balances[recipient] += amount - streamingFee;
 
         emit Transfer(holder, recipient, amount - streamingFee);
