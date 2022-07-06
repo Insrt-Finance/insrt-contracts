@@ -194,7 +194,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             shareAmount,
             shareAmount,
-            0
+            shareAmount - shareAmountOut
         );
     }
 
@@ -224,8 +224,10 @@ contract IndexIO is IndexInternal, IIndexIO {
             userData,
             receiver
         );
+
         poolTokenAmount = poolTokenAmounts[tokenId];
 
+        uint256 offset = shareAmount - shareAmountOut; //stack too deep fix
         _withdraw(
             msg.sender,
             receiver,
@@ -233,7 +235,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             shareAmount,
             shareAmount,
-            0
+            offset
         );
     }
 }
