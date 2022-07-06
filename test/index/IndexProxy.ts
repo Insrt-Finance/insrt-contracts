@@ -50,7 +50,8 @@ describe('IndexProxy', () => {
   before(async () => {
     [deployer] = await ethers.getSigners();
 
-    const EXIT_FEE = ethers.constants.Zero;
+    const EXIT_FEE = ethers.utils.parseEther('0.02');
+    const STREAMING_FEE = ethers.constants.Zero; //ethers.utils.parseEther('0.015');
 
     const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
@@ -72,7 +73,6 @@ describe('IndexProxy', () => {
     const coreDiamond = await new Core__factory(deployer).deploy();
 
     const indexDiamond = await new IndexDiamond__factory(deployer).deploy();
-
     const coreFacetCuts = [
       await new IndexManager__factory(deployer).deploy(
         indexDiamond.address,
@@ -97,24 +97,28 @@ describe('IndexProxy', () => {
         BALANCER_HELPERS,
         swapper.address,
         EXIT_FEE,
+        STREAMING_FEE,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
         EXIT_FEE,
+        STREAMING_FEE,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
         EXIT_FEE,
+        STREAMING_FEE,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
         EXIT_FEE,
+        STREAMING_FEE,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
     ].map(function (f) {

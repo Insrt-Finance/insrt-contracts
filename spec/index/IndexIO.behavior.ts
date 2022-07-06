@@ -13,6 +13,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 import { defaultAbiCoder } from 'ethers/lib/utils';
+import { exit } from 'process';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
@@ -26,6 +27,7 @@ export function describeBehaviorOfIndexIO(
   skips?: string[],
 ) {
   let depositor: SignerWithAddress;
+  let protocolOwner: SignerWithAddress;
   let instance: IIndex;
   let investmentPoolToken: SolidStateERC20Mock;
   let arbitraryERC20: SolidStateERC20Mock;
@@ -33,13 +35,14 @@ export function describeBehaviorOfIndexIO(
   const poolTokenAmounts: BigNumber[] = [];
   const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
   const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'; //arbitrum
+  const feeBasis = ethers.utils.parseEther('1.0');
   let BALANCER_VAULT = '';
   let balancerHelpers: IBalancerHelpers;
   let uniswapV2Router: UniswapV2Router02;
   let deadline: BigNumber;
 
   before(async () => {
-    [depositor] = await ethers.getSigners();
+    [protocolOwner, depositor] = await ethers.getSigners();
     let totalWeight: BigNumber = BigNumber.from('0');
     const mintAmount = ethers.utils.parseEther('10000'); //large value to suffice for all tests
     const tokensLength = args.tokens.length;
@@ -412,9 +415,9 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const fee = await instance.exitFee();
-      const feeBasis = BigNumber.from('10000');
-      const feeScaling = feeBasis.sub(fee).div(feeBasis);
+      const oldTotalSupply = await investmentPoolToken['totalSupply()']();
+      const exitFee = await instance.exitFee();
+      const bptFee = bptIn.mul(exitFee).div(feeBasis);
 
       await expect(() =>
         instance
@@ -427,11 +430,14 @@ export function describeBehaviorOfIndexIO(
       ).to.changeTokenBalance(
         instance,
         depositor,
-        bptIn.mul(feeScaling).mul(ethers.constants.NegativeOne),
+        bptIn.mul(ethers.constants.NegativeOne),
       );
+      const newTotalSupply = await investmentPoolToken['totalSupply()']();
+
+      expect(oldTotalSupply.sub(newTotalSupply)).to.eq(bptIn.sub(bptFee));
     });
 
-    it('increases the user balance by the amount returned by the query', async () => {
+    it('increases the user balance by the amount returned by the query - fee', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
       await instance
@@ -493,12 +499,74 @@ export function describeBehaviorOfIndexIO(
         newUserBalances.push(await assets[i].balanceOf(depositor.address));
       }
 
+      const exitFee = await instance.exitFee();
+
       for (let i = 0; i < assets.length; i++) {
-        expect(returnedAmounts[i]).to.eq(
-          newUserBalances[i].sub(oldUserBalances[i]),
-        );
-        expect(returnedAmounts[i]).to.eq(returnedPoolTokenAmounts[i]);
+        expect(
+          returnedAmounts[i].sub(returnedAmounts[i].mul(exitFee).div(feeBasis)),
+        ).to.eq(newUserBalances[i].sub(oldUserBalances[i]));
+        expect(
+          returnedAmounts[i].sub(returnedAmounts[i].mul(exitFee).div(feeBasis)),
+        ).to.eq(returnedPoolTokenAmounts[i]);
       }
+    });
+
+    it('sends the fees to the protocol owner', async () => {
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+      await instance
+        .connect(depositor)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          depositor.address,
+        );
+
+      const userBalance = await instance.balanceOf(depositor.address);
+
+      const userData = ethers.utils.solidityPack(
+        ['uint256', 'uint256'],
+        [ethers.BigNumber.from('1'), userBalance],
+      );
+
+      const minPoolTokenAmounts = [minBptOut, minBptOut];
+
+      const request = {
+        assets: args.tokens,
+        minAmountsOut: minPoolTokenAmounts,
+        userData,
+        toInternalBalance: false,
+      };
+
+      const [bptIn, returnedAmounts] = await balancerHelpers
+        .connect(depositor)
+        .callStatic.queryExit(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          instance.address,
+          request,
+        );
+
+      const oldFeeRecipientBalance = await instance.balanceOf(
+        protocolOwner.address,
+      );
+
+      await instance
+        .connect(depositor)
+        ['redeem(uint256,uint256[],address)'](
+          userBalance,
+          minPoolTokenAmounts,
+          depositor.address,
+        );
+
+      const newFeeRecipientBalance = await instance.balanceOf(
+        protocolOwner.address,
+      );
+
+      const exitFee = await instance.exitFee();
+      expect(bptIn.mul(exitFee).div(feeBasis)).to.eq(
+        newFeeRecipientBalance.sub(oldFeeRecipientBalance),
+      );
     });
   });
 
@@ -541,11 +609,11 @@ export function describeBehaviorOfIndexIO(
         );
 
       const fee = await instance.exitFee();
-      const feeBasis = BigNumber.from('10000');
-      const feeScaling = feeBasis.sub(fee).div(feeBasis);
+      const bptFee = bptIn.mul(fee).div(feeBasis);
 
       const tokenId = ethers.constants.Zero;
 
+      const oldSupply = await instance.totalSupply();
       await expect(() =>
         instance
           .connect(depositor)
@@ -558,8 +626,12 @@ export function describeBehaviorOfIndexIO(
       ).to.changeTokenBalance(
         instance,
         depositor,
-        bptIn.mul(feeScaling).mul(ethers.constants.NegativeOne),
+        bptIn.mul(ethers.constants.NegativeOne),
       );
+
+      const newSupply = await instance.totalSupply();
+
+      expect(oldSupply.sub(newSupply)).to.eq(bptIn.sub(bptFee));
     });
 
     it('increases the user balance by the amount returned by the query', async () => {
@@ -573,31 +645,11 @@ export function describeBehaviorOfIndexIO(
           depositor.address,
         );
 
-      const userData = ethers.utils.solidityPack(
-        ['uint256', 'uint256', 'uint256'],
-        [ethers.constants.Zero, minBptOut, ethers.constants.Zero],
-      );
-
       const minPoolTokenAmounts = [
         ethers.constants.Zero,
         ethers.constants.Zero,
       ];
 
-      const request = {
-        assets: args.tokens,
-        minAmountsOut: minPoolTokenAmounts,
-        userData,
-        toInternalBalance: false,
-      };
-
-      const [bptIn, returnedAmounts] = await balancerHelpers
-        .connect(depositor)
-        .callStatic.queryExit(
-          await instance.callStatic.getPoolId(),
-          instance.address,
-          depositor.address,
-          request,
-        );
       const tokenId = ethers.constants.Zero;
       const returnedPoolTokenAmount = await instance
         .connect(depositor)
@@ -624,6 +676,69 @@ export function describeBehaviorOfIndexIO(
         depositor.address,
       );
       expect(returnedPoolTokenAmount).to.eq(newUserBalance.sub(oldUserBalance));
+    });
+
+    it('sends the total fees to the protocol owner', async () => {
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+      await instance
+        .connect(depositor)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          depositor.address,
+        );
+
+      const minPoolTokenAmounts = [
+        ethers.constants.Zero,
+        ethers.constants.Zero,
+      ];
+
+      const tokenId = ethers.constants.Zero;
+
+      const userData = ethers.utils.solidityPack(
+        ['uint256', 'uint256', 'uint256'],
+        [ethers.constants.Zero, minBptOut, ethers.constants.Zero],
+      );
+
+      const request = {
+        assets: args.tokens,
+        minAmountsOut: minPoolTokenAmounts,
+        userData,
+        toInternalBalance: false,
+      };
+      const [bptIn, returnedAmounts] = await balancerHelpers
+        .connect(depositor)
+        .callStatic.queryExit(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          depositor.address,
+          request,
+        );
+
+      const oldProtocolOwnerBalance = await instance.balanceOf(
+        protocolOwner.address,
+      );
+
+      await instance
+        .connect(depositor)
+        ['redeem(uint256,uint256[],uint256,address)'](
+          minBptOut,
+          minPoolTokenAmounts,
+          tokenId,
+          depositor.address,
+        );
+
+      const newProtocolOwnerBalance = await instance.balanceOf(
+        protocolOwner.address,
+      );
+
+      const fee = await instance.exitFee();
+      const bptFee = fee.mul(bptIn).div(feeBasis);
+
+      expect(newProtocolOwnerBalance.sub(oldProtocolOwnerBalance)).to.eq(
+        bptFee,
+      );
     });
   });
 }
