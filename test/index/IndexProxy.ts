@@ -46,12 +46,11 @@ describe('IndexProxy', () => {
   const swapperArg: string[] = [];
 
   const id = 1;
+  const EXIT_FEE = ethers.utils.parseEther('0.02');
+  const STREAMING_FEE = ethers.utils.parseEther('0.015');
 
   before(async () => {
     [deployer] = await ethers.getSigners();
-
-    const EXIT_FEE = ethers.utils.parseEther('0.02');
-    const STREAMING_FEE = ethers.constants.Zero; //ethers.utils.parseEther('0.015');
 
     const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
@@ -271,6 +270,7 @@ describe('IndexProxy', () => {
     tokens: tokensArg,
     weights: weightsArg,
     swapper: swapperArg,
+    streamingFee: STREAMING_FEE,
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],
