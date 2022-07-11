@@ -18,6 +18,8 @@ import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 import { IAsset, IVault } from '../balancer/IVault.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title Infra Index internal functions
  * @dev inherited by all Index implementation contracts
@@ -53,8 +55,12 @@ abstract contract IndexInternal is
         SWAPPER = swapper;
         EXIT_FEE = exitFee;
 
-        int128 secondStreamingFee = streamingFeeBP.divu(31556736); // divided by seconds in a year = 365.25 * 24 * 3600
-        DECAY_FACTOR_64x64 = ONE_64x64.sub(secondStreamingFee);
+        int128 streamingFee64x64 = streamingFeeBP.divu(FEE_BASIS);
+        int128 streamingFeeSecond64x64 = streamingFee64x64.div(
+            uint256(31557600).fromUInt()
+        );
+
+        DECAY_FACTOR_64x64 = ONE_64x64.sub(streamingFeeSecond64x64);
     }
 
     modifier onlyProtocolOwner() {
@@ -261,6 +267,7 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
         (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE, shareAmount);
 
+        console.log('assetAmountAfterExt: ', assetAmountAfterExit);
         assetAmount =
             assetAmountAfterExit -
             _calculateStreamingFee(
@@ -269,6 +276,7 @@ abstract contract IndexInternal is
                     l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp
             ) -
             l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
+        console.log('assetAmount: ', assetAmount);
     }
 
     /**
@@ -389,6 +397,7 @@ abstract contract IndexInternal is
         view
         returns (uint256 totalFee)
     {
+        console.log(duration);
         totalFee = amount - (DECAY_FACTOR_64x64.pow(duration)).mulu(amount);
     }
 }
