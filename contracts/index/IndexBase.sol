@@ -19,14 +19,14 @@ contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee,
+        uint256 exitFeeBP,
         uint256 streamingFeeBP
     )
         IndexInternal(
             balancerVault,
             balancerHelpers,
             swapper,
-            exitFee,
+            exitFeeBP,
             streamingFeeBP
         )
     {}

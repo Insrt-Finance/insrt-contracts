@@ -36,7 +36,7 @@ abstract contract IndexInternal is
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
-    uint256 internal immutable EXIT_FEE;
+    uint256 internal immutable EXIT_FEE_BP;
     uint256 internal constant FEE_BASIS = 1 ether;
     int128 internal immutable DECAY_FACTOR_64x64;
     int128 internal constant ONE_64x64 = 0x10000000000000000; //64x64 representation of 1
@@ -45,13 +45,13 @@ abstract contract IndexInternal is
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee,
+        uint256 exitFeeBP,
         uint256 streamingFeeBP
     ) {
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
         SWAPPER = swapper;
-        EXIT_FEE = exitFee;
+        EXIT_FEE_BP = exitFeeBP;
 
         DECAY_FACTOR_64x64 = ONE_64x64.sub(
             ABDKMath64x64.div(
@@ -183,7 +183,7 @@ abstract contract IndexInternal is
      * @return exitFee
      */
     function _exitFee() internal view virtual returns (uint256) {
-        return EXIT_FEE;
+        return EXIT_FEE_BP;
     }
 
     /**
@@ -263,7 +263,7 @@ abstract contract IndexInternal is
         returns (uint256 assetAmount)
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE, shareAmount);
+        (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE_BP, shareAmount);
 
         IndexStorage.UserStreamingFeeData memory userStreamingFeeData = l
             .userStreamingFeeData[msg.sender];
@@ -292,7 +292,7 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         (uint256 exitFeeAmount, uint256 amountAfterExitFee) = _applyFee(
-            EXIT_FEE,
+            EXIT_FEE_BP,
             shareAmount
         );
 

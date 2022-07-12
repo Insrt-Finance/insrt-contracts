@@ -25,14 +25,14 @@ contract IndexIO is IndexInternal, IIndexIO {
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee,
+        uint256 exitFeeBP,
         uint256 streamingFeeBP
     )
         IndexInternal(
             balancerVault,
             balancerHelpers,
             swapper,
-            exitFee,
+            exitFeeBP,
             streamingFeeBP
         )
     {}
@@ -227,7 +227,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         poolTokenAmount = poolTokenAmounts[tokenId];
 
-        uint256 offset = shareAmount - shareAmountOut; //stack too deep fix
+        uint256 offset = shareAmount - shareAmountOut;
         _withdraw(
             msg.sender,
             receiver,
