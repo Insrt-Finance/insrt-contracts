@@ -18,8 +18,6 @@ import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
 import { IAsset, IVault } from '../balancer/IVault.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title Infra Index internal functions
  * @dev inherited by all Index implementation contracts
@@ -268,7 +266,6 @@ abstract contract IndexInternal is
         IndexStorage.UserStreamingFeeData memory userStreamingFeeData = l
             .userStreamingFeeData[msg.sender];
 
-        console.log('assetAmountAfterExt: ', assetAmountAfterExit);
         assetAmount =
             assetAmountAfterExit -
             _calculateStreamingFee(
@@ -276,7 +273,6 @@ abstract contract IndexInternal is
                 block.timestamp - userStreamingFeeData.lastAcquisitionTimestamp
             ) -
             userStreamingFeeData.streamingFeeAccumulated;
-        console.log('assetAmount: ', assetAmount);
     }
 
     /**
@@ -397,7 +393,6 @@ abstract contract IndexInternal is
         view
         returns (uint256 totalFee)
     {
-        console.log(duration);
         totalFee = amount - (DECAY_FACTOR_64x64.pow(duration)).mulu(amount);
     }
 }

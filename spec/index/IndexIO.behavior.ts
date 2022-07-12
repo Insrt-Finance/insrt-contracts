@@ -13,7 +13,6 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 import { defaultAbiCoder } from 'ethers/lib/utils';
-import { exit } from 'process';
 
 export interface IndexIOBehaviorArgs {
   tokens: string[];
@@ -638,9 +637,14 @@ export function describeBehaviorOfIndexIO(
           depositor.address,
         );
 
+      const depositBlock = await ethers.provider.getBlock('latest');
+      const depositTimeStamp = BigNumber.from(
+        depositBlock.timestamp.toString(),
+      );
+      const userBalance = await instance.balanceOf(depositor.address);
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256', 'uint256'],
-        [ethers.constants.Zero, minBptOut, ethers.constants.Zero],
+        [ethers.constants.Zero, userBalance, ethers.constants.Zero],
       );
 
       const minPoolTokenAmounts = [
@@ -664,17 +668,22 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const fee = await instance.exitFee();
-      const bptFee = bptIn.mul(fee).div(feeBasis);
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        depositTimeStamp.add(BigNumber.from('100')).toNumber(),
+      ]);
 
       const tokenId = ethers.constants.Zero;
 
       const oldSupply = await instance.totalSupply();
+      const exitFee = await instance.exitFee();
+      const bptExitFee = bptIn.mul(exitFee).div(feeBasis);
+      const bptAfterExitFee = bptIn.sub(bptExitFee);
+
       await expect(() =>
         instance
           .connect(depositor)
           ['redeem(uint256,uint256[],uint256,address)'](
-            minBptOut,
+            userBalance,
             minPoolTokenAmounts,
             tokenId,
             depositor.address,
@@ -684,14 +693,23 @@ export function describeBehaviorOfIndexIO(
         depositor,
         bptIn.mul(ethers.constants.NegativeOne),
       );
-
+      const redeemBlock = await ethers.provider.getBlock('latest');
+      const redeemTimestamp = BigNumber.from(redeemBlock.timestamp.toString());
+      const duration = redeemTimestamp.sub(depositTimeStamp);
+      const decayedBPTAfterExitFee = decayFactor
+        .pow(duration)
+        .mul(bptAfterExitFee)
+        .div(feeBasis.pow(duration));
+      const bptStreamingFee = bptAfterExitFee.sub(decayedBPTAfterExitFee);
+      const bptAfterAllFees = bptIn.sub(bptStreamingFee).sub(bptExitFee);
       const newSupply = await instance.totalSupply();
 
-      expect(oldSupply.sub(newSupply)).to.eq(bptIn.sub(bptFee));
+      expect(oldSupply.sub(newSupply)).to.eq(bptAfterAllFees);
     });
 
-    it('increases the user balance by the amount returned by the query', async () => {
+    it('increases the user balance by the amount returned by the query - fee', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+      const duration = BigNumber.from('100');
 
       await instance
         .connect(depositor)
@@ -701,37 +719,76 @@ export function describeBehaviorOfIndexIO(
           depositor.address,
         );
 
+      const depositBlock = await ethers.provider.getBlock('latest');
+      const depositTimeStamp = BigNumber.from(
+        depositBlock.timestamp.toString(),
+      );
       const minPoolTokenAmounts = [
         ethers.constants.Zero,
         ethers.constants.Zero,
       ];
 
+      //mimic effect of applying both fees
+      const userIndexBalance = await instance.balanceOf(depositor.address);
       const tokenId = ethers.constants.Zero;
-      const returnedPoolTokenAmount = await instance
+      const exitFee = await instance.exitFee();
+      const exitFeeAmount = userIndexBalance.mul(exitFee).div(feeBasis);
+      const returnedAmountAfterExitFee = userIndexBalance.sub(exitFeeAmount);
+      const decayedReturnedAmountAfterExitFee = decayFactor
+        .pow(duration)
+        .mul(returnedAmountAfterExitFee)
+        .div(feeBasis.pow(duration));
+
+      const userData = ethers.utils.solidityPack(
+        ['uint256', 'uint256', 'uint256'],
+        [
+          ethers.constants.Zero,
+          decayedReturnedAmountAfterExitFee,
+          ethers.constants.Zero,
+        ],
+      );
+      const request = {
+        assets: args.tokens,
+        minAmountsOut: minPoolTokenAmounts,
+        userData,
+        toInternalBalance: false,
+      };
+
+      const [bptIn, returnedAmounts] = await balancerHelpers
         .connect(depositor)
-        .callStatic['redeem(uint256,uint256[],uint256,address)'](
-          minBptOut,
-          minPoolTokenAmounts,
-          tokenId,
-          depositor.address,
+        .callStatic.queryExit(
+          await instance.callStatic.getPoolId(),
+          instance.address,
+          instance.address,
+          request,
         );
+
+      const returnedIndexTokenAmount = returnedAmounts[tokenId.toNumber()];
 
       const oldUserBalance = await assets[tokenId.toNumber()].balanceOf(
         depositor.address,
       );
 
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        depositTimeStamp.add(duration).toNumber(),
+      ]);
+
       await instance
         .connect(depositor)
         ['redeem(uint256,uint256[],uint256,address)'](
-          minBptOut,
+          userIndexBalance,
           minPoolTokenAmounts,
           tokenId,
           depositor.address,
         );
+
       const newUserBalance = await assets[tokenId.toNumber()].balanceOf(
         depositor.address,
       );
-      expect(returnedPoolTokenAmount).to.eq(newUserBalance.sub(oldUserBalance));
+
+      expect(returnedIndexTokenAmount).to.eq(
+        newUserBalance.sub(oldUserBalance),
+      );
     });
 
     it('sends the total fees to the protocol owner', async () => {
@@ -744,6 +801,11 @@ export function describeBehaviorOfIndexIO(
           minBptOut,
           depositor.address,
         );
+
+      const depositBlock = await ethers.provider.getBlock('latest');
+      const depositTimeStamp = BigNumber.from(
+        depositBlock.timestamp.toString(),
+      );
 
       const minPoolTokenAmounts = [
         ethers.constants.Zero,
@@ -776,6 +838,10 @@ export function describeBehaviorOfIndexIO(
         protocolOwner.address,
       );
 
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        depositTimeStamp.add(BigNumber.from('100')).toNumber(),
+      ]);
+
       await instance
         .connect(depositor)
         ['redeem(uint256,uint256[],uint256,address)'](
@@ -789,11 +855,20 @@ export function describeBehaviorOfIndexIO(
         protocolOwner.address,
       );
 
-      const fee = await instance.exitFee();
-      const bptFee = fee.mul(bptIn).div(feeBasis);
+      const exitFee = await instance.exitFee();
+      const bptExitFee = bptIn.mul(exitFee).div(feeBasis);
+      const bptAfterExitFee = bptIn.sub(bptExitFee);
+      const redeemBlock = await ethers.provider.getBlock('latest');
+      const redeemTimestamp = BigNumber.from(redeemBlock.timestamp.toString());
+      const duration = redeemTimestamp.sub(depositTimeStamp);
+      const decayedBPTAfterExitFee = decayFactor
+        .pow(duration)
+        .mul(bptAfterExitFee)
+        .div(feeBasis.pow(duration));
+      const bptStreamingFee = bptAfterExitFee.sub(decayedBPTAfterExitFee);
 
       expect(newProtocolOwnerBalance.sub(oldProtocolOwnerBalance)).to.eq(
-        bptFee,
+        bptExitFee.add(bptStreamingFee),
       );
     });
   });
