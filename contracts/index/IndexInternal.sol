@@ -136,7 +136,7 @@ abstract contract IndexInternal is
 
     /**
      * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
-     * @param fee the fee as 0-10000 value representing a two decimal point percentage
+     * @param fee the fee as 0-10**18 value representing a two decimal point percentage
      * @param amount the amount to apply the fee on
      * @return totalFee the actual value of the fee (not percent)
      * @return remainder the remaining amount after the fee has been subtracted from it
@@ -265,15 +265,17 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
         (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE, shareAmount);
 
+        IndexStorage.UserStreamingFeeData memory userStreamingFeeData = l
+            .userStreamingFeeData[msg.sender];
+
         console.log('assetAmountAfterExt: ', assetAmountAfterExit);
         assetAmount =
             assetAmountAfterExit -
             _calculateStreamingFee(
                 assetAmountAfterExit,
-                block.timestamp -
-                    l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp
+                block.timestamp - userStreamingFeeData.lastAcquisitionTimestamp
             ) -
-            l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
+            userStreamingFeeData.streamingFeeAccumulated;
         console.log('assetAmount: ', assetAmount);
     }
 
@@ -340,8 +342,8 @@ abstract contract IndexInternal is
         uint256 currTimestamp = block.timestamp;
 
         uint256 streamingFee;
-
-        if (recipient == _protocolOwner()) {
+        address protocolOwner = _protocolOwner();
+        if (recipient == protocolOwner) {
             streamingFee = 0;
         } else {
             streamingFee =
@@ -374,7 +376,7 @@ abstract contract IndexInternal is
         }
 
         if (streamingFee > 0) {
-            l.balances[_protocolOwner()] += streamingFee;
+            l.balances[protocolOwner] += streamingFee;
         }
 
         l.balances[recipient] += amount - streamingFee;
