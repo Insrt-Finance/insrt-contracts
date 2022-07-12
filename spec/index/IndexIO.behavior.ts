@@ -512,14 +512,6 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const returnedPoolTokenAmounts = await instance
-        .connect(depositor)
-        .callStatic['redeem(uint256,uint256[],address)'](
-          userBalance,
-          minPoolTokenAmounts,
-          depositor.address,
-        );
-
       await instance
         .connect(depositor)
         ['redeem(uint256,uint256[],address)'](
@@ -532,7 +524,6 @@ export function describeBehaviorOfIndexIO(
       const redeemTimestamp = BigNumber.from(redeemBlock.timestamp.toString());
       const duration = redeemTimestamp.sub(depositTimeStamp);
 
-      console.log(duration);
       const newUserBalances = [];
       for (let i = 0; i < assets.length; i++) {
         newUserBalances.push(await assets[i].balanceOf(depositor.address));
@@ -551,19 +542,9 @@ export function describeBehaviorOfIndexIO(
           decayedReturnedAmountAfterExitFee,
         );
 
-        console.log(streamingFeeAmount);
-
         expect(
           returnedAmounts[i].sub(exitFeeAmount).sub(streamingFeeAmount),
         ).to.eq(newUserBalances[i].sub(oldUserBalances[i]));
-        console.log('returned minus fee equal to user balance');
-        console.log(
-          returnedAmounts[i].sub(exitFeeAmount).sub(streamingFeeAmount),
-        );
-
-        expect(
-          returnedAmounts[i].sub(exitFeeAmount).sub(streamingFeeAmount),
-        ).to.eq(returnedPoolTokenAmounts[i]);
       }
     });
 
