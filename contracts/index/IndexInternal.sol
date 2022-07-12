@@ -30,8 +30,6 @@ abstract contract IndexInternal is
     OwnableInternal
 {
     using UintUtils for uint256;
-    using ABDKMath64x64 for uint256;
-    using ABDKMath64x64 for int256;
     using ABDKMath64x64 for int128;
     using SafeERC20 for IERC20;
 
@@ -55,12 +53,12 @@ abstract contract IndexInternal is
         SWAPPER = swapper;
         EXIT_FEE = exitFee;
 
-        int128 streamingFee64x64 = streamingFeeBP.divu(FEE_BASIS);
-        int128 streamingFeeSecond64x64 = streamingFee64x64.div(
-            uint256(31557600).fromUInt()
+        DECAY_FACTOR_64x64 = ONE_64x64.sub(
+            ABDKMath64x64.div(
+                ABDKMath64x64.divu(streamingFeeBP, FEE_BASIS),
+                ABDKMath64x64.fromUInt(uint256(31557600))
+            )
         );
-
-        DECAY_FACTOR_64x64 = ONE_64x64.sub(streamingFeeSecond64x64);
     }
 
     modifier onlyProtocolOwner() {
