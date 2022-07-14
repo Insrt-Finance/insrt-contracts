@@ -324,32 +324,25 @@ abstract contract IndexInternal is
         uint256 amount
     ) internal virtual override returns (bool) {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        uint256 currTimestamp = block.timestamp;
 
-        uint256 streamingFee;
-        address protocolOwner = _protocolOwner();
+        uint256 streamingFee = _calculateStreamingFee(
+            amount,
+            block.timestamp - l.reservedFeeData[holder].updatedAt
+        ) + l.reservedFeeData[holder].amount;
 
-        streamingFee =
-            _calculateStreamingFee(
-                amount,
-                currTimestamp - l.reservedFeeData[holder].updatedAt
-            ) +
-            l.reservedFeeData[holder].amount;
-        l.reservedFeeData[holder].amount = 0;
-        uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
+        delete l.reservedFeeData[holder].amount;
+
+        l.reservedFeeData[recipient].amount += _calculateStreamingFee(
             _balanceOf(recipient),
-            currTimestamp - l.reservedFeeData[recipient].updatedAt
+            block.timestamp - l.reservedFeeData[recipient].updatedAt
         );
 
-        l
-            .reservedFeeData[recipient]
-            .amount += recipientStreamingFeeAccumulation;
-        l.reservedFeeData[recipient].updatedAt = currTimestamp;
+        l.reservedFeeData[recipient].updatedAt = block.timestamp;
 
         // TODO: emit StreamingFeePaid event
 
         super._transfer(holder, recipient, amount - streamingFee);
-        super._transfer(holder, protocolOwner, streamingFee);
+        super._transfer(holder, _protocolOwner(), streamingFee);
     }
 
     /**
