@@ -29,8 +29,6 @@ describe('StakedInsrtToken', () => {
     instance = await new StakedInsrtTokenMock__factory(deployer).deploy(
       insrtToken.address,
     );
-    // TODO: remove getAddress workaround
-    (instance as any).getAddress = () => instance.address;
   });
 
   describeBehaviorOfSolidStateERC4626(async () => instance, {
