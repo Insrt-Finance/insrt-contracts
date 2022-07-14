@@ -210,22 +210,23 @@ contract IndexIO is IndexInternal, IIndexIO {
         // because assets and shares are pegged 1:1, output can be treated as share amount
         uint256 shareAmountOut = _previewRedeem(shareAmount);
 
-        bytes memory userData = abi.encode(
-            IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-            shareAmountOut,
-            tokenId
-        );
+        {
+            bytes memory userData = abi.encode(
+                IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+                shareAmountOut,
+                tokenId
+            );
 
-        uint256[] memory poolTokenAmounts = _exitPool(
-            l,
-            minPoolTokenAmounts,
-            userData,
-            receiver
-        );
+            uint256[] memory poolTokenAmounts = _exitPool(
+                l,
+                minPoolTokenAmounts,
+                userData,
+                receiver
+            );
 
-        poolTokenAmount = poolTokenAmounts[tokenId];
+            poolTokenAmount = poolTokenAmounts[tokenId];
+        }
 
-        uint256 offset = shareAmount - shareAmountOut;
         _withdraw(
             msg.sender,
             receiver,
@@ -233,7 +234,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             shareAmount,
             shareAmount,
-            offset
+            shareAmount - shareAmountOut
         );
     }
 }
