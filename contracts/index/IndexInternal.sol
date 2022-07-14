@@ -294,12 +294,16 @@ abstract contract IndexInternal is
             shareAmount
         );
 
+        IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
+            msg.sender
+        ];
+
         uint256 totalFeeAmount = exitFeeAmount +
             _calculateStreamingFee(
                 amountAfterExitFee,
-                block.timestamp - l.reservedFeeData[msg.sender].updatedAt
+                block.timestamp - reservedFeeData.updatedAt
             ) +
-            l.reservedFeeData[msg.sender].amount;
+            reservedFeeData.amount;
 
         if (totalFeeAmount > 0) {
             _transfer(msg.sender, _protocolOwner(), totalFeeAmount);
