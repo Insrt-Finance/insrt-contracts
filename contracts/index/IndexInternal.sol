@@ -328,9 +328,8 @@ abstract contract IndexInternal is
 
         uint256 streamingFee;
         address protocolOwner = _protocolOwner();
-        if (recipient == protocolOwner) {
-            streamingFee = 0;
-        } else {
+
+        if (recipient != protocolOwner) {
             streamingFee =
                 _calculateStreamingFee(
                     amount,
