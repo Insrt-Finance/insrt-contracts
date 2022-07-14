@@ -193,8 +193,6 @@ describe('IndexProxy', () => {
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
 
     instance = IIndex__factory.connect(deployment, deployer);
-    // TODO: remove getAddress workaround
-    (instance as any).getAddress = () => instance.address;
 
     balancerPool = IERC20__factory.connect(
       await instance.callStatic.asset(),
