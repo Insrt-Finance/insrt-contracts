@@ -36,7 +36,7 @@ export function describeBehaviorOfIndexIO(
   const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
   const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'; //arbitrum
   const feeBasis = ethers.utils.parseEther('1.0');
-  const streamingFeePerSecond = args.streamingFee.div(31557600); //streamingFee / (365.25*24*3600)
+  const streamingFeePerSecond = args.streamingFee.div(365.25 * 24 * 3600);
   const decayFactor = ethers.utils.parseEther('1.0').sub(streamingFeePerSecond);
 
   let BALANCER_VAULT = '';

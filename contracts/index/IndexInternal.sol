@@ -54,7 +54,7 @@ abstract contract IndexInternal is
         DECAY_FACTOR_64x64 = ONE_64x64.sub(
             ABDKMath64x64.div(
                 ABDKMath64x64.divu(streamingFeeBP, FEE_BASIS),
-                ABDKMath64x64.fromUInt(uint256(31557600))
+                ABDKMath64x64.fromUInt(uint256(365.25 days))
             )
         );
     }
