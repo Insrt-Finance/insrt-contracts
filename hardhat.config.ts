@@ -35,23 +35,13 @@ export default {
           },
         },
       },
+      // @balancer-labs/*
       {
         version: '0.7.1',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
       },
+      // @uniswap/v2-periphery
       {
         version: '0.6.6',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
       },
     ],
   },
