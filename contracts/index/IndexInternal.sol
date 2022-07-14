@@ -264,16 +264,17 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
         (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE_BP, shareAmount);
 
-        IndexStorage.UserStreamingFeeData memory userStreamingFeeData = l
-            .userStreamingFeeData[msg.sender];
+        IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
+            msg.sender
+        ];
 
         assetAmount =
             assetAmountAfterExit -
             _calculateStreamingFee(
                 assetAmountAfterExit,
-                block.timestamp - userStreamingFeeData.lastAcquisitionTimestamp
+                block.timestamp - reservedFeeData.updatedAt
             ) -
-            userStreamingFeeData.streamingFeeAccumulated;
+            reservedFeeData.amount;
     }
 
     /**
@@ -296,10 +297,9 @@ abstract contract IndexInternal is
         uint256 totalFeeAmount = exitFeeAmount +
             _calculateStreamingFee(
                 amountAfterExitFee,
-                block.timestamp -
-                    l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp
+                block.timestamp - l.reservedFeeData[msg.sender].updatedAt
             ) +
-            l.userStreamingFeeData[msg.sender].streamingFeeAccumulated;
+            l.reservedFeeData[msg.sender].amount;
 
         if (totalFeeAmount > 0) {
             _transfer(msg.sender, _protocolOwner(), totalFeeAmount);
@@ -347,29 +347,18 @@ abstract contract IndexInternal is
                 _calculateStreamingFee(
                     amount,
                     currTimestamp -
-                        indexLayout
-                            .userStreamingFeeData[holder]
-                            .lastAcquisitionTimestamp
+                        indexLayout.reservedFeeData[holder].updatedAt
                 ) +
-                indexLayout
-                    .userStreamingFeeData[holder]
-                    .streamingFeeAccumulated;
-            indexLayout
-                .userStreamingFeeData[holder]
-                .streamingFeeAccumulated = 0;
+                indexLayout.reservedFeeData[holder].amount;
+            indexLayout.reservedFeeData[holder].amount = 0;
             uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
                 _balanceOf(recipient),
-                currTimestamp -
-                    indexLayout
-                        .userStreamingFeeData[recipient]
-                        .lastAcquisitionTimestamp
+                currTimestamp - indexLayout.reservedFeeData[recipient].updatedAt
             );
             indexLayout
-                .userStreamingFeeData[recipient]
-                .streamingFeeAccumulated += recipientStreamingFeeAccumulation;
-            indexLayout
-                .userStreamingFeeData[recipient]
-                .lastAcquisitionTimestamp = currTimestamp;
+                .reservedFeeData[recipient]
+                .amount += recipientStreamingFeeAccumulation;
+            indexLayout.reservedFeeData[recipient].updatedAt = currTimestamp;
         }
 
         if (streamingFee > 0) {

@@ -102,8 +102,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             0
         );
 
-        l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp = block
-            .timestamp;
+        l.reservedFeeData[msg.sender].updatedAt = block.timestamp;
     }
 
     /**
@@ -158,8 +157,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             0
         );
 
-        l.userStreamingFeeData[msg.sender].lastAcquisitionTimestamp = block
-            .timestamp;
+        l.reservedFeeData[msg.sender].updatedAt = block.timestamp;
     }
 
     /**
