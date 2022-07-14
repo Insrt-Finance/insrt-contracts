@@ -329,23 +329,22 @@ abstract contract IndexInternal is
         uint256 streamingFee;
         address protocolOwner = _protocolOwner();
 
-        if (recipient != protocolOwner) {
-            streamingFee =
-                _calculateStreamingFee(
-                    amount,
-                    currTimestamp - l.reservedFeeData[holder].updatedAt
-                ) +
-                l.reservedFeeData[holder].amount;
-            l.reservedFeeData[holder].amount = 0;
-            uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
-                _balanceOf(recipient),
-                currTimestamp - l.reservedFeeData[recipient].updatedAt
-            );
-            l
-                .reservedFeeData[recipient]
-                .amount += recipientStreamingFeeAccumulation;
-            l.reservedFeeData[recipient].updatedAt = currTimestamp;
-        }
+        streamingFee =
+            _calculateStreamingFee(
+                amount,
+                currTimestamp - l.reservedFeeData[holder].updatedAt
+            ) +
+            l.reservedFeeData[holder].amount;
+        l.reservedFeeData[holder].amount = 0;
+        uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
+            _balanceOf(recipient),
+            currTimestamp - l.reservedFeeData[recipient].updatedAt
+        );
+
+        l
+            .reservedFeeData[recipient]
+            .amount += recipientStreamingFeeAccumulation;
+        l.reservedFeeData[recipient].updatedAt = currTimestamp;
 
         // TODO: emit StreamingFeePaid event
 
