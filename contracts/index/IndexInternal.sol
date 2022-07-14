@@ -218,7 +218,8 @@ abstract contract IndexInternal is
      * @inheritdoc ERC4626BaseInternal
      */
     function _totalAssets() internal view override returns (uint256) {
-        return IERC20(_asset()).balanceOf(address(this));
+        // return BPT balance, which is equal to total Index token supply
+        return _totalSupply();
     }
 
     /**
