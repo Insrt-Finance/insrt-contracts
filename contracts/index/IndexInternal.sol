@@ -6,6 +6,7 @@ import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
+import { ERC20BaseInternal } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
 import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseStorage.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
@@ -303,12 +304,8 @@ abstract contract IndexInternal is
     }
 
     /**
-     * @notice transfer tokens from holder to recipient
-     * @dev accounts for streaming fee on token transfers
-     * @param holder owner of tokens to be transferred
-     * @param recipient beneficiary of transfer
-     * @param amount quantity of tokens transferred
-     * @return success status (always true; otherwise function should revert)
+     * @inheritdoc ERC20BaseInternal
+     * @dev additionally applies the streamingFee on every transfer except those going to the protocolOwner
      */
     function _transfer(
         address holder,
@@ -346,7 +343,7 @@ abstract contract IndexInternal is
                         indexLayout.reservedFeeData[holder].updatedAt
                 ) +
                 indexLayout.reservedFeeData[holder].amount;
-            indexLayout.reservedFeeData[holder].amount = 0;
+            delete indexLayout.reservedFeeData[holder].amount;
             uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
                 _balanceOf(recipient),
                 currTimestamp - indexLayout.reservedFeeData[recipient].updatedAt
