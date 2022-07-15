@@ -9,6 +9,7 @@ library IndexStorage {
         uint256 updatedAt;
         uint256 amount;
     }
+
     struct Layout {
         uint256 id;
         bytes32 poolId;

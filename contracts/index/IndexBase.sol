@@ -124,4 +124,15 @@ contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
     ) internal override(ERC20BaseInternal, IndexInternal) returns (bool) {
         return super._transfer(holder, recipient, amount);
     }
+
+    /**
+     * @inheritdoc IndexInternal
+     */
+    function _afterDeposit(
+        address receiver,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal override(ERC4626BaseInternal, IndexInternal) {
+        super._afterDeposit(receiver, assetAmount, shareAmount);
+    }
 }

@@ -6,7 +6,8 @@ import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
-import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
+import { ERC20BaseInternal } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
+import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseStorage.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
@@ -35,7 +36,7 @@ abstract contract IndexInternal is
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
     uint256 internal immutable EXIT_FEE_BP;
-    uint256 internal constant FEE_BASIS = 1 ether;
+    uint256 internal constant BASIS = 10000;
     int128 internal immutable DECAY_FACTOR_64x64;
     int128 internal constant ONE_64x64 = 0x10000000000000000; //64x64 representation of 1
 
@@ -53,7 +54,7 @@ abstract contract IndexInternal is
 
         DECAY_FACTOR_64x64 = ONE_64x64.sub(
             ABDKMath64x64.div(
-                ABDKMath64x64.divu(streamingFeeBP, FEE_BASIS),
+                ABDKMath64x64.divu(streamingFeeBP, BASIS),
                 ABDKMath64x64.fromUInt(uint256(365.25 days))
             )
         );
@@ -134,7 +135,7 @@ abstract contract IndexInternal is
 
     /**
      * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
-     * @param fee the fee as 0-10**18 value representing a two decimal point percentage
+     * @param fee the fee as 0-10000 value representing a two decimal point percentage
      * @param amount the amount to apply the fee on
      * @return totalFee the actual value of the fee (not percent)
      * @return remainder the remaining amount after the fee has been subtracted from it
@@ -145,7 +146,7 @@ abstract contract IndexInternal is
         returns (uint256 totalFee, uint256 remainder)
     {
         if (msg.sender != _protocolOwner()) {
-            totalFee = (fee * amount) / FEE_BASIS;
+            totalFee = (fee * amount) / BASIS;
         }
 
         remainder = amount - totalFee;
@@ -174,14 +175,6 @@ abstract contract IndexInternal is
      */
     function _poolId() internal view virtual returns (bytes32) {
         return IndexStorage.layout().poolId;
-    }
-
-    /**
-     * @notice get the exit fee in basis points
-     * @return exitFee
-     */
-    function _exitFee() internal view virtual returns (uint256) {
-        return EXIT_FEE_BP;
     }
 
     /**
@@ -311,12 +304,22 @@ abstract contract IndexInternal is
     }
 
     /**
-     * @notice transfer tokens from holder to recipient
-     * @dev accounts for streaming fee on token transfers
-     * @param holder owner of tokens to be transferred
-     * @param recipient beneficiary of transfer
-     * @param amount quantity of tokens transferred
-     * @return success status (always true; otherwise function should revert)
+     * @inheritdoc ERC4626BaseInternal
+     * @dev additionally sets the reserveFeeData for the receiver
+     */
+    function _afterDeposit(
+        address receiver,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal virtual override {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        l.reservedFeeData[receiver].updatedAt = block.timestamp;
+    }
+
+    /**
+     * @inheritdoc ERC20BaseInternal
+     * @dev additionally applies the streamingFee on every transfer except those going to the protocolOwner
      */
     function _transfer(
         address holder,

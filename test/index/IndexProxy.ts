@@ -46,8 +46,8 @@ describe('IndexProxy', () => {
   const swapperArg: string[] = [];
 
   const id = 1;
-  const EXIT_FEE = ethers.utils.parseEther('0.02');
-  const STREAMING_FEE = ethers.utils.parseEther('0.015');
+  const EXIT_FEE = BigNumber.from('200');
+  const STREAMING_FEE = BigNumber.from('150');
 
   before(async () => {
     [deployer] = await ethers.getSigners();
@@ -271,6 +271,7 @@ describe('IndexProxy', () => {
     weights: weightsArg,
     swapper: swapperArg,
     streamingFee: STREAMING_FEE,
+    exitFee: EXIT_FEE,
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],
