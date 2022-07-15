@@ -133,6 +133,6 @@ contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
         uint256 assetAmount,
         uint256 shareAmount
     ) internal override(ERC4626BaseInternal, IndexInternal) {
-        super._afterDeposit;
+        super._afterDeposit(receiver, assetAmount, shareAmount);
     }
 }
