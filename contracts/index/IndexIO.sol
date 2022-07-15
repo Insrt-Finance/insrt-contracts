@@ -102,7 +102,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             0
         );
 
-        l.reservedFeeData[msg.sender].updatedAt = block.timestamp;
+        _setReservedFeeData(l, msg.sender, block.timestamp, 0);
     }
 
     /**
@@ -157,7 +157,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             0
         );
 
-        l.reservedFeeData[msg.sender].updatedAt = block.timestamp;
+        _setReservedFeeData(l, msg.sender, block.timestamp, 0);
     }
 
     /**
