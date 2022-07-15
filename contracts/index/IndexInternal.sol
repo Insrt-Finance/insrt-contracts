@@ -177,14 +177,6 @@ abstract contract IndexInternal is
     }
 
     /**
-     * @notice get the exit fee in basis points
-     * @return exitFee
-     */
-    function _exitFee() internal view virtual returns (uint256) {
-        return EXIT_FEE_BP;
-    }
-
-    /**
      * @inheritdoc ERC20MetadataInternal
      */
     function _name() internal view virtual override returns (string memory) {
