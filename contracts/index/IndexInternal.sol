@@ -326,54 +326,26 @@ abstract contract IndexInternal is
         address recipient,
         uint256 amount
     ) internal virtual override returns (bool) {
-        require(holder != address(0), 'ERC20: transfer from the zero address');
-        require(recipient != address(0), 'ERC20: transfer to the zero address');
+        IndexStorage.Layout storage l = IndexStorage.layout();
 
-        _beforeTokenTransfer(holder, recipient, amount);
+        uint256 streamingFee = _calculateStreamingFee(
+            amount,
+            block.timestamp - l.reservedFeeData[holder].updatedAt
+        ) + l.reservedFeeData[holder].amount;
 
-        ERC20BaseStorage.Layout storage l = ERC20BaseStorage.layout();
-        IndexStorage.Layout storage indexLayout = IndexStorage.layout();
+        delete l.reservedFeeData[holder].amount;
 
-        uint256 holderBalance = l.balances[holder];
-        require(
-            holderBalance >= amount,
-            'ERC20: transfer amount exceeds balance'
+        l.reservedFeeData[recipient].amount += _calculateStreamingFee(
+            _balanceOf(recipient),
+            block.timestamp - l.reservedFeeData[recipient].updatedAt
         );
-        unchecked {
-            l.balances[holder] = holderBalance - amount;
-        }
 
-        uint256 currTimestamp = block.timestamp;
+        l.reservedFeeData[recipient].updatedAt = block.timestamp;
 
-        uint256 streamingFee;
-        address protocolOwner = _protocolOwner();
-        if (recipient != protocolOwner) {
-            streamingFee =
-                _calculateStreamingFee(
-                    amount,
-                    currTimestamp -
-                        indexLayout.reservedFeeData[holder].updatedAt
-                ) +
-                indexLayout.reservedFeeData[holder].amount;
-            delete indexLayout.reservedFeeData[holder].amount;
-            uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
-                _balanceOf(recipient),
-                currTimestamp - indexLayout.reservedFeeData[recipient].updatedAt
-            );
-            indexLayout
-                .reservedFeeData[recipient]
-                .amount += recipientStreamingFeeAccumulation;
-            indexLayout.reservedFeeData[recipient].updatedAt = currTimestamp;
-        }
+        // TODO: emit StreamingFeePaid event
 
-        if (streamingFee > 0) {
-            l.balances[protocolOwner] += streamingFee;
-        }
-
-        l.balances[recipient] += amount - streamingFee;
-
-        emit Transfer(holder, recipient, amount - streamingFee);
-        return true;
+        super._transfer(holder, recipient, amount - streamingFee);
+        super._transfer(holder, _protocolOwner(), streamingFee);
     }
 
     /**
