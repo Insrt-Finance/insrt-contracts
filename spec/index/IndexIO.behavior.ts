@@ -391,8 +391,6 @@ export function describeBehaviorOfIndexIO(
   describe('#redeem(uint256,uint256[],address)', () => {
     it('burns BPT at 1:1, for shares - fee', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
-
-      console.log('streamingFeePerSecond: ', streamingFeePerSecond);
       await instance
         .connect(depositor)
         ['deposit(uint256[],uint256,address)'](
@@ -465,9 +463,7 @@ export function describeBehaviorOfIndexIO(
       const bptAfterAllFees = bptIn.sub(bptStreamingFee).sub(bptExitFee);
 
       const newTotalSupply = await investmentPoolToken['totalSupply()']();
-      console.log('df: ', decayFactor.toBigInt());
-      console.log('bptAfterFees: ', bptAfterAllFees);
-      console.log('duration: ', duration.toBigInt());
+
       expect(oldTotalSupply.sub(newTotalSupply)).to.eq(bptAfterAllFees);
     });
 
