@@ -35,7 +35,7 @@ abstract contract IndexInternal is
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
     uint256 internal immutable EXIT_FEE_BP;
-    uint256 internal constant FEE_BASIS = 1 ether;
+    uint256 internal constant BASIS = 10000;
     int128 internal immutable DECAY_FACTOR_64x64;
     int128 internal constant ONE_64x64 = 0x10000000000000000; //64x64 representation of 1
 
@@ -53,7 +53,7 @@ abstract contract IndexInternal is
 
         DECAY_FACTOR_64x64 = ONE_64x64.sub(
             ABDKMath64x64.div(
-                ABDKMath64x64.divu(streamingFeeBP, FEE_BASIS),
+                ABDKMath64x64.divu(streamingFeeBP, BASIS),
                 ABDKMath64x64.fromUInt(uint256(365.25 days))
             )
         );
@@ -145,7 +145,7 @@ abstract contract IndexInternal is
         returns (uint256 totalFee, uint256 remainder)
     {
         if (msg.sender != _protocolOwner()) {
-            totalFee = (fee * amount) / FEE_BASIS;
+            totalFee = (fee * amount) / BASIS;
         }
 
         remainder = amount - totalFee;
