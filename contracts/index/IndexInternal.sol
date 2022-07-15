@@ -314,7 +314,7 @@ abstract contract IndexInternal is
     ) internal virtual override {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        l.reservedFeeData[receiver].updatedAt = block.timestamp;
+        l.reservedFeeData[receiver].updatedAt = uint64(block.timestamp);
     }
 
     /**
@@ -335,12 +335,14 @@ abstract contract IndexInternal is
 
         delete l.reservedFeeData[holder].amount;
 
-        l.reservedFeeData[recipient].amount += _calculateStreamingFee(
-            _balanceOf(recipient),
-            block.timestamp - l.reservedFeeData[recipient].updatedAt
+        l.reservedFeeData[recipient].amount += uint192(
+            _calculateStreamingFee(
+                _balanceOf(recipient),
+                block.timestamp - l.reservedFeeData[recipient].updatedAt
+            )
         );
 
-        l.reservedFeeData[recipient].updatedAt = block.timestamp;
+        l.reservedFeeData[recipient].updatedAt = uint64(block.timestamp);
 
         // TODO: emit StreamingFeePaid event
 

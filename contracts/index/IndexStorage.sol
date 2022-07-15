@@ -6,8 +6,8 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
 library IndexStorage {
     struct ReservedFeeData {
-        uint256 updatedAt;
-        uint256 amount;
+        uint64 updatedAt;
+        uint192 amount;
     }
 
     struct Layout {
