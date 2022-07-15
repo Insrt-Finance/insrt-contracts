@@ -134,7 +134,7 @@ abstract contract IndexInternal is
 
     /**
      * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
-     * @param fee the fee as 0-10**18 value representing a two decimal point percentage
+     * @param fee the fee as 0-10000 value representing a two decimal point percentage
      * @param amount the amount to apply the fee on
      * @return totalFee the actual value of the fee (not percent)
      * @return remainder the remaining amount after the fee has been subtracted from it
