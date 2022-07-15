@@ -19,6 +19,7 @@ export interface IndexIOBehaviorArgs {
   weights: BigNumber[];
   swapper: string[];
   streamingFee: BigNumber;
+  exitFee: BigNumber;
 }
 
 export function describeBehaviorOfIndexIO(
@@ -35,9 +36,15 @@ export function describeBehaviorOfIndexIO(
   const poolTokenAmounts: BigNumber[] = [];
   const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
   const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'; //arbitrum
-  const feeBasis = ethers.utils.parseEther('1.0');
-  const streamingFeePerSecond = args.streamingFee.div(365.25 * 24 * 3600);
-  const decayFactor = ethers.utils.parseEther('1.0').sub(streamingFeePerSecond);
+
+  const testBasis = ethers.utils.parseEther('1.0');
+  const testScaling = ethers.utils
+    .parseEther('1.0')
+    .div(BigNumber.from('10000')); //if BASIS changes from 10000 this must change as well
+  const testScaledStreamingFee = args.streamingFee.mul(testScaling);
+  const testScaledExitFee = args.exitFee.mul(testScaling);
+  const streamingFeePerSecond = testScaledStreamingFee.div(365.25 * 24 * 3600);
+  const decayFactor = testBasis.sub(streamingFeePerSecond);
 
   let BALANCER_VAULT = '';
   let balancerHelpers: IBalancerHelpers;
@@ -385,6 +392,7 @@ export function describeBehaviorOfIndexIO(
     it('burns BPT at 1:1, for shares - fee', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
+      console.log('streamingFeePerSecond: ', streamingFeePerSecond);
       await instance
         .connect(depositor)
         ['deposit(uint256[],uint256,address)'](
@@ -424,8 +432,8 @@ export function describeBehaviorOfIndexIO(
         );
 
       const oldTotalSupply = await investmentPoolToken['totalSupply()']();
-      const exitFee = await instance.exitFee();
-      const bptExitFee = bptIn.mul(exitFee).div(feeBasis);
+
+      const bptExitFee = bptIn.mul(testScaledExitFee).div(testBasis);
       const bptAfterExitFee = bptIn.sub(bptExitFee);
 
       await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -452,12 +460,14 @@ export function describeBehaviorOfIndexIO(
       const decayedBPTAfterExitFee = decayFactor
         .pow(duration)
         .mul(bptAfterExitFee)
-        .div(feeBasis.pow(duration));
+        .div(testBasis.pow(duration));
       const bptStreamingFee = bptAfterExitFee.sub(decayedBPTAfterExitFee);
       const bptAfterAllFees = bptIn.sub(bptStreamingFee).sub(bptExitFee);
 
       const newTotalSupply = await investmentPoolToken['totalSupply()']();
-
+      console.log('df: ', decayFactor.toBigInt());
+      console.log('bptAfterFees: ', bptAfterAllFees);
+      console.log('duration: ', duration.toBigInt());
       expect(oldTotalSupply.sub(newTotalSupply)).to.eq(bptAfterAllFees);
     });
 
@@ -528,15 +538,15 @@ export function describeBehaviorOfIndexIO(
         newUserBalances.push(await assets[i].balanceOf(depositor.address));
       }
 
-      const exitFee = await instance.exitFee();
-
       for (let i = 0; i < assets.length; i++) {
-        let exitFeeAmount = returnedAmounts[i].mul(exitFee).div(feeBasis);
+        let exitFeeAmount = returnedAmounts[i]
+          .mul(testScaledExitFee)
+          .div(testBasis);
         let returnedAmountAfterExitFee = returnedAmounts[i].sub(exitFeeAmount);
         let decayedReturnedAmountAfterExitFee = decayFactor
           .pow(duration)
           .mul(returnedAmountAfterExitFee)
-          .div(feeBasis.pow(duration));
+          .div(testBasis.pow(duration));
         let streamingFeeAmount = returnedAmountAfterExitFee.sub(
           decayedReturnedAmountAfterExitFee,
         );
@@ -607,8 +617,7 @@ export function describeBehaviorOfIndexIO(
         protocolOwner.address,
       );
 
-      const exitFee = await instance.exitFee();
-      const bptExitFee = bptIn.mul(exitFee).div(feeBasis);
+      const bptExitFee = bptIn.mul(testScaledExitFee).div(testBasis);
       const bptAfterExitFee = bptIn.sub(bptExitFee);
       const redeemBlock = await ethers.provider.getBlock('latest');
       const redeemTimestamp = BigNumber.from(redeemBlock.timestamp.toString());
@@ -616,7 +625,7 @@ export function describeBehaviorOfIndexIO(
       const decayedBPTAfterExitFee = decayFactor
         .pow(duration)
         .mul(bptAfterExitFee)
-        .div(feeBasis.pow(duration));
+        .div(testBasis.pow(duration));
       const bptStreamingFee = bptAfterExitFee.sub(decayedBPTAfterExitFee);
 
       expect(bptExitFee.add(bptStreamingFee)).to.eq(
@@ -675,8 +684,7 @@ export function describeBehaviorOfIndexIO(
       const tokenId = ethers.constants.Zero;
 
       const oldSupply = await instance.totalSupply();
-      const exitFee = await instance.exitFee();
-      const bptExitFee = bptIn.mul(exitFee).div(feeBasis);
+      const bptExitFee = bptIn.mul(testScaledExitFee).div(testBasis);
       const bptAfterExitFee = bptIn.sub(bptExitFee);
 
       await expect(() =>
@@ -699,7 +707,7 @@ export function describeBehaviorOfIndexIO(
       const decayedBPTAfterExitFee = decayFactor
         .pow(duration)
         .mul(bptAfterExitFee)
-        .div(feeBasis.pow(duration));
+        .div(testBasis.pow(duration));
       const bptStreamingFee = bptAfterExitFee.sub(decayedBPTAfterExitFee);
       const bptAfterAllFees = bptIn.sub(bptStreamingFee).sub(bptExitFee);
       const newSupply = await instance.totalSupply();
@@ -731,13 +739,14 @@ export function describeBehaviorOfIndexIO(
       //mimic effect of applying both fees
       const userIndexBalance = await instance.balanceOf(depositor.address);
       const tokenId = ethers.constants.Zero;
-      const exitFee = await instance.exitFee();
-      const exitFeeAmount = userIndexBalance.mul(exitFee).div(feeBasis);
+      const exitFeeAmount = userIndexBalance
+        .mul(testScaledExitFee)
+        .div(testBasis);
       const returnedAmountAfterExitFee = userIndexBalance.sub(exitFeeAmount);
       const decayedReturnedAmountAfterExitFee = decayFactor
         .pow(duration)
         .mul(returnedAmountAfterExitFee)
-        .div(feeBasis.pow(duration));
+        .div(testBasis.pow(duration));
 
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256', 'uint256'],
@@ -855,8 +864,7 @@ export function describeBehaviorOfIndexIO(
         protocolOwner.address,
       );
 
-      const exitFee = await instance.exitFee();
-      const bptExitFee = bptIn.mul(exitFee).div(feeBasis);
+      const bptExitFee = bptIn.mul(testScaledExitFee).div(testBasis);
       const bptAfterExitFee = bptIn.sub(bptExitFee);
       const redeemBlock = await ethers.provider.getBlock('latest');
       const redeemTimestamp = BigNumber.from(redeemBlock.timestamp.toString());
@@ -864,7 +872,7 @@ export function describeBehaviorOfIndexIO(
       const decayedBPTAfterExitFee = decayFactor
         .pow(duration)
         .mul(bptAfterExitFee)
-        .div(feeBasis.pow(duration));
+        .div(testBasis.pow(duration));
       const bptStreamingFee = bptAfterExitFee.sub(decayedBPTAfterExitFee);
 
       expect(newProtocolOwnerBalance.sub(oldProtocolOwnerBalance)).to.eq(
