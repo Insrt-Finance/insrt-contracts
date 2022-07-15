@@ -6,7 +6,7 @@ import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
-import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
+import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseStorage.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
