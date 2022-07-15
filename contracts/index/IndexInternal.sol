@@ -257,18 +257,17 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
         (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE_BP, shareAmount);
 
-        (uint256 updatedAt, uint256 amount) = _getReservedFeedAta(
-            l,
+        IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
             msg.sender
-        );
+        ];
 
         assetAmount =
             assetAmountAfterExit -
             _calculateStreamingFee(
                 assetAmountAfterExit,
-                block.timestamp - updatedAt
+                block.timestamp - reservedFeeData.updatedAt
             ) -
-            amount;
+            reservedFeeData.amount;
     }
 
     /**
@@ -288,17 +287,16 @@ abstract contract IndexInternal is
             shareAmount
         );
 
-        (uint256 updatedAt, uint256 amount) = _getReservedFeedAta(
-            l,
+        IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
             msg.sender
-        );
+        ];
 
         uint256 totalFeeAmount = exitFeeAmount +
             _calculateStreamingFee(
                 amountAfterExitFee,
-                block.timestamp - updatedAt
+                block.timestamp - reservedFeeData.updatedAt
             ) +
-            amount;
+            reservedFeeData.amount;
 
         if (totalFeeAmount > 0) {
             _transfer(msg.sender, _protocolOwner(), totalFeeAmount);
@@ -315,13 +313,8 @@ abstract contract IndexInternal is
         uint256 shareAmount
     ) internal virtual override {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        (, uint256 amount) = _getReservedFeedAta(l, receiver);
-        _setReservedFeeData(
-            IndexStorage.layout(),
-            receiver,
-            block.timestamp,
-            amount
-        );
+
+        l.reservedFeeData[receiver].updatedAt = block.timestamp;
     }
 
     /**
@@ -351,28 +344,26 @@ abstract contract IndexInternal is
         }
 
         uint256 currTimestamp = block.timestamp;
-        (uint256 updatedAt, uint256 amountAccumulated) = _getReservedFeedAta(
-            indexLayout,
-            holder
-        );
 
         uint256 streamingFee;
         address protocolOwner = _protocolOwner();
         if (recipient != protocolOwner) {
             streamingFee =
-                _calculateStreamingFee(amount, currTimestamp - updatedAt) +
-                amountAccumulated;
-
+                _calculateStreamingFee(
+                    amount,
+                    currTimestamp -
+                        indexLayout.reservedFeeData[holder].updatedAt
+                ) +
+                indexLayout.reservedFeeData[holder].amount;
+            delete indexLayout.reservedFeeData[holder].amount;
             uint256 recipientStreamingFeeAccumulation = _calculateStreamingFee(
                 _balanceOf(recipient),
-                currTimestamp - updatedAt
+                currTimestamp - indexLayout.reservedFeeData[recipient].updatedAt
             );
-            _setReservedFeeData(
-                indexLayout,
-                holder,
-                currTimestamp,
-                recipientStreamingFeeAccumulation
-            );
+            indexLayout
+                .reservedFeeData[recipient]
+                .amount += recipientStreamingFeeAccumulation;
+            indexLayout.reservedFeeData[recipient].updatedAt = currTimestamp;
         }
 
         if (streamingFee > 0) {
@@ -383,42 +374,6 @@ abstract contract IndexInternal is
 
         emit Transfer(holder, recipient, amount - streamingFee);
         return true;
-    }
-
-    /**
-     * @notice packs updatedAt timestamp and amount of streaming fee accumulated into a uint256 reservedFeeData
-     * @param l IndexStorage.Layout struct
-     * @param user address to set reserved fee data for
-     * @param updatedAt timestap of last update
-     * @param amount amount of streaming fee accumulated
-     */
-    function _setReservedFeeData(
-        IndexStorage.Layout storage l,
-        address user,
-        uint256 updatedAt,
-        uint256 amount
-    ) internal {
-        uint256 reservedFeeData;
-        reservedFeeData |= updatedAt;
-        reservedFeeData |= amount << 64;
-        l.reservedFeeData[user] = reservedFeeData;
-    }
-
-    /**
-     * @notice fetches reservedFeeData for a particular user
-     * @param l IndexStorage.Layout struct
-     * @param user address to fetch reservedFeeData for
-     * @return updatedAt timestamp of latest updated
-     * @return amount of streaming fee accumulated
-     */
-    function _getReservedFeedAta(IndexStorage.Layout storage l, address user)
-        internal
-        view
-        returns (uint256 updatedAt, uint256 amount)
-    {
-        uint256 reservedFeeData = l.reservedFeeData[user];
-        updatedAt = uint256(uint64(reservedFeeData));
-        amount = uint256(reservedFeeData >> 64);
     }
 
     /**
