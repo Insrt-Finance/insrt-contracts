@@ -101,8 +101,6 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             0
         );
-
-        _setReservedFeeData(l, msg.sender, block.timestamp, 0);
     }
 
     /**
@@ -156,8 +154,6 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmount,
             0
         );
-
-        _setReservedFeeData(l, msg.sender, block.timestamp, 0);
     }
 
     /**

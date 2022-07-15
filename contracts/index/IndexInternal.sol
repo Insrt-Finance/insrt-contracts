@@ -306,6 +306,25 @@ abstract contract IndexInternal is
     }
 
     /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev additionally sets the reserveFeeData for the receiver
+     */
+    function _afterDeposit(
+        address receiver,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal virtual override {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+        (, uint256 amount) = _getReservedFeedAta(l, receiver);
+        _setReservedFeeData(
+            IndexStorage.layout(),
+            receiver,
+            block.timestamp,
+            amount
+        );
+    }
+
+    /**
      * @inheritdoc ERC20BaseInternal
      * @dev additionally applies the streamingFee on every transfer except those going to the protocolOwner
      */
