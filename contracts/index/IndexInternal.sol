@@ -269,7 +269,7 @@ abstract contract IndexInternal is
                 assetAmountAfterExit,
                 block.timestamp - reservedFeeData.updatedAt
             ) -
-            reservedFeeData.amount;
+            reservedFeeData.amountPending;
     }
 
     /**
@@ -298,7 +298,7 @@ abstract contract IndexInternal is
                 amountAfterExitFee,
                 block.timestamp - reservedFeeData.updatedAt
             ) +
-            reservedFeeData.amount;
+            reservedFeeData.amountPending;
 
         if (totalFeeAmount > 0) {
             _transfer(msg.sender, _protocolOwner(), totalFeeAmount);
@@ -333,11 +333,11 @@ abstract contract IndexInternal is
         uint256 streamingFee = _calculateStreamingFee(
             amount,
             block.timestamp - l.reservedFeeData[holder].updatedAt
-        ) + l.reservedFeeData[holder].amount;
+        ) + l.reservedFeeData[holder].amountPending;
 
-        delete l.reservedFeeData[holder].amount;
+        delete l.reservedFeeData[holder].amountPending;
 
-        l.reservedFeeData[recipient].amount += _calculateStreamingFee(
+        l.reservedFeeData[recipient].amountPending += _calculateStreamingFee(
             _balanceOf(recipient),
             block.timestamp - l.reservedFeeData[recipient].updatedAt
         );
