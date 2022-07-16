@@ -164,8 +164,6 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] calldata minPoolTokenAmounts,
         address receiver
     ) external returns (uint256[] memory poolTokenAmounts) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
         // because assets and shares are pegged 1:1, output can be treated as share amount
         uint256 shareAmountOut = _previewRedeem(shareAmount);
 
@@ -174,12 +172,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             shareAmountOut
         );
 
-        poolTokenAmounts = _exitPool(
-            l,
-            minPoolTokenAmounts,
-            userData,
-            receiver
-        );
+        poolTokenAmounts = _exitPool(minPoolTokenAmounts, userData, receiver);
 
         _withdraw(
             msg.sender,
@@ -201,27 +194,22 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 tokenId,
         address receiver
     ) external returns (uint256 poolTokenAmount) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
         // because assets and shares are pegged 1:1, output can be treated as share amount
         uint256 shareAmountOut = _previewRedeem(shareAmount);
 
-        {
-            bytes memory userData = abi.encode(
-                IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-                shareAmountOut,
-                tokenId
-            );
+        bytes memory userData = abi.encode(
+            IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+            shareAmountOut,
+            tokenId
+        );
 
-            uint256[] memory poolTokenAmounts = _exitPool(
-                l,
-                minPoolTokenAmounts,
-                userData,
-                receiver
-            );
+        uint256[] memory poolTokenAmounts = _exitPool(
+            minPoolTokenAmounts,
+            userData,
+            receiver
+        );
 
-            poolTokenAmount = poolTokenAmounts[tokenId];
-        }
+        poolTokenAmount = poolTokenAmounts[tokenId];
 
         _withdraw(
             msg.sender,

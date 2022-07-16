@@ -100,18 +100,18 @@ abstract contract IndexInternal is
 
     /**
      * @notice construct Balancer exit request, exchange BPT for underlying pool token(s)
-     * @param l index layout struct
      * @param minAmountsOut minimum amounts to be returned by Balancer
      * @param userData encoded exit parameters
      * @param receiver recipient of withdrawn pool tokens
      * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function _exitPool(
-        IndexStorage.Layout storage l,
         uint256[] memory minAmountsOut,
         bytes memory userData,
         address receiver
     ) internal returns (uint256[] memory poolTokenAmounts) {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
         IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
             _tokensToAssets(l.tokens),
             minAmountsOut,
