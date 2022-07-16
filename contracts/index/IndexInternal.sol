@@ -236,6 +236,10 @@ abstract contract IndexInternal is
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
+        if (msg.sender == _protocolOwner()) {
+            return shareAmount;
+        }
+
         IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
             msg.sender
         ];
@@ -260,7 +264,9 @@ abstract contract IndexInternal is
         super._beforeWithdraw(owner, assetAmount, shareAmount);
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        uint256 amountAfterExitFee = _applyExitFee(shareAmount);
+        if (msg.sender == _protocolOwner()) {
+            return;
+        }
 
         IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
             msg.sender
@@ -303,28 +309,43 @@ abstract contract IndexInternal is
     ) internal virtual override returns (bool) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        uint256 streamingFee = amount -
-            _applyStreamingFee(amount, l.reservedFeeData[holder].updatedAt) +
-            l.reservedFeeData[holder].amountPending;
+        address protocolOwner = _protocolOwner();
 
-        delete l.reservedFeeData[holder].amountPending;
+        if (recipient != protocolOwner) {
+            IndexStorage.ReservedFeeData storage data = l.reservedFeeData[
+                holder
+            ];
 
-        uint192 recipientActiveBalance = uint192(_balanceOf(recipient)) -
-            l.reservedFeeData[recipient].amountPending;
+            uint192 recipientActiveBalance = uint192(_balanceOf(recipient)) -
+                data.amountPending;
 
-        l.reservedFeeData[recipient].amountPending +=
-            recipientActiveBalance -
-            _applyStreamingFee(
-                recipientActiveBalance,
-                l.reservedFeeData[recipient].updatedAt
-            );
+            data.amountPending +=
+                recipientActiveBalance -
+                _applyStreamingFee(recipientActiveBalance, data.updatedAt);
 
-        l.reservedFeeData[recipient].updatedAt = uint64(block.timestamp);
+            data.updatedAt = uint64(block.timestamp);
+        }
 
-        // TODO: emit StreamingFeePaid event
+        uint256 streamingFee;
 
-        super._transfer(holder, recipient, amount - streamingFee);
-        super._transfer(holder, _protocolOwner(), streamingFee);
+        if (holder != protocolOwner) {
+            IndexStorage.ReservedFeeData storage data = l.reservedFeeData[
+                holder
+            ];
+
+            streamingFee =
+                amount -
+                _applyStreamingFee(amount, data.updatedAt) +
+                data.amountPending;
+
+            delete data.amountPending;
+
+            // TODO: emit StreamingFeePaid event
+
+            super._transfer(holder, protocolOwner, streamingFee);
+        }
+
+        return super._transfer(holder, recipient, amount - streamingFee);
     }
 
     /**
@@ -337,9 +358,7 @@ abstract contract IndexInternal is
         view
         returns (uint256 amount)
     {
-        if (msg.sender != _protocolOwner()) {
-            amount = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
-        }
+        amount = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
     }
 
     /**
