@@ -245,9 +245,8 @@ abstract contract IndexInternal is
         ];
 
         assetAmount =
-            _applyStreamingFee(
-                _applyExitFee(shareAmount),
-                reservedFeeData.updatedAt
+            _applyExitFee(
+                _applyStreamingFee(shareAmount, reservedFeeData.updatedAt)
             ) -
             reservedFeeData.amountPending;
     }
@@ -273,9 +272,8 @@ abstract contract IndexInternal is
         ];
 
         uint256 totalFeeAmount = shareAmount -
-            _applyStreamingFee(
-                _applyExitFee(shareAmount),
-                reservedFeeData.updatedAt
+            _applyExitFee(
+                _applyStreamingFee(shareAmount, reservedFeeData.updatedAt)
             ) +
             reservedFeeData.amountPending;
 
