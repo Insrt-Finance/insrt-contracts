@@ -46,8 +46,8 @@ describe('IndexProxy', () => {
   const swapperArg: string[] = [];
 
   const id = 1;
-  const EXIT_FEE = ethers.utils.parseUnits('0.02', 4);
-  const STREAMING_FEE = ethers.utils.parseUnits('0.015', 4);
+  const EXIT_FEE_BP = ethers.utils.parseUnits('0.02', 4);
+  const STREAMING_FEE_BP = ethers.utils.parseUnits('0.015', 4);
 
   before(async () => {
     [deployer] = await ethers.getSigners();
@@ -95,29 +95,29 @@ describe('IndexProxy', () => {
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
-        STREAMING_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
-        STREAMING_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
-        STREAMING_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
-        STREAMING_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
     ].map(function (f) {
@@ -270,8 +270,8 @@ describe('IndexProxy', () => {
     tokens: tokensArg,
     weights: weightsArg,
     swapper: swapperArg,
-    streamingFee: STREAMING_FEE,
-    exitFee: EXIT_FEE,
+    streamingFeeBP: STREAMING_FEE_BP,
+    exitFeeBP: EXIT_FEE_BP,
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],

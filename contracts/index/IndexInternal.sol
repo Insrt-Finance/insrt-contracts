@@ -35,10 +35,10 @@ abstract contract IndexInternal is
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
 
-    uint256 internal immutable EXIT_FEE_BP;
+    uint256 internal immutable EXIT_FEE_FACTOR_BP;
     uint256 internal constant BASIS = 10000;
 
-    int128 internal immutable DECAY_FACTOR_64x64;
+    int128 internal immutable STREAMING_FEE_FACTOR_PER_SECOND_64x64;
     int128 internal constant ONE_64x64 = 0x10000000000000000;
 
     constructor(
@@ -51,13 +51,10 @@ abstract contract IndexInternal is
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
         SWAPPER = swapper;
-        EXIT_FEE_BP = exitFeeBP;
+        EXIT_FEE_FACTOR_BP = BASIS - exitFeeBP;
 
-        DECAY_FACTOR_64x64 = ONE_64x64.sub(
-            ABDKMath64x64.div(
-                ABDKMath64x64.divu(streamingFeeBP, BASIS),
-                ABDKMath64x64.fromUInt(uint256(365.25 days))
-            )
+        STREAMING_FEE_FACTOR_PER_SECOND_64x64 = ONE_64x64.sub(
+            ABDKMath64x64.divu(streamingFeeBP, BASIS * 365.25 days)
         );
     }
 
@@ -133,25 +130,6 @@ abstract contract IndexInternal is
             payable(receiver),
             request
         );
-    }
-
-    /**
-     * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
-     * @param fee the fee as 0-10000 value representing a two decimal point percentage
-     * @param amount the amount to apply the fee on
-     * @return totalFee the actual value of the fee (not percent)
-     * @return remainder the remaining amount after the fee has been subtracted from it
-     */
-    function _applyFee(uint256 fee, uint256 amount)
-        internal
-        view
-        returns (uint256 totalFee, uint256 remainder)
-    {
-        if (msg.sender != _protocolOwner()) {
-            totalFee = (fee * amount) / BASIS;
-        }
-
-        remainder = amount - totalFee;
     }
 
     //remove and save assets instead, saved on deployment?
@@ -257,7 +235,9 @@ abstract contract IndexInternal is
         returns (uint256 assetAmount)
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
-        (, uint256 assetAmountAfterExit) = _applyFee(EXIT_FEE_BP, shareAmount);
+
+        uint256 assetAmountAfterExit = shareAmount -
+            _calculateExitFee(shareAmount);
 
         IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
             msg.sender
@@ -267,7 +247,7 @@ abstract contract IndexInternal is
             assetAmountAfterExit -
             _calculateStreamingFee(
                 assetAmountAfterExit,
-                block.timestamp - reservedFeeData.updatedAt
+                reservedFeeData.updatedAt
             ) -
             reservedFeeData.amountPending;
     }
@@ -284,10 +264,9 @@ abstract contract IndexInternal is
         super._beforeWithdraw(owner, assetAmount, shareAmount);
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        (uint256 exitFeeAmount, uint256 amountAfterExitFee) = _applyFee(
-            EXIT_FEE_BP,
-            shareAmount
-        );
+        uint256 exitFeeAmount = _calculateExitFee(shareAmount);
+
+        uint256 amountAfterExitFee = shareAmount - exitFeeAmount;
 
         IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
             msg.sender
@@ -296,7 +275,7 @@ abstract contract IndexInternal is
         uint256 totalFeeAmount = exitFeeAmount +
             _calculateStreamingFee(
                 amountAfterExitFee,
-                block.timestamp - reservedFeeData.updatedAt
+                reservedFeeData.updatedAt
             ) +
             reservedFeeData.amountPending;
 
@@ -332,14 +311,17 @@ abstract contract IndexInternal is
 
         uint256 streamingFee = _calculateStreamingFee(
             amount,
-            block.timestamp - l.reservedFeeData[holder].updatedAt
+            l.reservedFeeData[holder].updatedAt
         ) + l.reservedFeeData[holder].amountPending;
 
         delete l.reservedFeeData[holder].amountPending;
 
+        uint256 recipientActiveBalance = _balanceOf(recipient) -
+            l.reservedFeeData[recipient].amountPending;
+
         l.reservedFeeData[recipient].amountPending += _calculateStreamingFee(
-            _balanceOf(recipient),
-            block.timestamp - l.reservedFeeData[recipient].updatedAt
+            recipientActiveBalance,
+            l.reservedFeeData[recipient].updatedAt
         );
 
         l.reservedFeeData[recipient].updatedAt = uint64(block.timestamp);
@@ -351,19 +333,37 @@ abstract contract IndexInternal is
     }
 
     /**
-     * @notice returns the streaming fee on an amount for a given duration
-     * @dev uses exponential decay formula to calculate streaming fee over a given duration
-     * @param amount amount to apply streaming fee to
-     * @param duration duration in seconds to apply streaming fee over
-     * @return totalFee the total fee calculated on the amount
+     * @notice calculate exit fee for given principal amount
+     * @param principal the token amount to which fee is applied
+     * @return fee fee amount
      */
-    function _calculateStreamingFee(uint256 amount, uint256 duration)
+    function _calculateExitFee(uint256 principal)
         internal
         view
-        returns (uint192 totalFee)
+        returns (uint256 fee)
     {
-        totalFee = uint192(
-            amount - (DECAY_FACTOR_64x64.pow(duration)).mulu(amount)
+        if (msg.sender != _protocolOwner()) {
+            fee = principal - (principal * EXIT_FEE_FACTOR_BP) / BASIS;
+        }
+    }
+
+    /**
+     * @notice calculate streaming fee for a given principal amount and duration of accrual
+     * @dev uses exponential decay formula to calculate streaming fee over a given duration
+     * @param principal the token amount to which fee is applied
+     * @param timestamp timestamp of beginning of fee accrual period
+     * @return fee fee amount
+     */
+    function _calculateStreamingFee(uint256 principal, uint256 timestamp)
+        internal
+        view
+        returns (uint192 fee)
+    {
+        fee = uint192(
+            principal -
+                STREAMING_FEE_FACTOR_PER_SECOND_64x64
+                    .pow(block.timestamp - timestamp)
+                    .mulu(principal)
         );
     }
 }
