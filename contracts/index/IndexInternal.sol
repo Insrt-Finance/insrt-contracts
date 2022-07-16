@@ -7,7 +7,6 @@ import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInt
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { ERC20BaseInternal } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
-import { ERC20BaseStorage } from '@solidstate/contracts/token/ERC20/base/ERC20BaseStorage.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
@@ -305,7 +304,7 @@ abstract contract IndexInternal is
 
     /**
      * @inheritdoc ERC4626BaseInternal
-     * @dev additionally sets the reserveFeeData for the receiver
+     * @dev additionally sets the reservedFeeData for the receiver
      */
     function _afterDeposit(
         address receiver,

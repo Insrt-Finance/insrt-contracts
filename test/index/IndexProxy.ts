@@ -46,8 +46,8 @@ describe('IndexProxy', () => {
   const swapperArg: string[] = [];
 
   const id = 1;
-  const EXIT_FEE = BigNumber.from('200');
-  const STREAMING_FEE = BigNumber.from('150');
+  const EXIT_FEE = ethers.utils.parseUnits('0.02', 4);
+  const STREAMING_FEE = ethers.utils.parseUnits('0.015', 4);
 
   before(async () => {
     [deployer] = await ethers.getSigners();
