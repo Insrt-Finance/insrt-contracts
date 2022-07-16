@@ -13,6 +13,7 @@ import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 
 import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
+import { IIndexInternal } from './IIndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
@@ -25,7 +26,8 @@ import { IAsset, IVault } from '../balancer/IVault.sol';
 abstract contract IndexInternal is
     ERC4626BaseInternal,
     ERC20MetadataInternal,
-    OwnableInternal
+    OwnableInternal,
+    IIndexInternal
 {
     using UintUtils for uint256;
     using ABDKMath64x64 for int128;
@@ -341,6 +343,7 @@ abstract contract IndexInternal is
             // TODO: emit StreamingFeePaid event
 
             super._transfer(holder, protocolOwner, streamingFee);
+            emit StreamingFeePaid(streamingFee);
         }
 
         return super._transfer(holder, recipient, amount - streamingFee);
