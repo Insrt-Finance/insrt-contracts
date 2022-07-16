@@ -334,11 +334,9 @@ abstract contract IndexInternal is
 
         delete l.reservedFeeData[holder].amount;
 
-        l.reservedFeeData[recipient].amount += uint192(
-            _calculateStreamingFee(
-                _balanceOf(recipient),
-                block.timestamp - l.reservedFeeData[recipient].updatedAt
-            )
+        l.reservedFeeData[recipient].amount += _calculateStreamingFee(
+            _balanceOf(recipient),
+            block.timestamp - l.reservedFeeData[recipient].updatedAt
         );
 
         l.reservedFeeData[recipient].updatedAt = uint64(block.timestamp);
@@ -359,8 +357,10 @@ abstract contract IndexInternal is
     function _calculateStreamingFee(uint256 amount, uint256 duration)
         internal
         view
-        returns (uint256 totalFee)
+        returns (uint192 totalFee)
     {
-        totalFee = amount - (DECAY_FACTOR_64x64.pow(duration)).mulu(amount);
+        totalFee = uint192(
+            amount - (DECAY_FACTOR_64x64.pow(duration)).mulu(amount)
+        );
     }
 }
