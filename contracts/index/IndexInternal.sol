@@ -34,10 +34,12 @@ abstract contract IndexInternal is
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
+
     uint256 internal immutable EXIT_FEE_BP;
     uint256 internal constant BASIS = 10000;
+
     int128 internal immutable DECAY_FACTOR_64x64;
-    int128 internal constant ONE_64x64 = 0x10000000000000000; //64x64 representation of 1
+    int128 internal constant ONE_64x64 = 0x10000000000000000;
 
     constructor(
         address balancerVault,
@@ -103,6 +105,7 @@ abstract contract IndexInternal is
      * @param minAmountsOut minimum amounts to be returned by Balancer
      * @param userData encoded exit parameters
      * @param receiver recipient of withdrawn pool tokens
+     * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function _exitPool(
         IndexStorage.Layout storage l,

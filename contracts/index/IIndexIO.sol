@@ -9,7 +9,7 @@ interface IIndexIO {
     /**
      * @notice initialize the Balancer InvestmentPool
      * @dev internal Balancer call will revert if called more than once
-     * @param poolTokenAmounts the amounts of each token deposited
+     * @param poolTokenAmounts quantities of underlying pool tokens deposited
      * @param receiver recipient of initial BPT supply
      */
     function initialize(uint256[] memory poolTokenAmounts, address receiver)
@@ -20,7 +20,7 @@ interface IIndexIO {
      * @dev takes all investmentPool tokens at specified amounts, deposits
      * into InvestmentPool, receives BPT in exchange to store in insrt-index,
      * returns insrt-index shares to user
-     * @param poolTokenAmounts the amounts of underlying tokens in balancer investmentPool
+     * @param poolTokenAmounts quantities of underlying pool tokens deposited
      * @param minShareAmount the minimum acceptable number of shares to be minted
      * @param receiver recipient of minted Index shares
      * @return shareAmount quantity of shares to mint
@@ -80,7 +80,7 @@ interface IIndexIO {
      * @dev applies a fee on the shares withdrawn, and sends an amount of `remainingSahres` of BPT from
      * insrt-index to Balancer Investment pool in exchange for the single token, send to user. Shares are burnt.
      * @param shareAmount quantity of Index shares to redeem
-     * @param minPoolTokenAmounts the amounts of underlying token received in exchange for shares
+     * @param minPoolTokenAmounts minimum quantities of underlying pool tokens yielded
      * @param tokenId the id of the token to be received
      * @param receiver recipient of withdrawn pool tokens
      * @return poolTokenAmount quantitiy of underlying pool token with tokenId returned
