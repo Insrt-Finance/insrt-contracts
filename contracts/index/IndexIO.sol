@@ -203,13 +203,9 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         );
 
-        uint256[] memory poolTokenAmounts = _exitPool(
-            minPoolTokenAmounts,
-            userData,
-            receiver
-        );
-
-        poolTokenAmount = poolTokenAmounts[tokenId];
+        poolTokenAmount = _exitPool(minPoolTokenAmounts, userData, receiver)[
+            tokenId
+        ];
 
         _withdraw(
             msg.sender,
