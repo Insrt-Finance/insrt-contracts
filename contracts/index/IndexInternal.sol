@@ -292,8 +292,6 @@ abstract contract IndexInternal is
         address receiver,
         uint256 amount
     ) internal virtual override returns (bool) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
         address protocolOwner = _protocolOwner();
 
         if (receiver != protocolOwner) {
