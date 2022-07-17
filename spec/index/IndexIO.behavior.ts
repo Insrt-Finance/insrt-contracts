@@ -15,6 +15,7 @@ import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 
 export interface IndexIOBehaviorArgs {
+  getProtocolOwner: () => Promise<SignerWithAddress>;
   tokens: string[];
   weights: BigNumber[];
   swapper: string[];
@@ -54,7 +55,8 @@ export function describeBehaviorOfIndexIO(
   let deadline: BigNumber;
 
   before(async () => {
-    [protocolOwner, depositor] = await ethers.getSigners();
+    [depositor] = await ethers.getSigners();
+    protocolOwner = await args.getProtocolOwner();
     let totalWeight: BigNumber = BigNumber.from('0');
     const mintAmount = ethers.utils.parseEther('10000'); //large value to suffice for all tests
     const tokensLength = args.tokens.length;

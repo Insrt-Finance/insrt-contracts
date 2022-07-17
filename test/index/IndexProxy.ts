@@ -50,7 +50,8 @@ describe('IndexProxy', () => {
   const STREAMING_FEE_BP = ethers.utils.parseUnits('0.015', 4);
 
   before(async () => {
-    [deployer] = await ethers.getSigners();
+    // TODO: must skip signers because they're not parameterized in SolidState spec
+    [, , , deployer] = await ethers.getSigners();
 
     const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
@@ -212,6 +213,7 @@ describe('IndexProxy', () => {
   });
 
   describeBehaviorOfIndexProxy(async () => instance, {
+    getProtocolOwner: async () => deployer,
     // TODO: replace circular `asset` logic with Balancer event output
     getAsset: async () =>
       IERC20__factory.connect(
