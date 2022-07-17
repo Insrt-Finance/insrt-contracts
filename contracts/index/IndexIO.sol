@@ -176,24 +176,29 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] calldata minPoolTokenAmounts,
         address receiver
     ) external returns (uint256[] memory poolTokenAmounts) {
-        // because assets and shares are pegged 1:1, output can be treated as share amount
-        uint256 shareAmountOut = _previewRedeem(shareAmount);
+        uint256 assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
-            shareAmountOut
+            assetAmount
         );
 
         poolTokenAmounts = _exitPool(minPoolTokenAmounts, userData, receiver);
+
+        // because assets and shares are pegged 1:1, their difference is equal to fees applied
+        uint256 feeAmount = shareAmount - assetAmount;
+
+        // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
+        // set feeAmount as shareAmountOffset to prevent double burn
 
         _withdraw(
             msg.sender,
             receiver,
             msg.sender,
+            assetAmount,
             shareAmount,
-            shareAmount,
-            shareAmount,
-            shareAmount - shareAmountOut
+            assetAmount,
+            feeAmount
         );
     }
 
@@ -206,12 +211,11 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 tokenId,
         address receiver
     ) external returns (uint256 poolTokenAmount) {
-        // because assets and shares are pegged 1:1, output can be treated as share amount
-        uint256 shareAmountOut = _previewRedeem(shareAmount);
+        uint256 assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-            shareAmountOut,
+            assetAmount,
             tokenId
         );
 
@@ -219,14 +223,20 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         ];
 
+        // because assets and shares are pegged 1:1, their difference is equal to fees applied
+        uint256 feeAmount = shareAmount - assetAmount;
+
+        // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
+        // set feeAmount as shareAmountOffset to prevent double burn
+
         _withdraw(
             msg.sender,
             receiver,
             msg.sender,
+            assetAmount,
             shareAmount,
-            shareAmount,
-            shareAmount,
-            shareAmount - shareAmountOut
+            assetAmount,
+            feeAmount
         );
     }
 }
