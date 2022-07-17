@@ -63,7 +63,7 @@ contract IndexIO is IndexInternal, IIndexIO {
         unchecked {
             for (uint256 i; i < accounts.length; i++) {
                 address account = accounts[i];
-                _collectStreamingFee(account, _balanceOf(account));
+                _collectStreamingFee(account, _balanceOf(account), true);
             }
         }
     }

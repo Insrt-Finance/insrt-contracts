@@ -254,18 +254,8 @@ abstract contract IndexInternal is
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
-        uint256 balance = _balanceOf(owner);
-
-        if (balance > 0) {
-            _collectStreamingFee(address(0), _totalSupply());
-
-            uint256 streamingFee = _collectStreamingFee(owner, balance);
-
-            _collectExitFee(
-                owner,
-                shareAmount - (shareAmount * streamingFee) / balance
-            );
-        }
+        _collectStreamingFee(address(0), _totalSupply(), true);
+        _collectExitFee(owner, _collectStreamingFee(owner, shareAmount, false));
     }
 
     /**
@@ -282,8 +272,12 @@ abstract contract IndexInternal is
         if (balance > 0) {
             unchecked {
                 // apply fee to previous balance, ignoring newly minted shareAmount
-                _collectStreamingFee(receiver, balance - shareAmount);
-                _collectStreamingFee(address(0), _totalSupply() - shareAmount);
+                _collectStreamingFee(
+                    address(0),
+                    _totalSupply() - shareAmount,
+                    true
+                );
+                _collectStreamingFee(receiver, balance - shareAmount, true);
             }
         }
     }
@@ -302,32 +296,29 @@ abstract contract IndexInternal is
         uint256 receiverBalance = _balanceOf(receiver);
 
         if (receiverBalance > 0) {
-            _collectStreamingFee(receiver, receiverBalance);
+            _collectStreamingFee(receiver, receiverBalance, true);
         }
-
-        uint256 deduction;
 
         uint256 holderBalance = _balanceOf(holder);
 
         if (holderBalance > 0) {
-            uint256 streamingFee = _collectStreamingFee(holder, holderBalance);
-            deduction = (amount * streamingFee) / holderBalance;
+            amount = _collectStreamingFee(holder, amount, false);
         }
 
-        return super._transfer(holder, receiver, amount - deduction);
+        return super._transfer(holder, receiver, amount);
     }
 
     /**
      * @notice calculate exit fee for given principal amount
      * @param principal the token amount to which fee is applied
-     * @return amount amount after fee
+     * @return amountOut amount after fee
      */
     function _applyExitFee(uint256 principal)
         internal
         view
-        returns (uint256 amount)
+        returns (uint256 amountOut)
     {
-        amount = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
+        amountOut = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
     }
 
     /**
@@ -335,23 +326,20 @@ abstract contract IndexInternal is
      * @dev uses exponential decay formula to calculate streaming fee over a given duration
      * @param principal the token amount to which fee is applied
      * @param timestamp timestamp of beginning of fee accrual period
-     * @return amount amount after fee
+     * @return amountOut amount after fee
      */
     function _applyStreamingFee(uint256 principal, uint256 timestamp)
         internal
         view
-        returns (uint256 amount)
+        returns (uint256 amountOut)
     {
-        amount = STREAMING_FEE_FACTOR_PER_SECOND_64x64
+        amountOut = STREAMING_FEE_FACTOR_PER_SECOND_64x64
             .pow(block.timestamp - timestamp)
             .mulu(principal);
     }
 
-    function _collectExitFee(address account, uint256 amount)
-        internal
-        returns (uint256 fee)
-    {
-        fee = amount - _applyExitFee(amount);
+    function _collectExitFee(address account, uint256 amount) internal {
+        uint256 fee = amount - _applyExitFee(amount);
 
         IndexStorage.layout().feesAccrued += fee;
         _burn(account, fee);
@@ -359,13 +347,15 @@ abstract contract IndexInternal is
         emit ExitFeePaid(fee);
     }
 
-    function _collectStreamingFee(address account, uint256 amount)
-        internal
-        returns (uint256 fee)
-    {
+    function _collectStreamingFee(
+        address account,
+        uint256 amount,
+        bool update
+    ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        fee = amount - _applyStreamingFee(amount, l.feeUpdatedAt[account]);
+        amountOut = _applyStreamingFee(amount, l.feeUpdatedAt[account]);
+        uint256 fee = amount - amountOut;
 
         if (account == address(0)) {
             l.feesAccrued += fee;
@@ -373,7 +363,9 @@ abstract contract IndexInternal is
             _burn(account, fee);
         }
 
-        l.feeUpdatedAt[account] = block.timestamp;
+        if (update) {
+            l.feeUpdatedAt[account] = block.timestamp;
+        }
 
         emit StreamingFeePaid(fee);
     }
