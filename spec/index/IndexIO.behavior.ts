@@ -150,6 +150,14 @@ export function describeBehaviorOfIndexIO(
     );
   });
 
+  describe('#initialize(uint256[], address)', () => {
+    it('todo');
+  });
+
+  describe('#collectStreamingFees(address[])', () => {
+    it('todo');
+  });
+
   describe('#deposit(uint256[],uint256)', () => {
     it('mints shares to user at 1:1 for BPT received', async () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');

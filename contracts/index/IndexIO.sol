@@ -59,6 +59,18 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
+    function collectStreamingFees(address[] calldata accounts) external {
+        unchecked {
+            for (uint256 i; i < accounts.length; i++) {
+                address account = accounts[i];
+                _collectStreamingFee(account, _balanceOf(account));
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc IIndexIO
+     */
     function deposit(
         uint256[] memory poolTokenAmounts,
         uint256 minShareAmount,

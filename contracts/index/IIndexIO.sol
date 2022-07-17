@@ -16,6 +16,12 @@ interface IIndexIO {
         external;
 
     /**
+     * @notice trigger collection of accrued streaming from given addresses
+     * @param accounts addresses whose fees to collect
+     */
+    function collectStreamingFees(address[] calldata accounts) external;
+
+    /**
      * @notice function to deposit an amount of tokens to Balancer InvestmentPool
      * @dev takes all investmentPool tokens at specified amounts, deposits
      * into InvestmentPool, receives BPT in exchange to store in insrt-index,
