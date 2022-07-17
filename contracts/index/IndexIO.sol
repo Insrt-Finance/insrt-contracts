@@ -99,11 +99,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             }
         }
 
+        uint256 oldAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
         _joinPool(poolTokenAmounts, userData);
 
-        shareAmount =
-            IERC20(_asset()).balanceOf(address(this)) -
-            _totalSupply();
+        uint256 newAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
+        // because assets and shares are pegged 1:1, change in asset balance is equal to change in share balance
+        shareAmount = newAssetBalance - oldAssetBalance;
 
         _deposit(
             msg.sender,
@@ -152,11 +155,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             minShareAmount
         );
 
+        uint256 oldAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
         _joinPool(poolTokenAmounts, userData);
 
-        shareAmount =
-            IERC20(_asset()).balanceOf(address(this)) -
-            _totalSupply();
+        uint256 newAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
+        // because assets and shares are pegged 1:1, change in asset balance is equal to change in share balance
+        shareAmount = newAssetBalance - oldAssetBalance;
 
         _deposit(
             msg.sender,
