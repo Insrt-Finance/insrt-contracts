@@ -305,7 +305,9 @@ abstract contract IndexInternal is
         if (holder != protocolOwner) {
             uint256 balance = _balanceOf(holder);
             uint256 streamingFee = _collectStreamingFee(holder, balance);
-            deduction = (amount * streamingFee) / balance;
+            if (balance > 0) {
+                deduction = (amount * streamingFee) / balance;
+            }
         }
 
         return super._transfer(holder, receiver, amount - deduction);
