@@ -364,7 +364,7 @@ abstract contract IndexInternal is
     {
         fee = amount - _applyExitFee(amount);
 
-        emit ExitFeePAid(fee);
+        emit ExitFeePaid(fee);
 
         super._transfer(account, _protocolOwner(), fee);
     }
