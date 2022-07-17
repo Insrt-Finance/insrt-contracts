@@ -418,9 +418,8 @@ export function describeBehaviorOfIndexIO(
       depositTimeStamp = timestamp;
     });
 
-    it('burns BPT at 1:1, for shares - fee', async () => {
+    it('burns BPT at 1:1 for shares - fee', async () => {
       const userBalance = await instance.balanceOf(depositor.address);
-
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256'],
         [ethers.BigNumber.from('1'), userBalance],
@@ -444,7 +443,7 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const oldTotalSupply = await investmentPoolToken['totalSupply()']();
+      const oldSupply = await investmentPoolToken['totalSupply()']();
 
       await hre.network.provider.send('evm_setNextBlockTimestamp', [
         depositTimeStamp + 100,
@@ -476,9 +475,9 @@ export function describeBehaviorOfIndexIO(
         .mul(EXIT_FEE_FACTOR_BP)
         .div(BASIS);
 
-      const newTotalSupply = await investmentPoolToken['totalSupply()']();
+      const newSupply = await investmentPoolToken['totalSupply()']();
 
-      expect(oldTotalSupply.sub(newTotalSupply)).to.eq(amountOutAfterFee);
+      expect(oldSupply.sub(newSupply)).to.eq(amountOutAfterFee);
     });
 
     it('increases the user balance by the amount returned by the query - fee', async () => {
@@ -660,13 +659,13 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
+      const oldSupply = await investmentPoolToken['totalSupply()']();
+
       await hre.network.provider.send('evm_setNextBlockTimestamp', [
         depositTimeStamp + 100,
       ]);
 
       const tokenId = ethers.constants.Zero;
-
-      const oldSupply = await instance.totalSupply();
 
       await expect(() =>
         instance
@@ -694,7 +693,7 @@ export function describeBehaviorOfIndexIO(
         .mul(EXIT_FEE_FACTOR_BP)
         .div(BASIS);
 
-      const newSupply = await instance.totalSupply();
+      const newSupply = await investmentPoolToken['totalSupply()']();
 
       expect(oldSupply.sub(newSupply)).to.eq(amountOutAfterFee);
     });
