@@ -267,18 +267,20 @@ abstract contract IndexInternal is
         uint256 assetAmount,
         uint256 shareAmount
     ) internal virtual override {
-        uint256 balance = _balanceOf(receiver);
+        super._afterDeposit(receiver, assetAmount, shareAmount);
 
-        if (balance > 0) {
-            unchecked {
-                // apply fee to previous balance, ignoring newly minted shareAmount
-                _collectStreamingFee(
-                    address(0),
-                    _totalSupply() - shareAmount,
-                    true
-                );
-                _collectStreamingFee(receiver, balance - shareAmount, true);
-            }
+        unchecked {
+            // apply fee to previous balance, ignoring newly minted shareAmount
+            _collectStreamingFee(
+                address(0),
+                _totalSupply() - shareAmount,
+                true
+            );
+            _collectStreamingFee(
+                receiver,
+                _balanceOf(receiver) - shareAmount,
+                true
+            );
         }
     }
 
@@ -291,21 +293,14 @@ abstract contract IndexInternal is
         address receiver,
         uint256 amount
     ) internal virtual override returns (bool) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
+        _collectStreamingFee(receiver, _balanceOf(receiver), true);
 
-        uint256 receiverBalance = _balanceOf(receiver);
-
-        if (receiverBalance > 0) {
-            _collectStreamingFee(receiver, receiverBalance, true);
-        }
-
-        uint256 holderBalance = _balanceOf(holder);
-
-        if (holderBalance > 0) {
-            amount = _collectStreamingFee(holder, amount, false);
-        }
-
-        return super._transfer(holder, receiver, amount);
+        return
+            super._transfer(
+                holder,
+                receiver,
+                _collectStreamingFee(holder, amount, false)
+            );
     }
 
     /**
@@ -339,6 +334,8 @@ abstract contract IndexInternal is
     }
 
     function _collectExitFee(address account, uint256 amount) internal {
+        if (amount == 0) return;
+
         uint256 fee = amount - _applyExitFee(amount);
 
         IndexStorage.layout().feesAccrued += fee;
@@ -354,6 +351,12 @@ abstract contract IndexInternal is
     ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
+        if (update) {
+            l.feeUpdatedAt[account] = block.timestamp;
+        }
+
+        if (amount == 0) return 0;
+
         amountOut = _applyStreamingFee(amount, l.feeUpdatedAt[account]);
         uint256 fee = amount - amountOut;
 
@@ -361,10 +364,6 @@ abstract contract IndexInternal is
             l.feesAccrued += fee;
         } else {
             _burn(account, fee);
-        }
-
-        if (update) {
-            l.feeUpdatedAt[account] = block.timestamp;
         }
 
         emit StreamingFeePaid(fee);
