@@ -10,6 +10,7 @@ import {
 import { expect } from 'chai';
 
 export interface IndexSettingsBehaviorArgs {
+  getProtocolOwner: () => Promise<SignerWithAddress>;
   tokens: string[];
   weights: BigNumber[];
 }
@@ -19,13 +20,14 @@ export function describeBehaviorOfIndexSettings(
   args: IndexSettingsBehaviorArgs,
   skips?: string[],
 ) {
-  let owner: SignerWithAddress;
+  let protocolOwner: SignerWithAddress;
   let nonOwner: SignerWithAddress;
   let instance: IIndex;
 
   beforeEach(async () => {
     instance = await deploy();
-    [owner, nonOwner] = await ethers.getSigners();
+    [nonOwner] = await ethers.getSigners();
+    protocolOwner = await args.getProtocolOwner();
   });
 
   describe('#updateWeights(uint256[],uint256)', () => {
@@ -39,11 +41,11 @@ export function describeBehaviorOfIndexSettings(
 
       const investmentPool = IInvestmentPool__factory.connect(
         await instance.asset(),
-        owner,
+        protocolOwner,
       );
 
       await instance
-        .connect(owner)
+        .connect(protocolOwner)
         .updateWeights(
           newWeights,
           BigNumber.from(timestamp.toString()).add(endTime),
@@ -90,18 +92,18 @@ export function describeBehaviorOfIndexSettings(
 
   describe('#setSwapEnabled(bool)', () => {
     it('pauses swaps', async () => {
-      await instance.connect(owner).setSwapEnabled(false);
+      await instance.connect(protocolOwner).setSwapEnabled(false);
 
       const investmentPool = IInvestmentPool__factory.connect(
         await instance.asset(),
-        owner,
+        protocolOwner,
       );
 
       expect(await investmentPool.getSwapEnabled()).to.eq(false);
     });
 
     it('allows proportional exits whilst swaps are paused', async () => {
-      await instance.connect(owner).setSwapEnabled(false);
+      await instance.connect(protocolOwner).setSwapEnabled(false);
       const minPoolTokenAmounts = [
         ethers.constants.Zero,
         ethers.constants.Zero,
@@ -109,17 +111,17 @@ export function describeBehaviorOfIndexSettings(
       const shareAmount = ethers.constants.One;
       await expect(
         instance
-          .connect(owner)
+          .connect(protocolOwner)
           ['redeem(uint256,uint256[],address)'](
             shareAmount,
             minPoolTokenAmounts,
-            owner.address,
+            protocolOwner.address,
           ),
       ).to.not.be.reverted;
     });
 
     it('forbids non-proportional exits', async () => {
-      await instance.connect(owner).setSwapEnabled(false);
+      await instance.connect(protocolOwner).setSwapEnabled(false);
       const minPoolTokenAmounts = [
         ethers.constants.Zero,
         ethers.constants.Zero,
@@ -128,12 +130,12 @@ export function describeBehaviorOfIndexSettings(
       const tokenIndex = ethers.constants.Zero;
       await expect(
         instance
-          .connect(owner)
+          .connect(protocolOwner)
           ['redeem(uint256,uint256[],uint256,address)'](
             shareAmount,
             minPoolTokenAmounts,
             tokenIndex,
-            owner.address,
+            protocolOwner.address,
           ),
       ).to.be.revertedWith('BAL#330'); //refers to balancer error: INVALID_JOIN_EXIT_KIND_WHILE_SWAPS_DISABLED
     });
@@ -150,11 +152,14 @@ export function describeBehaviorOfIndexSettings(
   describe('#withdrawAllLiquidity()', () => {
     it('withdraws all BPT and assets in Insrt-Index and sends them to protocol owner', async () => {
       //pool initialized, so BPT already in Index => can avoid deposit
-      const bpt = IERC20__factory.connect(await instance.asset(), owner);
+      const bpt = IERC20__factory.connect(
+        await instance.asset(),
+        protocolOwner,
+      );
       const indexBPT = await bpt.balanceOf(instance.address);
       await expect(() =>
-        instance.connect(owner).withdrawAllLiquidity(),
-      ).changeTokenBalance(bpt, owner, indexBPT);
+        instance.connect(protocolOwner).withdrawAllLiquidity(),
+      ).changeTokenBalance(bpt, protocolOwner, indexBPT);
     });
 
     describe('reverts if', () => {
