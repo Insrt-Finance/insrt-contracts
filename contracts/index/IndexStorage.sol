@@ -5,11 +5,6 @@ pragma solidity ^0.8.11;
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
 library IndexStorage {
-    struct ReservedFeeData {
-        uint64 updatedAt;
-        uint192 amountPending;
-    }
-
     struct Layout {
         uint256 id;
         bytes32 poolId;
