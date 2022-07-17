@@ -14,7 +14,7 @@ library IndexStorage {
         uint256 id;
         bytes32 poolId;
         IERC20[] tokens;
-        mapping(address => ReservedFeeData) reservedFeeData;
+        mapping(address => uint256) feeUpdatedAt;
     }
 
     bytes32 internal constant STORAGE_SLOT =

@@ -537,7 +537,7 @@ export function describeBehaviorOfIndexIO(
       }
     });
 
-    it('sends the fees to the protocol owner', async () => {
+    it('sends fees to protocol owner', async () => {
       const userBalance = await instance.balanceOf(depositor.address);
 
       const userData = ethers.utils.solidityPack(
@@ -545,7 +545,10 @@ export function describeBehaviorOfIndexIO(
         [ethers.BigNumber.from('1'), userBalance],
       );
 
-      const minPoolTokenAmounts = [minBptOut, minBptOut];
+      const minPoolTokenAmounts = [
+        ethers.constants.Zero,
+        ethers.constants.Zero,
+      ];
 
       const request = {
         assets: args.tokens,
@@ -563,7 +566,7 @@ export function describeBehaviorOfIndexIO(
           request,
         );
 
-      const oldFeeRecipientBalance = await instance.balanceOf(
+      const oldProtocolOwnerBalance = await instance.balanceOf(
         protocolOwner.address,
       );
 
@@ -579,7 +582,7 @@ export function describeBehaviorOfIndexIO(
           depositor.address,
         );
 
-      const newFeeRecipientBalance = await instance.balanceOf(
+      const newProtocolOwnerBalance = await instance.balanceOf(
         protocolOwner.address,
       );
 
@@ -595,7 +598,7 @@ export function describeBehaviorOfIndexIO(
         .mul(EXIT_FEE_FACTOR_BP)
         .div(BASIS);
 
-      expect(newFeeRecipientBalance.sub(oldFeeRecipientBalance)).to.eq(
+      expect(newProtocolOwnerBalance.sub(oldProtocolOwnerBalance)).to.eq(
         bptIn.sub(amountOutAfterFee),
       );
     });
@@ -752,18 +755,20 @@ export function describeBehaviorOfIndexIO(
       );
     });
 
-    it('sends the total fees to the protocol owner', async () => {
-      const minPoolTokenAmounts = [
-        ethers.constants.Zero,
-        ethers.constants.Zero,
-      ];
+    it('sends fees to protocol owner', async () => {
+      const userBalance = await instance.balanceOf(depositor.address);
 
       const tokenId = ethers.constants.Zero;
 
       const userData = ethers.utils.solidityPack(
         ['uint256', 'uint256', 'uint256'],
-        [ethers.constants.Zero, minBptOut, ethers.constants.Zero],
+        [ethers.constants.Zero, userBalance, ethers.constants.Zero],
       );
+
+      const minPoolTokenAmounts = [
+        ethers.constants.Zero,
+        ethers.constants.Zero,
+      ];
 
       const request = {
         assets: args.tokens,
@@ -771,12 +776,13 @@ export function describeBehaviorOfIndexIO(
         userData,
         toInternalBalance: false,
       };
+
       const [bptIn, returnedAmounts] = await balancerHelpers
         .connect(depositor)
         .callStatic.queryExit(
           await instance.callStatic.getPoolId(),
           instance.address,
-          depositor.address,
+          instance.address,
           request,
         );
 
@@ -791,7 +797,7 @@ export function describeBehaviorOfIndexIO(
       await instance
         .connect(depositor)
         ['redeem(uint256,uint256[],uint256,address)'](
-          minBptOut,
+          userBalance,
           minPoolTokenAmounts,
           tokenId,
           depositor.address,
