@@ -7,4 +7,5 @@ pragma solidity ^0.8.0;
  */
 interface IIndexInternal {
     event StreamingFeePaid(uint256 amount);
+    event ExitFeePAid(uint256 amount);
 }
