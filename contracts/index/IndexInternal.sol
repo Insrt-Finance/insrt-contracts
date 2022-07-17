@@ -242,15 +242,9 @@ abstract contract IndexInternal is
             return shareAmount;
         }
 
-        IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
-            msg.sender
-        ];
-
-        assetAmount =
-            _applyExitFee(
-                _applyStreamingFee(shareAmount, reservedFeeData.updatedAt)
-            ) -
-            reservedFeeData.amountPending;
+        assetAmount = _applyExitFee(
+            _applyStreamingFee(shareAmount, l.feeUpdatedAt[msg.sender])
+        );
     }
 
     /**
@@ -263,90 +257,60 @@ abstract contract IndexInternal is
         uint256 shareAmount
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
-        IndexStorage.Layout storage l = IndexStorage.layout();
 
-        if (msg.sender == _protocolOwner()) {
-            return;
-        }
+        if (owner != _protocolOwner()) {
+            uint256 balance = _balanceOf(owner);
+            uint256 streamingFee = _collectStreamingFee(owner, balance);
 
-        IndexStorage.ReservedFeeData memory reservedFeeData = l.reservedFeeData[
-            msg.sender
-        ];
-
-        uint256 totalFeeAmount = shareAmount -
-            _applyExitFee(
-                _applyStreamingFee(shareAmount, reservedFeeData.updatedAt)
-            ) +
-            reservedFeeData.amountPending;
-
-        if (totalFeeAmount > 0) {
-            _transfer(msg.sender, _protocolOwner(), totalFeeAmount);
+            _collectExitFee(
+                owner,
+                shareAmount - (shareAmount * streamingFee) / balance
+            );
         }
     }
 
     /**
      * @inheritdoc ERC4626BaseInternal
-     * @dev additionally sets the reservedFeeData for the receiver
+     * @dev collects accrued streaming fees from receiver of deposit
      */
     function _afterDeposit(
         address receiver,
         uint256 assetAmount,
         uint256 shareAmount
     ) internal virtual override {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        l.reservedFeeData[receiver].updatedAt = uint64(block.timestamp);
+        if (receiver != _protocolOwner()) {
+            _collectStreamingFee(receiver, _balanceOf(receiver) - shareAmount);
+        }
     }
 
     /**
      * @inheritdoc ERC20BaseInternal
-     * @dev additionally applies the streamingFee on every transfer except those going to the protocolOwner
+     * @dev collects accrued streaming fees from holder and receiver, and reduces amount transferred accordingly
      */
     function _transfer(
         address holder,
-        address recipient,
+        address receiver,
         uint256 amount
     ) internal virtual override returns (bool) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         address protocolOwner = _protocolOwner();
 
-        if (recipient != protocolOwner) {
-            IndexStorage.ReservedFeeData storage data = l.reservedFeeData[
-                holder
-            ];
-
-            uint192 recipientActiveBalance = uint192(_balanceOf(recipient)) -
-                data.amountPending;
-
-            data.amountPending +=
-                recipientActiveBalance -
-                _applyStreamingFee(recipientActiveBalance, data.updatedAt);
-
-            data.updatedAt = uint64(block.timestamp);
+        if (receiver != protocolOwner) {
+            _collectStreamingFee(receiver, _balanceOf(receiver));
         }
 
-        uint256 streamingFee;
+        uint256 deduction;
 
         if (holder != protocolOwner) {
-            IndexStorage.ReservedFeeData storage data = l.reservedFeeData[
-                holder
-            ];
-
-            streamingFee =
-                amount -
-                _applyStreamingFee(amount, data.updatedAt) +
-                data.amountPending;
-
-            delete data.amountPending;
-
-            // TODO: emit StreamingFeePaid event
-
-            super._transfer(holder, protocolOwner, streamingFee);
-            emit StreamingFeePaid(streamingFee);
+            uint256 balance = _balanceOf(holder);
+            uint256 streamingFee = _collectStreamingFee(holder, balance);
+            if (balance > 0) {
+                deduction = (amount * streamingFee) / balance;
+            }
         }
 
-        return super._transfer(holder, recipient, amount - streamingFee);
+        return super._transfer(holder, receiver, amount - deduction);
     }
 
     /**
@@ -372,12 +336,36 @@ abstract contract IndexInternal is
     function _applyStreamingFee(uint256 principal, uint256 timestamp)
         internal
         view
-        returns (uint192 amount)
+        returns (uint256 amount)
     {
-        amount = uint192(
-            STREAMING_FEE_FACTOR_PER_SECOND_64x64
-                .pow(block.timestamp - timestamp)
-                .mulu(principal)
-        );
+        amount = STREAMING_FEE_FACTOR_PER_SECOND_64x64
+            .pow(block.timestamp - timestamp)
+            .mulu(principal);
+    }
+
+    function _collectExitFee(address account, uint256 amount)
+        internal
+        returns (uint256 fee)
+    {
+        fee = amount - _applyExitFee(amount);
+
+        emit ExitFeePAid(fee);
+
+        super._transfer(account, _protocolOwner(), fee);
+    }
+
+    function _collectStreamingFee(address account, uint256 amount)
+        internal
+        returns (uint256 fee)
+    {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        fee = amount - _applyStreamingFee(amount, l.feeUpdatedAt[account]);
+
+        l.feeUpdatedAt[account] = block.timestamp;
+
+        emit StreamingFeePaid(fee);
+
+        super._transfer(account, _protocolOwner(), fee);
     }
 }
