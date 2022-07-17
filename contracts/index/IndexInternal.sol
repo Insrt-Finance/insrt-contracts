@@ -257,6 +257,8 @@ abstract contract IndexInternal is
         uint256 balance = _balanceOf(owner);
 
         if (balance > 0) {
+            _collectStreamingFee(address(0), _totalSupply());
+
             uint256 streamingFee = _collectStreamingFee(owner, balance);
 
             _collectExitFee(
@@ -281,6 +283,7 @@ abstract contract IndexInternal is
             unchecked {
                 // apply fee to previous balance, ignoring newly minted shareAmount
                 _collectStreamingFee(receiver, balance - shareAmount);
+                _collectStreamingFee(address(0), _totalSupply() - shareAmount);
             }
         }
     }
@@ -350,10 +353,10 @@ abstract contract IndexInternal is
     {
         fee = amount - _applyExitFee(amount);
 
-        emit ExitFeePaid(fee);
-
         IndexStorage.layout().feesAccrued += fee;
         _burn(account, fee);
+
+        emit ExitFeePaid(fee);
     }
 
     function _collectStreamingFee(address account, uint256 amount)
@@ -364,11 +367,14 @@ abstract contract IndexInternal is
 
         fee = amount - _applyStreamingFee(amount, l.feeUpdatedAt[account]);
 
+        if (account == address(0)) {
+            l.feesAccrued += fee;
+        } else {
+            _burn(account, fee);
+        }
+
         l.feeUpdatedAt[account] = block.timestamp;
 
         emit StreamingFeePaid(fee);
-
-        l.feesAccrued += fee;
-        _burn(account, fee);
     }
 }
