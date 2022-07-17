@@ -342,8 +342,6 @@ abstract contract IndexInternal is
 
             delete data.amountPending;
 
-            // TODO: emit StreamingFeePaid event
-
             super._transfer(holder, protocolOwner, streamingFee);
             emit StreamingFeePaid(streamingFee);
         }
