@@ -339,7 +339,9 @@ abstract contract IndexInternal is
         uint256 fee = amount - _applyExitFee(amount);
 
         IndexStorage.layout().feesAccrued += fee;
-        _burn(account, fee);
+
+        // exit fees are only applied when calling withdraw and redeem functions
+        // these functions execute burn internally, so do not burn here
 
         emit ExitFeePaid(fee);
     }
@@ -347,11 +349,11 @@ abstract contract IndexInternal is
     function _collectStreamingFee(
         address account,
         uint256 amount,
-        bool update
+        bool checkpoint
     ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        if (update) {
+        if (checkpoint) {
             l.feeUpdatedAt[account] = block.timestamp;
         }
 
@@ -362,7 +364,10 @@ abstract contract IndexInternal is
 
         if (account == address(0)) {
             l.feesAccrued += fee;
-        } else {
+        } else if (checkpoint) {
+            // `checkpoint` is false in withdraw and redeem calls
+            // these functions execute burn internally, only burn if true
+
             _burn(account, fee);
         }
 

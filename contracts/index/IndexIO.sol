@@ -191,11 +191,7 @@ contract IndexIO is IndexInternal, IIndexIO {
 
         poolTokenAmounts = _exitPool(minPoolTokenAmounts, userData, receiver);
 
-        // because assets and shares are pegged 1:1, their difference is equal to fees applied
-        uint256 feeAmount = shareAmount - assetAmount;
-
         // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
-        // set feeAmount as shareAmountOffset to prevent double burn
 
         _withdraw(
             msg.sender,
@@ -204,7 +200,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             assetAmount,
             shareAmount,
             assetAmount,
-            feeAmount
+            0
         );
     }
 
@@ -229,11 +225,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         ];
 
-        // because assets and shares are pegged 1:1, their difference is equal to fees applied
-        uint256 feeAmount = shareAmount - assetAmount;
-
         // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
-        // set feeAmount as shareAmountOffset to prevent double burn
 
         _withdraw(
             msg.sender,
@@ -242,7 +234,7 @@ contract IndexIO is IndexInternal, IIndexIO {
             assetAmount,
             shareAmount,
             assetAmount,
-            feeAmount
+            0
         );
     }
 }
