@@ -238,10 +238,6 @@ abstract contract IndexInternal is
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        if (msg.sender == _protocolOwner()) {
-            return shareAmount;
-        }
-
         assetAmount = _applyExitFee(
             _applyStreamingFee(shareAmount, l.feeUpdatedAt[msg.sender])
         );
@@ -258,17 +254,15 @@ abstract contract IndexInternal is
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
-        if (owner != _protocolOwner()) {
-            uint256 balance = _balanceOf(owner);
+        uint256 balance = _balanceOf(owner);
 
-            if (balance > 0) {
-                uint256 streamingFee = _collectStreamingFee(owner, balance);
+        if (balance > 0) {
+            uint256 streamingFee = _collectStreamingFee(owner, balance);
 
-                _collectExitFee(
-                    owner,
-                    shareAmount - (shareAmount * streamingFee) / balance
-                );
-            }
+            _collectExitFee(
+                owner,
+                shareAmount - (shareAmount * streamingFee) / balance
+            );
         }
     }
 
@@ -281,14 +275,12 @@ abstract contract IndexInternal is
         uint256 assetAmount,
         uint256 shareAmount
     ) internal virtual override {
-        if (receiver != _protocolOwner()) {
-            uint256 balance = _balanceOf(receiver);
+        uint256 balance = _balanceOf(receiver);
 
-            if (balance > 0) {
-                unchecked {
-                    // apply fee to previous balance, ignoring newly minted shareAmount
-                    _collectStreamingFee(receiver, balance - shareAmount);
-                }
+        if (balance > 0) {
+            unchecked {
+                // apply fee to previous balance, ignoring newly minted shareAmount
+                _collectStreamingFee(receiver, balance - shareAmount);
             }
         }
     }
@@ -304,25 +296,19 @@ abstract contract IndexInternal is
     ) internal virtual override returns (bool) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        address protocolOwner = _protocolOwner();
+        uint256 receiverBalance = _balanceOf(receiver);
 
-        if (receiver != protocolOwner) {
-            uint256 balance = _balanceOf(receiver);
-
-            if (balance > 0) {
-                _collectStreamingFee(receiver, balance);
-            }
+        if (receiverBalance > 0) {
+            _collectStreamingFee(receiver, receiverBalance);
         }
 
         uint256 deduction;
 
-        if (holder != protocolOwner) {
-            uint256 balance = _balanceOf(holder);
+        uint256 holderBalance = _balanceOf(holder);
 
-            if (balance > 0) {
-                uint256 streamingFee = _collectStreamingFee(holder, balance);
-                deduction = (amount * streamingFee) / balance;
-            }
+        if (holderBalance > 0) {
+            uint256 streamingFee = _collectStreamingFee(holder, holderBalance);
+            deduction = (amount * streamingFee) / holderBalance;
         }
 
         return super._transfer(holder, receiver, amount - deduction);
