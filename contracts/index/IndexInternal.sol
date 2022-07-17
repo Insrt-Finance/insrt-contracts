@@ -366,7 +366,8 @@ abstract contract IndexInternal is
 
         emit ExitFeePaid(fee);
 
-        super._transfer(account, _protocolOwner(), fee);
+        IndexStorage.layout().feesAccrued += fee;
+        _burn(account, fee);
     }
 
     function _collectStreamingFee(address account, uint256 amount)
@@ -381,6 +382,7 @@ abstract contract IndexInternal is
 
         emit StreamingFeePaid(fee);
 
-        super._transfer(account, _protocolOwner(), fee);
+        l.feesAccrued += fee;
+        _burn(account, fee);
     }
 }
