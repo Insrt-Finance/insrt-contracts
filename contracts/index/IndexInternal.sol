@@ -11,8 +11,8 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
-
 import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
+
 import { IIndexInternal } from './IIndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
@@ -24,10 +24,10 @@ import { IAsset, IVault } from '../balancer/IVault.sol';
  * @dev inherited by all Index implementation contracts
  */
 abstract contract IndexInternal is
+    IIndexInternal,
     ERC4626BaseInternal,
     ERC20MetadataInternal,
-    OwnableInternal,
-    IIndexInternal
+    OwnableInternal
 {
     using UintUtils for uint256;
     using ABDKMath64x64 for int128;
