@@ -260,12 +260,15 @@ abstract contract IndexInternal is
 
         if (owner != _protocolOwner()) {
             uint256 balance = _balanceOf(owner);
-            uint256 streamingFee = _collectStreamingFee(owner, balance);
 
-            _collectExitFee(
-                owner,
-                shareAmount - (shareAmount * streamingFee) / balance
-            );
+            if (balance > 0) {
+                uint256 streamingFee = _collectStreamingFee(owner, balance);
+
+                _collectExitFee(
+                    owner,
+                    shareAmount - (shareAmount * streamingFee) / balance
+                );
+            }
         }
     }
 
@@ -279,7 +282,14 @@ abstract contract IndexInternal is
         uint256 shareAmount
     ) internal virtual override {
         if (receiver != _protocolOwner()) {
-            _collectStreamingFee(receiver, _balanceOf(receiver) - shareAmount);
+            uint256 balance = _balanceOf(receiver);
+
+            if (balance > 0) {
+                unchecked {
+                    // apply fee to previous balance, ignoring newly minted shareAmount
+                    _collectStreamingFee(receiver, balance - shareAmount);
+                }
+            }
         }
     }
 
@@ -297,15 +307,20 @@ abstract contract IndexInternal is
         address protocolOwner = _protocolOwner();
 
         if (receiver != protocolOwner) {
-            _collectStreamingFee(receiver, _balanceOf(receiver));
+            uint256 balance = _balanceOf(receiver);
+
+            if (balance > 0) {
+                _collectStreamingFee(receiver, balance);
+            }
         }
 
         uint256 deduction;
 
         if (holder != protocolOwner) {
             uint256 balance = _balanceOf(holder);
-            uint256 streamingFee = _collectStreamingFee(holder, balance);
+
             if (balance > 0) {
+                uint256 streamingFee = _collectStreamingFee(holder, balance);
                 deduction = (amount * streamingFee) / balance;
             }
         }
