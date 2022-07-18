@@ -343,7 +343,7 @@ abstract contract IndexInternal is
         // exit fees are only applied when calling withdraw and redeem functions
         // these functions execute burn internally, so do not burn here
 
-        emit ExitFeePaid(fee);
+        emit ExitFeePaid(account, fee);
     }
 
     function _collectStreamingFee(
@@ -371,6 +371,6 @@ abstract contract IndexInternal is
             _burn(account, fee);
         }
 
-        emit StreamingFeePaid(fee);
+        emit StreamingFeePaid(account, fee);
     }
 }
