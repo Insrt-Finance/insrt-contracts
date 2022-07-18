@@ -209,6 +209,34 @@ abstract contract IndexInternal is
 
     /**
      * @inheritdoc ERC4626BaseInternal
+     * @dev assets and shares are pegged 1:1, so this override is made for gas savings
+     */
+    function _convertToAssets(uint256 shareAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 assetAmount)
+    {
+        assetAmount = shareAmount;
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev assets and shares are pegged 1:1, so this override is made for gas savings
+     */
+    function _convertToShares(uint256 assetAmount)
+        internal
+        view
+        virtual
+        override
+        returns (uint256 shareAmount)
+    {
+        shareAmount = assetAmount;
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
      * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewDeposit
      */
     function _previewMint(uint256 shareAmount)
