@@ -238,10 +238,6 @@ abstract contract IndexInternal is
     {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        if (msg.sender == _protocolOwner()) {
-            return shareAmount;
-        }
-
         assetAmount = _applyExitFee(
             _applyStreamingFee(shareAmount, l.feeUpdatedAt[msg.sender])
         );
@@ -258,15 +254,8 @@ abstract contract IndexInternal is
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
-        if (owner != _protocolOwner()) {
-            uint256 balance = _balanceOf(owner);
-            uint256 streamingFee = _collectStreamingFee(owner, balance);
-
-            _collectExitFee(
-                owner,
-                shareAmount - (shareAmount * streamingFee) / balance
-            );
-        }
+        _collectStreamingFee(address(0), _totalSupply(), true);
+        _collectExitFee(owner, _collectStreamingFee(owner, shareAmount, false));
     }
 
     /**
@@ -278,8 +267,20 @@ abstract contract IndexInternal is
         uint256 assetAmount,
         uint256 shareAmount
     ) internal virtual override {
-        if (receiver != _protocolOwner()) {
-            _collectStreamingFee(receiver, _balanceOf(receiver) - shareAmount);
+        super._afterDeposit(receiver, assetAmount, shareAmount);
+
+        unchecked {
+            // apply fee to previous balance, ignoring newly minted shareAmount
+            _collectStreamingFee(
+                address(0),
+                _totalSupply() - shareAmount,
+                true
+            );
+            _collectStreamingFee(
+                receiver,
+                _balanceOf(receiver) - shareAmount,
+                true
+            );
         }
     }
 
@@ -292,36 +293,27 @@ abstract contract IndexInternal is
         address receiver,
         uint256 amount
     ) internal virtual override returns (bool) {
-        address protocolOwner = _protocolOwner();
+        _collectStreamingFee(receiver, _balanceOf(receiver), true);
 
-        if (receiver != protocolOwner) {
-            _collectStreamingFee(receiver, _balanceOf(receiver));
-        }
-
-        uint256 deduction;
-
-        if (holder != protocolOwner) {
-            uint256 balance = _balanceOf(holder);
-            uint256 streamingFee = _collectStreamingFee(holder, balance);
-            if (balance > 0) {
-                deduction = (amount * streamingFee) / balance;
-            }
-        }
-
-        return super._transfer(holder, receiver, amount - deduction);
+        return
+            super._transfer(
+                holder,
+                receiver,
+                _collectStreamingFee(holder, amount, true)
+            );
     }
 
     /**
      * @notice calculate exit fee for given principal amount
      * @param principal the token amount to which fee is applied
-     * @return amount amount after fee
+     * @return amountOut amount after fee
      */
     function _applyExitFee(uint256 principal)
         internal
         view
-        returns (uint256 amount)
+        returns (uint256 amountOut)
     {
-        amount = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
+        amountOut = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
     }
 
     /**
@@ -329,41 +321,56 @@ abstract contract IndexInternal is
      * @dev uses exponential decay formula to calculate streaming fee over a given duration
      * @param principal the token amount to which fee is applied
      * @param timestamp timestamp of beginning of fee accrual period
-     * @return amount amount after fee
+     * @return amountOut amount after fee
      */
     function _applyStreamingFee(uint256 principal, uint256 timestamp)
         internal
         view
-        returns (uint256 amount)
+        returns (uint256 amountOut)
     {
-        amount = STREAMING_FEE_FACTOR_PER_SECOND_64x64
+        amountOut = STREAMING_FEE_FACTOR_PER_SECOND_64x64
             .pow(block.timestamp - timestamp)
             .mulu(principal);
     }
 
-    function _collectExitFee(address account, uint256 amount)
-        internal
-        returns (uint256 fee)
-    {
-        fee = amount - _applyExitFee(amount);
+    function _collectExitFee(address account, uint256 amount) internal {
+        if (amount == 0) return;
 
-        emit ExitFeePAid(account, fee);
+        uint256 fee = amount - _applyExitFee(amount);
 
-        super._transfer(account, _protocolOwner(), fee);
+        IndexStorage.layout().feesAccrued += fee;
+
+        // exit fees are only applied when calling withdraw and redeem functions
+        // these functions execute burn internally, so do not burn here
+
+        emit ExitFeePaid(fee);
     }
 
-    function _collectStreamingFee(address account, uint256 amount)
-        internal
-        returns (uint256 fee)
-    {
+    function _collectStreamingFee(
+        address account,
+        uint256 amount,
+        bool checkpoint
+    ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        fee = amount - _applyStreamingFee(amount, l.feeUpdatedAt[account]);
+        if (checkpoint) {
+            l.feeUpdatedAt[account] = block.timestamp;
+        }
 
-        l.feeUpdatedAt[account] = block.timestamp;
+        if (amount == 0) return 0;
 
-        emit StreamingFeePaid(account, fee);
+        amountOut = _applyStreamingFee(amount, l.feeUpdatedAt[account]);
+        uint256 fee = amount - amountOut;
 
-        super._transfer(account, _protocolOwner(), fee);
+        if (account == address(0)) {
+            l.feesAccrued += fee;
+        } else if (checkpoint) {
+            // `checkpoint` is false in withdraw and redeem calls
+            // these functions execute burn internally, only burn if true
+
+            _burn(account, fee);
+        }
+
+        emit StreamingFeePaid(fee);
     }
 }

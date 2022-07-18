@@ -59,6 +59,18 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
+    function collectStreamingFees(address[] calldata accounts) external {
+        unchecked {
+            for (uint256 i; i < accounts.length; i++) {
+                address account = accounts[i];
+                _collectStreamingFee(account, _balanceOf(account), true);
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc IIndexIO
+     */
     function deposit(
         uint256[] memory poolTokenAmounts,
         uint256 minShareAmount,
@@ -87,11 +99,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             }
         }
 
+        uint256 oldAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
         _joinPool(poolTokenAmounts, userData);
 
-        shareAmount =
-            IERC20(_asset()).balanceOf(address(this)) -
-            _totalSupply();
+        uint256 newAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
+        // because assets and shares are pegged 1:1, change in asset balance is equal to change in share balance
+        shareAmount = newAssetBalance - oldAssetBalance;
 
         _deposit(
             msg.sender,
@@ -140,11 +155,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             minShareAmount
         );
 
+        uint256 oldAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
         _joinPool(poolTokenAmounts, userData);
 
-        shareAmount =
-            IERC20(_asset()).balanceOf(address(this)) -
-            _totalSupply();
+        uint256 newAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
+        // because assets and shares are pegged 1:1, change in asset balance is equal to change in share balance
+        shareAmount = newAssetBalance - oldAssetBalance;
 
         _deposit(
             msg.sender,
@@ -164,24 +182,25 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] calldata minPoolTokenAmounts,
         address receiver
     ) external returns (uint256[] memory poolTokenAmounts) {
-        // because assets and shares are pegged 1:1, output can be treated as share amount
-        uint256 shareAmountOut = _previewRedeem(shareAmount);
+        uint256 assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
-            shareAmountOut
+            assetAmount
         );
 
         poolTokenAmounts = _exitPool(minPoolTokenAmounts, userData, receiver);
+
+        // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
 
         _withdraw(
             msg.sender,
             receiver,
             msg.sender,
+            assetAmount,
             shareAmount,
-            shareAmount,
-            shareAmount,
-            shareAmount - shareAmountOut
+            assetAmount,
+            0
         );
     }
 
@@ -194,12 +213,11 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 tokenId,
         address receiver
     ) external returns (uint256 poolTokenAmount) {
-        // because assets and shares are pegged 1:1, output can be treated as share amount
-        uint256 shareAmountOut = _previewRedeem(shareAmount);
+        uint256 assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-            shareAmountOut,
+            assetAmount,
             tokenId
         );
 
@@ -207,14 +225,16 @@ contract IndexIO is IndexInternal, IIndexIO {
             tokenId
         ];
 
+        // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
+
         _withdraw(
             msg.sender,
             receiver,
             msg.sender,
+            assetAmount,
             shareAmount,
-            shareAmount,
-            shareAmount,
-            shareAmount - shareAmountOut
+            assetAmount,
+            0
         );
     }
 }
