@@ -24,10 +24,10 @@ import { IAsset, IVault } from '../balancer/IVault.sol';
  * @dev inherited by all Index implementation contracts
  */
 abstract contract IndexInternal is
-    ERC4626BaseInternal,
     IIndexInternal,
     ERC20MetadataInternal,
-    OwnableInternal
+    OwnableInternal,
+    ERC4626BaseInternal
 {
     using UintUtils for uint256;
     using ABDKMath64x64 for int128;
@@ -222,7 +222,9 @@ abstract contract IndexInternal is
         override
         returns (uint256 shareAmount)
     {
-        shareAmount = _previewRedeem(assetAmount);
+        shareAmount = ABDKMath64x64.divu(1 ether, _previewRedeem(1 ether)).mulu(
+                assetAmount
+            );
     }
 
     /**
