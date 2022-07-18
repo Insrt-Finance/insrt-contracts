@@ -299,7 +299,7 @@ abstract contract IndexInternal is
             super._transfer(
                 holder,
                 receiver,
-                _collectStreamingFee(holder, amount, false)
+                _collectStreamingFee(holder, amount, true)
             );
     }
 
