@@ -70,6 +70,30 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     /**
      * @inheritdoc IndexInternal
      */
+    function _convertToAssets(uint256 shareAmount)
+        internal
+        view
+        override(ERC4626BaseInternal, IndexInternal)
+        returns (uint256 assetAmount)
+    {
+        assetAmount = super._convertToAssets(shareAmount);
+    }
+
+    /**
+     * @inheritdoc IndexInternal
+     */
+    function _convertToShares(uint256 assetAmount)
+        internal
+        view
+        override(ERC4626BaseInternal, IndexInternal)
+        returns (uint256 shareAmount)
+    {
+        shareAmount = super._convertToShares(assetAmount);
+    }
+
+    /**
+     * @inheritdoc IndexInternal
+     */
     function _previewMint(uint256 shareAmount)
         internal
         view
