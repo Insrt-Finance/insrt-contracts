@@ -14,7 +14,7 @@ import { IndexInternal } from './IndexInternal.sol';
  * @title Infra Index base functions
  * @dev deployed standalone and referenced by IndexProxy
  */
-contract IndexBase is IIndexBase, SolidStateERC4626, IndexInternal {
+contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     constructor(
         address balancerVault,
         address balancerHelpers,

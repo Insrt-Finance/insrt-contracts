@@ -24,9 +24,9 @@ import { IAsset, IVault } from '../balancer/IVault.sol';
  * @dev inherited by all Index implementation contracts
  */
 abstract contract IndexInternal is
+    ERC4626BaseInternal,
     IIndexInternal,
     ERC20MetadataInternal,
-    ERC4626BaseInternal,
     OwnableInternal
 {
     using UintUtils for uint256;
