@@ -11,6 +11,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { SolidStateERC20Mock__factory } from '../../typechain-types';
 
 export interface IndexBaseBehaviorArgs extends SolidStateERC4626BehaviorArgs {
+  getProtocolOwner: () => Promise<SignerWithAddress>;
   weights: BigNumber[];
   streamingFeeBP: BigNumber;
   exitFeeBP: BigNumber;
@@ -26,7 +27,7 @@ export function describeBehaviorOfIndexBase(
     let instance: IIndex;
     let protocolOwner: SignerWithAddress;
     let nonProtocolOwner: SignerWithAddress;
-    let recipient: SignerWithAddress;
+    let receiver: SignerWithAddress;
 
     const BASIS = ethers.utils.parseUnits('1', 4);
     const EXIT_FEE_FACTOR_BP = BASIS.sub(args.exitFeeBP);
@@ -45,7 +46,8 @@ export function describeBehaviorOfIndexBase(
 
     before(async () => {
       instance = await deploy();
-      [protocolOwner, nonProtocolOwner, recipient] = await ethers.getSigners();
+      protocolOwner = await args.getProtocolOwner();
+      [, nonProtocolOwner, receiver] = await ethers.getSigners();
       let totalWeight: BigNumber = BigNumber.from('0');
 
       const mintAmount = ethers.utils.parseEther('10000'); //large value to suffice for all tests
@@ -74,8 +76,11 @@ export function describeBehaviorOfIndexBase(
 
     describe('overriden ERC4626 internal functions', () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+      const timeStep = 100;
       let depositTimeStamp;
+      let laterTimestamp;
       let duration;
+      let transferAmount;
 
       beforeEach(async () => {
         for (let i = 0; i < assets.length; i++) {
@@ -96,20 +101,23 @@ export function describeBehaviorOfIndexBase(
           );
 
         const { blockNumber } = await tx.wait();
-        const { timestamp } = await ethers.provider.getBlock(blockNumber);
-        depositTimeStamp = timestamp;
+        const { timestamp: first } = await ethers.provider.getBlock(
+          blockNumber,
+        );
+        depositTimeStamp = first;
 
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
-          depositTimeStamp + 100,
+          depositTimeStamp + timeStep,
         ]);
 
         await hre.network.provider.send('evm_mine', []);
 
-        const { timestamp: redeemTimestamp } = await ethers.provider.getBlock(
-          'latest',
-        );
+        const { timestamp: second } = await ethers.provider.getBlock('latest');
+        laterTimestamp = second;
 
-        duration = redeemTimestamp - depositTimeStamp;
+        duration = laterTimestamp - depositTimeStamp;
+
+        transferAmount = await instance.balanceOf(nonProtocolOwner.address);
       });
 
       describe('previewRedeem(uint256)', () => {
@@ -134,13 +142,41 @@ export function describeBehaviorOfIndexBase(
         });
       });
 
-      describe('_beforeWithdraw(address,uint256,uint256)', () => {});
       describe('transfer(address,address,amount)', () => {
-        it('emits StremaingFeePaid event', async () => {});
-        it('transfer streaming fee to protocolOwner if holder is not protocolOwner', async () => {});
-        it('does not apply streaming fee on transfer if recipient is protocol owner', async () => {});
-        it('applies streaming fee on transfer if recipient is not protocol owner', async () => {});
+        let snapshotId;
+        let fee;
+        beforeEach(async () => {
+          snapshotId = await ethers.provider.send('evm_snapshot', []);
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            depositTimeStamp + timeStep * 2,
+          ]);
+
+          fee = transferAmount.sub(
+            transferAmount
+              .mul(
+                STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration + timeStep),
+              )
+              .shr(64 * (duration + timeStep)),
+          );
+        });
+
+        afterEach(async () => {
+          await ethers.provider.send('evm_revert', [snapshotId]);
+        });
+        it('emits StreamingFeePaid event for nonProtocolOwner and receiver', async () => {
+          await expect(
+            await instance
+              .connect(nonProtocolOwner)
+              .transfer(receiver.address, transferAmount),
+          )
+            .to.emit(instance, 'StreamingFeePaid')
+            .withArgs(nonProtocolOwner.address, fee)
+            .to.emit(instance, 'StreamingFeePaid')
+            .withArgs(receiver.address, 0);
+        });
       });
+      describe('_beforeWithdraw(address,uint256,uint256)', () => {});
       describe('_afterDeposit(address,uint256,uint256)', () => {});
     });
 
