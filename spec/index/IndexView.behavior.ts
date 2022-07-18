@@ -10,35 +10,37 @@ export function describeBehaviorOfIndexView(
   args: IndexViewBehaviorArgs,
   skips?: string[],
 ) {
-  let instance: IIndex;
-  let balancerVault: IVault;
+  describe('::IndexView', () => {
+    let instance: IIndex;
+    let balancerVault: IVault;
 
-  before(async () => {
-    const balancerVaultAddress = await getBalancerContractAddress(
-      '20210418-vault',
-      'Vault',
-      'arbitrum',
-    );
+    before(async () => {
+      const balancerVaultAddress = await getBalancerContractAddress(
+        '20210418-vault',
+        'Vault',
+        'arbitrum',
+      );
 
-    balancerVault = IVault__factory.connect(
-      balancerVaultAddress,
-      ethers.provider,
-    );
-  });
-
-  beforeEach(async () => {
-    instance = await deploy();
-  });
-
-  describe('#getPoolId()', () => {
-    it('returns Balancer pool id', async function () {
-      const id = await instance.callStatic.getPoolId();
-      const [pool] = await balancerVault.callStatic.getPool(id);
-      expect(pool).to.equal(await instance.callStatic.asset());
+      balancerVault = IVault__factory.connect(
+        balancerVaultAddress,
+        ethers.provider,
+      );
     });
-  });
 
-  describe('#getExitFee()', () => {
-    it('todo', async () => {});
+    beforeEach(async () => {
+      instance = await deploy();
+    });
+
+    describe('#getPoolId()', () => {
+      it('returns Balancer pool id', async function () {
+        const id = await instance.callStatic.getPoolId();
+        const [pool] = await balancerVault.callStatic.getPool(id);
+        expect(pool).to.equal(await instance.callStatic.asset());
+      });
+    });
+
+    describe('#getExitFee()', () => {
+      it('todo', async () => {});
+    });
   });
 }
