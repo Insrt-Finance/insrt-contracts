@@ -184,7 +184,7 @@ export function describeBehaviorOfIndexBase(
         });
       });
 
-      describe('#transfer(address,address,amount)', () => {
+      describe('#transfer(address,address,uint256)', () => {
         it('emits StreamingFeePaid event', async () => {
           const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
