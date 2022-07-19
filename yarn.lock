@@ -798,24 +798,24 @@
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
-"@solidstate/contracts@^0.0.38":
-  version "0.0.38"
-  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.38.tgz#8fe94467ebba9a6c38252b319befb1c3ec24152c"
-  integrity sha512-dtJ0SjhNjzFUupTTPwL9cvnzpRj07BGIsijsTqN9IGbfMmem8JsYqlQLN1fbqxCVEd9XjBOCnWVINOlXZEKsdg==
+"@solidstate/contracts@^0.0.39":
+  version "0.0.39"
+  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.39.tgz#62a4211d968386670e319d8bb2486b9655d5677c"
+  integrity sha512-+q88PGF+ooNH8MjrbdP05F8+PIjgUqxfYj9pnngaGx3vVyPsLgO433quvq+HglPsg9/XqNFLflmZ5qbJPjwg/g==
 
-"@solidstate/library@^0.0.38":
-  version "0.0.38"
-  resolved "https://registry.yarnpkg.com/@solidstate/library/-/library-0.0.38.tgz#36deca0305d8f8322ce135e00f6bbebaf2ea6675"
-  integrity sha512-/wiZ8xOqxtV2MXJQ9bfEx1bpAFyLyBJrv25jxkyFrhndMGU5dxyq3bG5ZKye43b6oCFu95RuZmKHEsnYrCOUlQ==
+"@solidstate/library@^0.0.39":
+  version "0.0.39"
+  resolved "https://registry.yarnpkg.com/@solidstate/library/-/library-0.0.39.tgz#5661df7f5fa54faf1ffcea57c698b7f1e02dc155"
+  integrity sha512-V8RUS2Qc3CcyFIXxIUmlKEa4SnSbuTehu2zrf/DfLkse6pDcCFOfnzjcODLPffQ+2Tc5Zb450QEU2ChBuyocsQ==
   dependencies:
     eth-permit "^0.1.10"
 
-"@solidstate/spec@^0.0.38":
-  version "0.0.38"
-  resolved "https://registry.yarnpkg.com/@solidstate/spec/-/spec-0.0.38.tgz#3727d1e3f01f4f185be28766fb54709862376830"
-  integrity sha512-oj5V2dTOVB+htUWSHyEHXWYvr5eoNPoTsYIwa8uKD88hsbM11FNMVwM0grp0AvLSrWNj2UEftZ4bVC8SFcUdJw==
+"@solidstate/spec@^0.0.39":
+  version "0.0.39"
+  resolved "https://registry.yarnpkg.com/@solidstate/spec/-/spec-0.0.39.tgz#a89e24959e50b870390367db3c57a0f7c980e0cb"
+  integrity sha512-SmzFbkFslF1Is3SQMG14P76XjsjQvaBLu7oYSC8vrnbN7H/UF5h0rlQUiUwcR7SP3NI3zGzzyEm31XYOIFATew==
   dependencies:
-    "@solidstate/library" "^0.0.38"
+    "@solidstate/library" "^0.0.39"
 
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
@@ -3549,9 +3549,9 @@ ee-first@1.1.1:
   integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
 electron-to-chromium@^1.3.47, electron-to-chromium@^1.4.188:
-  version "1.4.192"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.192.tgz#fac050058b3e0713b401a1088cc579e14c2ab165"
-  integrity sha512-8nCXyIQY9An88NXAp+PuPy5h3/w5ZY7Iu2lag65Q0XREprcat5F8gKhoHsBUnQcFuCRnmevpR8yEBYRU3d2HDw==
+  version "1.4.193"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.193.tgz#8e760b9d9a7b92fe472664fd61811b307f3de39b"
+  integrity sha512-tBqbgRv0yFIYBLBQKW6kHzI81rjvO1CRy+K8+XHTZtkVPkAZayI/CxTqBiy6Q1+tYAxby8bq/6yOiuNkTvfxmw==
 
 elliptic@6.5.4, elliptic@^6.4.0, elliptic@^6.5.2, elliptic@^6.5.3, elliptic@^6.5.4:
   version "6.5.4"
@@ -9726,9 +9726,9 @@ unset-value@^1.0.0:
     isobject "^3.0.0"
 
 update-browserslist-db@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.0.4.tgz#dbfc5a789caa26b1db8990796c2c8ebbce304824"
-  integrity sha512-jnmO2BEGUjsMOe/Fg9u0oczOe/ppIDZPebzccl1yDWGLFP16Pa1/RM5wEoKYPG2zstNcDuAStejyxsOuKINdGA==
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.0.5.tgz#be06a5eedd62f107b7c19eb5bcefb194411abf38"
+  integrity sha512-dteFFpCyvuDdr9S/ff1ISkKt/9YZxKjI9WlRR99c180GaztJtRa/fn18FdxGVKVsnPY7/a/FDN68mcvUmP4U7Q==
   dependencies:
     escalade "^3.1.1"
     picocolors "^1.0.0"
