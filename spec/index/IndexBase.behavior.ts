@@ -93,11 +93,7 @@ export function describeBehaviorOfIndexBase(
       });
 
       describe('#previewWithdraw(uint256)', () => {
-        it('todo');
-      });
-
-      describe('#previewRedeem(uint256)', () => {
-        it('returns the correct amount of BPT for a given amount of IIT', async () => {
+        it('returns quantity of IIT needed to withdraw given quantity of BPT', async () => {
           const minBptOut = ethers.utils.parseUnits('1', 'gwei');
 
           const tx = await instance
@@ -117,11 +113,54 @@ export function describeBehaviorOfIndexBase(
 
           await hre.network.provider.send('evm_mine', [previewTimestamp]);
 
-          const shareAmount = await instance.balanceOf(
-            nonProtocolOwner.address,
-          );
+          const assetAmount = ethers.utils.parseEther('10000');
 
-          const amountOutAfterFee = shareAmount
+          const amountAfterFee = assetAmount
+            .mul(
+              ethers.constants.One.shl(64)
+                .shl(64)
+                .div(
+                  EXIT_FEE_FACTOR_64x64.mul(
+                    STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration),
+                  ).shr(64 * duration),
+                ),
+            )
+            .shr(64);
+
+          const shareAmount = await instance
+            .connect(nonProtocolOwner)
+            .callStatic.previewWithdraw(assetAmount);
+
+          expect(shareAmount).to.eq(amountAfterFee);
+        });
+      });
+
+      describe('#previewRedeem(uint256)', () => {
+        it('returns quantity of BPT withdrawn in exchange for given quantity of IIT', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const duration = 100;
+          const previewTimestamp = depositTimestamp + duration;
+
+          await hre.network.provider.send('evm_mine', [previewTimestamp]);
+
+          const shareAmount = ethers.utils.parseEther('10000');
+
+          // TODO: rounding error and rounding direction
+
+          const amountAfterFee = shareAmount
             .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
             .shr(64 * duration)
             .mul(EXIT_FEE_FACTOR_64x64)
@@ -131,7 +170,7 @@ export function describeBehaviorOfIndexBase(
             .connect(nonProtocolOwner)
             .callStatic.previewRedeem(shareAmount);
 
-          expect(assetAmount).to.eq(amountOutAfterFee);
+          expect(assetAmount).to.eq(amountAfterFee);
         });
       });
 
@@ -160,11 +199,11 @@ export function describeBehaviorOfIndexBase(
             transferTimestamp,
           ]);
 
-          const amountOutAfterFee = amount
+          const amountAfterFee = amount
             .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
             .shr(64 * duration);
 
-          const fee = amount.sub(amountOutAfterFee);
+          const fee = amount.sub(amountAfterFee);
 
           await expect(
             instance

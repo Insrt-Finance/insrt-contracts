@@ -190,9 +190,13 @@ abstract contract IndexInternal is
         override
         returns (uint256 shareAmount)
     {
-        shareAmount = ABDKMath64x64.divu(1 ether, _previewRedeem(1 ether)).mulu(
-                assetAmount
-            );
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        shareAmount = STREAMING_FEE_FACTOR_PER_SECOND_64x64
+            .pow(block.timestamp - l.feeUpdatedAt[msg.sender])
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .inv()
+            .mulu(assetAmount);
     }
 
     /**
