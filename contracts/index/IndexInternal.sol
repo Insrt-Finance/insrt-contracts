@@ -262,13 +262,15 @@ abstract contract IndexInternal is
     ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
+        uint256 feeUpdatedAt = l.feeUpdatedAt[account];
+
         if (checkpoint) {
             l.feeUpdatedAt[account] = block.timestamp;
         }
 
         if (amount == 0) return 0;
 
-        amountOut = _applyStreamingFee(amount, l.feeUpdatedAt[account]);
+        amountOut = _applyStreamingFee(amount, feeUpdatedAt);
         uint256 fee = amount - amountOut;
 
         if (account == address(0)) {
