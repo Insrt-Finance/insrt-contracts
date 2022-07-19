@@ -61,6 +61,11 @@ export function describeBehaviorOfIndexBase(
         await asset
           .connect(nonProtocolOwner)
           ['__mint(address,uint256)'](nonProtocolOwner.address, mintAmount);
+
+        await asset
+          .connect(receiver)
+          ['__mint(address,uint256)'](receiver.address, mintAmount);
+
         totalWeight = totalWeight.add(args.weights[i]);
         assets.push(asset);
       }
@@ -85,6 +90,12 @@ export function describeBehaviorOfIndexBase(
         for (let i = 0; i < assets.length; i++) {
           await assets[i]
             .connect(nonProtocolOwner)
+            ['increaseAllowance(address,uint256)'](
+              instance.address,
+              poolTokenAmounts[i],
+            );
+          await assets[i]
+            .connect(receiver)
             ['increaseAllowance(address,uint256)'](
               instance.address,
               poolTokenAmounts[i],
@@ -159,7 +170,6 @@ export function describeBehaviorOfIndexBase(
           const shareAmount = ethers.utils.parseEther('10000');
 
           // TODO: rounding error and rounding direction
-
           const amountAfterFee = shareAmount
             .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
             .shr(64 * duration)
@@ -214,6 +224,66 @@ export function describeBehaviorOfIndexBase(
             .withArgs(nonProtocolOwner.address, fee);
 
           // TODO: no event emitted for receiver if receiver balance is 0
+        });
+
+        it('transfers amount minus holder fee and burns receiver fee', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+          let tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber: nonProtocolOwnerNumber } = await tx.wait();
+          const { timestamp: nonProtocolOwnerDeposit } =
+            await ethers.provider.getBlock(nonProtocolOwnerNumber);
+
+          tx = await instance
+            .connect(receiver)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              receiver.address,
+            );
+
+          const { blockNumber: receiverNumber } = await tx.wait();
+          const { timestamp: receiverDeposit } = await ethers.provider.getBlock(
+            receiverNumber,
+          );
+
+          const duration = 100;
+          const transferTimestamp = nonProtocolOwnerDeposit + duration;
+          const receiverDuration = transferTimestamp - receiverDeposit;
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          const amount = await instance.callStatic.balanceOf(
+            nonProtocolOwner.address,
+          );
+          const receiverBalance = await instance.callStatic.balanceOf(
+            receiver.address,
+          );
+
+          const amountAfterFee = amount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration);
+
+          const receiverBalanceAfterFee = receiverBalance
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(receiverDuration))
+            .shr(64 * receiverDuration);
+
+          const receiverFee = receiverBalance.sub(receiverBalanceAfterFee);
+          const receiverBalanceChange = amountAfterFee.sub(receiverFee);
+
+          await expect(() =>
+            instance
+              .connect(nonProtocolOwner)
+              .transfer(receiver.address, amount),
+          ).to.changeTokenBalance(instance, receiver, receiverBalanceChange);
         });
       });
     });
