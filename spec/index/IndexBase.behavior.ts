@@ -74,14 +74,13 @@ export function describeBehaviorOfIndexBase(
       }
     });
 
-    describe('overridden ERC4626 functions', () => {
-      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
-      const timeStep = 100;
-      let depositTimeStamp;
-      let laterTimestamp;
-      let duration;
-      let transferAmount;
+    describeBehaviorOfSolidStateERC4626(deploy, args, [
+      '#previewWithdraw(uint256)',
+      '#previewRedeem(uint256)',
+      ...(skips ?? []),
+    ]);
 
+    describe('overridden ERC4626 functions', () => {
       beforeEach(async () => {
         for (let i = 0; i < assets.length; i++) {
           await assets[i]
@@ -91,33 +90,6 @@ export function describeBehaviorOfIndexBase(
               poolTokenAmounts[i],
             );
         }
-
-        const tx = await instance
-          .connect(nonProtocolOwner)
-          ['deposit(uint256[],uint256,address)'](
-            poolTokenAmounts,
-            minBptOut,
-            nonProtocolOwner.address,
-          );
-
-        const { blockNumber } = await tx.wait();
-        const { timestamp: first } = await ethers.provider.getBlock(
-          blockNumber,
-        );
-        depositTimeStamp = first;
-
-        await hre.network.provider.send('evm_setNextBlockTimestamp', [
-          depositTimeStamp + timeStep,
-        ]);
-
-        await hre.network.provider.send('evm_mine', []);
-
-        const { timestamp: second } = await ethers.provider.getBlock('latest');
-        laterTimestamp = second;
-
-        duration = laterTimestamp - depositTimeStamp;
-
-        transferAmount = await instance.balanceOf(nonProtocolOwner.address);
       });
 
       describe('#previewWithdraw(uint256)', () => {
@@ -125,67 +97,86 @@ export function describeBehaviorOfIndexBase(
       });
 
       describe('#previewRedeem(uint256)', () => {
-        it('returns the correct amount of BPT for a given amount of IIT for a nonProtocolOwner', async () => {
-          const shareAmount = await instance
+        it('returns the correct amount of BPT for a given amount of IIT', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
             .connect(nonProtocolOwner)
-            .callStatic['previewWithdraw(uint256)'](assetAmount);
-          const amountOutAfterFee = assetAmount
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const duration = 100;
+          const previewTimestamp = depositTimestamp + duration;
+
+          await hre.network.provider.send('evm_mine', [previewTimestamp]);
+
+          const shareAmount = await instance.balanceOf(
+            nonProtocolOwner.address,
+          );
+
+          const amountOutAfterFee = shareAmount
             .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
             .shr(64 * duration)
             .mul(EXIT_FEE_FACTOR_BP)
             .div(BASIS);
 
-          expect(shareAmount).to.eq(amountOutAfterFee);
-        });
+          const assetAmount = await instance
+            .connect(nonProtocolOwner)
+            .callStatic.previewRedeem(shareAmount);
 
-        it('returns the same amount of BPT for a given amount of IIT for the protocolOwner', async () => {
-          const shareAmount = await instance
-            .connect(protocolOwner)
-            .callStatic['previewWithdraw(uint256)'](assetAmount);
-          expect(shareAmount).to.equal(assetAmount);
+          expect(assetAmount).to.eq(amountOutAfterFee);
         });
       });
 
       describe('#transfer(address,address,amount)', () => {
-        let snapshotId;
-        let fee;
-        beforeEach(async () => {
-          snapshotId = await ethers.provider.send('evm_snapshot', []);
+        it('emits StreamingFeePaid event', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const amount = await instance.balanceOf(nonProtocolOwner.address);
+
+          const duration = 100;
+          const transferTimestamp = depositTimestamp + duration;
 
           await hre.network.provider.send('evm_setNextBlockTimestamp', [
-            depositTimeStamp + timeStep * 2,
+            transferTimestamp,
           ]);
 
-          fee = transferAmount.sub(
-            transferAmount
-              .mul(
-                STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration + timeStep),
-              )
-              .shr(64 * (duration + timeStep)),
-          );
-        });
+          const amountOutAfterFee = amount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration);
 
-        afterEach(async () => {
-          await ethers.provider.send('evm_revert', [snapshotId]);
-        });
-        it('emits StreamingFeePaid event for nonProtocolOwner and receiver', async () => {
+          const fee = amount.sub(amountOutAfterFee);
+
           await expect(
-            await instance
+            instance
               .connect(nonProtocolOwner)
-              .transfer(receiver.address, transferAmount),
+              .transfer(receiver.address, amount),
           )
             .to.emit(instance, 'StreamingFeePaid')
-            .withArgs(nonProtocolOwner.address, fee)
-            .to.emit(instance, 'StreamingFeePaid')
-            .withArgs(receiver.address, 0);
+            .withArgs(nonProtocolOwner.address, fee);
+
+          // TODO: no event emitted for receiver if receiver balance is 0
         });
       });
     });
-
-    describeBehaviorOfSolidStateERC4626(deploy, args, [
-      '#previewWithdraw(uint256)',
-      '#previewRedeem(uint256)',
-      ...(skips ?? []),
-    ]);
   });
 }
