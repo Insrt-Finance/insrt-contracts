@@ -73,6 +73,67 @@ abstract contract IndexInternal is
         return IERC173(_owner()).owner();
     }
 
+    /**
+     * @notice construct Balancer join request and exchange underlying pool tokens for BPT
+     * @param amounts token quantities to deposit, in asset-sorted order
+     * @param userData encoded join parameters
+     */
+    function _joinPool(uint256[] memory amounts, bytes memory userData)
+        internal
+    {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(
+            _tokensToAssets(l.tokens),
+            amounts,
+            userData,
+            false
+        );
+
+        IVault(BALANCER_VAULT).joinPool(
+            _poolId(),
+            address(this),
+            address(this),
+            request
+        );
+    }
+
+    /**
+     * @notice construct Balancer exit request, exchange BPT for underlying pool token(s)
+     * @param minAmountsOut minimum amounts to be returned by Balancer
+     * @param userData encoded exit parameters
+     * @param receiver recipient of withdrawn pool tokens
+     * @return poolTokenAmounts quantities of underlying pool tokens yielded
+     */
+    function _exitPool(
+        uint256[] memory minAmountsOut,
+        bytes memory userData,
+        address receiver
+    ) internal returns (uint256[] memory poolTokenAmounts) {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
+            _tokensToAssets(l.tokens),
+            minAmountsOut,
+            userData,
+            false
+        );
+
+        (, poolTokenAmounts) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
+            l.poolId,
+            address(this),
+            payable(receiver),
+            request
+        );
+
+        IVault(BALANCER_VAULT).exitPool(
+            l.poolId,
+            address(this),
+            payable(receiver),
+            request
+        );
+    }
+
     //remove and save assets instead, saved on deployment?
     /**
      * @notice function to convert IERC20 to IAsset used in Balancer
@@ -213,6 +274,66 @@ abstract contract IndexInternal is
     }
 
     /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev apply exit fee and streaming to shareAmount
+     */
+    function _beforeWithdraw(
+        address owner,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal virtual override {
+        super._beforeWithdraw(owner, assetAmount, shareAmount);
+
+        _collectStreamingFee(address(0), _totalSupply(), true);
+        _collectExitFee(owner, _collectStreamingFee(owner, shareAmount, false));
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev collects accrued streaming fees from receiver of deposit
+     */
+    function _afterDeposit(
+        address receiver,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal virtual override {
+        super._afterDeposit(receiver, assetAmount, shareAmount);
+
+        unchecked {
+            // apply fee to previous balance, ignoring newly minted shareAmount
+            _collectStreamingFee(
+                address(0),
+                _totalSupply() - shareAmount,
+                true
+            );
+            _collectStreamingFee(
+                receiver,
+                _balanceOf(receiver) - shareAmount,
+                true
+            );
+        }
+    }
+
+    /**
+     * @inheritdoc ERC20BaseInternal
+     * @dev collects accrued streaming fees from holder and receiver, and reduces amount transferred accordingly
+     */
+    function _transfer(
+        address holder,
+        address receiver,
+        uint256 amount
+    ) internal virtual override returns (bool) {
+        _collectStreamingFee(receiver, _balanceOf(receiver), true);
+
+        return
+            super._transfer(
+                holder,
+                receiver,
+                _collectStreamingFee(holder, amount, true)
+            );
+    }
+
+    /**
      * @notice calculate exit fee for given principal amount
      * @param principal the token amount to which fee is applied
      * @return amountOut amount after fee
@@ -281,126 +402,5 @@ abstract contract IndexInternal is
         }
 
         emit StreamingFeePaid(account, fee);
-    }
-
-    /**
-     * @notice construct Balancer join request and exchange underlying pool tokens for BPT
-     * @param amounts token quantities to deposit, in asset-sorted order
-     * @param userData encoded join parameters
-     */
-    function _joinPool(uint256[] memory amounts, bytes memory userData)
-        internal
-    {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(
-            _tokensToAssets(l.tokens),
-            amounts,
-            userData,
-            false
-        );
-
-        IVault(BALANCER_VAULT).joinPool(
-            _poolId(),
-            address(this),
-            address(this),
-            request
-        );
-    }
-
-    /**
-     * @notice construct Balancer exit request, exchange BPT for underlying pool token(s)
-     * @param minAmountsOut minimum amounts to be returned by Balancer
-     * @param userData encoded exit parameters
-     * @param receiver recipient of withdrawn pool tokens
-     * @return poolTokenAmounts quantities of underlying pool tokens yielded
-     */
-    function _exitPool(
-        uint256[] memory minAmountsOut,
-        bytes memory userData,
-        address receiver
-    ) internal returns (uint256[] memory poolTokenAmounts) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
-            _tokensToAssets(l.tokens),
-            minAmountsOut,
-            userData,
-            false
-        );
-
-        (, poolTokenAmounts) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
-            l.poolId,
-            address(this),
-            payable(receiver),
-            request
-        );
-
-        IVault(BALANCER_VAULT).exitPool(
-            l.poolId,
-            address(this),
-            payable(receiver),
-            request
-        );
-    }
-
-    /**
-     * @inheritdoc ERC20BaseInternal
-     * @dev collects accrued streaming fees from holder and receiver, and reduces amount transferred accordingly
-     */
-    function _transfer(
-        address holder,
-        address receiver,
-        uint256 amount
-    ) internal virtual override returns (bool) {
-        _collectStreamingFee(receiver, _balanceOf(receiver), true);
-
-        return
-            super._transfer(
-                holder,
-                receiver,
-                _collectStreamingFee(holder, amount, true)
-            );
-    }
-
-    /**
-     * @inheritdoc ERC4626BaseInternal
-     * @dev apply exit fee and streaming to shareAmount
-     */
-    function _beforeWithdraw(
-        address owner,
-        uint256 assetAmount,
-        uint256 shareAmount
-    ) internal virtual override {
-        super._beforeWithdraw(owner, assetAmount, shareAmount);
-
-        _collectStreamingFee(address(0), _totalSupply(), true);
-        _collectExitFee(owner, _collectStreamingFee(owner, shareAmount, false));
-    }
-
-    /**
-     * @inheritdoc ERC4626BaseInternal
-     * @dev collects accrued streaming fees from receiver of deposit
-     */
-    function _afterDeposit(
-        address receiver,
-        uint256 assetAmount,
-        uint256 shareAmount
-    ) internal virtual override {
-        super._afterDeposit(receiver, assetAmount, shareAmount);
-
-        unchecked {
-            // apply fee to previous balance, ignoring newly minted shareAmount
-            _collectStreamingFee(
-                address(0),
-                _totalSupply() - shareAmount,
-                true
-            );
-            _collectStreamingFee(
-                receiver,
-                _balanceOf(receiver) - shareAmount,
-                true
-            );
-        }
     }
 }
