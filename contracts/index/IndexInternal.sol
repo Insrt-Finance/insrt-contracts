@@ -82,23 +82,6 @@ abstract contract IndexInternal is
         return IndexStorage.layout().feesAccrued;
     }
 
-    //remove and save assets instead, saved on deployment?
-    /**
-     * @notice function to convert IERC20 to IAsset used in Balancer
-     * @param tokens an array of IERC20-wrapped addresses
-     * @return assets an array of IAsset-wrapped addresses
-     */
-    function _tokensToAssets(IERC20[] memory tokens)
-        internal
-        pure
-        returns (IAsset[] memory assets)
-    {
-        assets = new IAsset[](tokens.length);
-        for (uint256 i; i < tokens.length; i++) {
-            assets[i] = (IAsset(address(tokens[i])));
-        }
-    }
-
     /**
      * @notice get the ID of the underlying Balancer pool
      * @return poolId
@@ -309,7 +292,7 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(
-            _tokensToAssets(l.tokens),
+            l.tokens,
             amounts,
             userData,
             false
@@ -338,7 +321,7 @@ abstract contract IndexInternal is
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
-            _tokensToAssets(l.tokens),
+            l.tokens,
             minAmountsOut,
             userData,
             false
