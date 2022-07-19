@@ -40,7 +40,7 @@ export function describeBehaviorOfIndexIO(
     const uniswapV2RouterAddress = '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'; //arbitrum
 
     const BASIS = ethers.utils.parseUnits('1', 4);
-    const EXIT_FEE_FACTOR_BP = BASIS.sub(args.exitFeeBP);
+    const EXIT_FEE_FACTOR_64x64 = BASIS.sub(args.exitFeeBP).shl(64).div(BASIS);
     const STREAMING_FEE_FACTOR_PER_SECOND_64x64 = ethers.constants.One.shl(
       64,
     ).sub(
@@ -475,8 +475,8 @@ export function describeBehaviorOfIndexIO(
         const amountOutAfterFee = bptIn
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
           .shr(64 * duration)
-          .mul(EXIT_FEE_FACTOR_BP)
-          .div(BASIS);
+          .mul(EXIT_FEE_FACTOR_64x64)
+          .shr(64);
 
         const newSupply = await investmentPoolToken['totalSupply()']();
 
@@ -540,8 +540,8 @@ export function describeBehaviorOfIndexIO(
           const amountOutAfterFee = returnedAmounts[i]
             .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
             .shr(64 * duration)
-            .mul(EXIT_FEE_FACTOR_BP)
-            .div(BASIS);
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .shr(64);
 
           expect(newUserBalances[i].sub(oldUserBalances[i])).to.eq(
             amountOutAfterFee,
@@ -607,8 +607,8 @@ export function describeBehaviorOfIndexIO(
         const amountOutAfterFee = bptIn
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
           .shr(64 * duration)
-          .mul(EXIT_FEE_FACTOR_BP)
-          .div(BASIS);
+          .mul(EXIT_FEE_FACTOR_64x64)
+          .shr(64);
 
         expect(newProtocolOwnerBalance.sub(oldProtocolOwnerBalance)).to.eq(
           bptIn.sub(amountOutAfterFee),
@@ -693,8 +693,8 @@ export function describeBehaviorOfIndexIO(
         const amountOutAfterFee = bptIn
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
           .shr(64 * duration)
-          .mul(EXIT_FEE_FACTOR_BP)
-          .div(BASIS);
+          .mul(EXIT_FEE_FACTOR_64x64)
+          .shr(64);
 
         const newSupply = await investmentPoolToken['totalSupply()']();
 
@@ -714,8 +714,8 @@ export function describeBehaviorOfIndexIO(
         const amountOutAfterFee = userIndexBalance
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
           .shr(64 * duration)
-          .mul(EXIT_FEE_FACTOR_BP)
-          .div(BASIS);
+          .mul(EXIT_FEE_FACTOR_64x64)
+          .shr(64);
 
         const userData = ethers.utils.solidityPack(
           ['uint256', 'uint256', 'uint256'],
@@ -828,8 +828,8 @@ export function describeBehaviorOfIndexIO(
         const amountOutAfterFee = bptIn
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
           .shr(64 * duration)
-          .mul(EXIT_FEE_FACTOR_BP)
-          .div(BASIS);
+          .mul(EXIT_FEE_FACTOR_64x64)
+          .shr(64);
 
         expect(newProtocolOwnerBalance.sub(oldProtocolOwnerBalance)).to.eq(
           bptIn.sub(amountOutAfterFee),

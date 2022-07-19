@@ -30,7 +30,7 @@ export function describeBehaviorOfIndexBase(
     let receiver: SignerWithAddress;
 
     const BASIS = ethers.utils.parseUnits('1', 4);
-    const EXIT_FEE_FACTOR_BP = BASIS.sub(args.exitFeeBP);
+    const EXIT_FEE_FACTOR_64x64 = BASIS.sub(args.exitFeeBP).shl(64).div(BASIS);
     const STREAMING_FEE_FACTOR_PER_SECOND_64x64 = ethers.constants.One.shl(
       64,
     ).sub(
@@ -124,8 +124,8 @@ export function describeBehaviorOfIndexBase(
           const amountOutAfterFee = shareAmount
             .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
             .shr(64 * duration)
-            .mul(EXIT_FEE_FACTOR_BP)
-            .div(BASIS);
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .shr(64);
 
           const assetAmount = await instance
             .connect(nonProtocolOwner)

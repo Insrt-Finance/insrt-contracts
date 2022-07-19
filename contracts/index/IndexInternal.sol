@@ -37,11 +37,11 @@ abstract contract IndexInternal is
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
 
-    uint256 internal immutable EXIT_FEE_FACTOR_BP;
-    uint256 internal constant BASIS = 10000;
-
+    int128 internal immutable EXIT_FEE_FACTOR_64x64;
     int128 internal immutable STREAMING_FEE_FACTOR_PER_SECOND_64x64;
     int128 internal constant ONE_64x64 = 0x10000000000000000;
+
+    uint256 internal constant BASIS = 10000;
 
     constructor(
         address balancerVault,
@@ -53,7 +53,8 @@ abstract contract IndexInternal is
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
         SWAPPER = swapper;
-        EXIT_FEE_FACTOR_BP = BASIS - exitFeeBP;
+
+        EXIT_FEE_FACTOR_64x64 = ABDKMath64x64.divu(BASIS - exitFeeBP, BASIS);
 
         STREAMING_FEE_FACTOR_PER_SECOND_64x64 = ONE_64x64.sub(
             ABDKMath64x64.divu(streamingFeeBP, BASIS * 365.25 days)
@@ -222,7 +223,7 @@ abstract contract IndexInternal is
         view
         returns (uint256 amountOut)
     {
-        amountOut = (principal * EXIT_FEE_FACTOR_BP) / BASIS;
+        amountOut = EXIT_FEE_FACTOR_64x64.mulu(principal);
     }
 
     /**
