@@ -74,7 +74,7 @@ export function describeBehaviorOfIndexBase(
       }
     });
 
-    describe('overriden ERC4626 internal functions', () => {
+    describe('overridden ERC4626 functions', () => {
       const minBptOut = ethers.utils.parseUnits('1', 'gwei');
       const timeStep = 100;
       let depositTimeStamp;
@@ -120,7 +120,11 @@ export function describeBehaviorOfIndexBase(
         transferAmount = await instance.balanceOf(nonProtocolOwner.address);
       });
 
-      describe('previewRedeem(uint256)', () => {
+      describe('#previewWithdraw(uint256)', () => {
+        it('todo');
+      });
+
+      describe('#previewRedeem(uint256)', () => {
         it('returns the correct amount of BPT for a given amount of IIT for a nonProtocolOwner', async () => {
           const shareAmount = await instance
             .connect(nonProtocolOwner)
@@ -142,7 +146,7 @@ export function describeBehaviorOfIndexBase(
         });
       });
 
-      describe('transfer(address,address,amount)', () => {
+      describe('#transfer(address,address,amount)', () => {
         let snapshotId;
         let fee;
         beforeEach(async () => {
@@ -176,10 +180,12 @@ export function describeBehaviorOfIndexBase(
             .withArgs(receiver.address, 0);
         });
       });
-      describe('_beforeWithdraw(address,uint256,uint256)', () => {});
-      describe('_afterDeposit(address,uint256,uint256)', () => {});
     });
 
-    describeBehaviorOfSolidStateERC4626(deploy, args, skips);
+    describeBehaviorOfSolidStateERC4626(deploy, args, [
+      '#previewWithdraw(uint256)',
+      '#previewRedeem(uint256)',
+      ...(skips ?? []),
+    ]);
   });
 }
