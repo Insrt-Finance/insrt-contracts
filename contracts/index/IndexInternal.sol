@@ -74,6 +74,14 @@ abstract contract IndexInternal is
         return IERC173(_owner()).owner();
     }
 
+    /**
+     * @notice return total fees accrued
+     * @return uint256 total fees accrued
+     */
+    function _feesAccrued() internal view returns (uint256) {
+        return IndexStorage.layout().feesAccrued;
+    }
+
     //remove and save assets instead, saved on deployment?
     /**
      * @notice function to convert IERC20 to IAsset used in Balancer

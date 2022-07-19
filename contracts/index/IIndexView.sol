@@ -17,4 +17,10 @@ interface IIndexView {
      * @return exitFee of the Index
      */
     function exitFee() external view returns (uint256);
+
+    /**
+     * @notice return the total fees accrued
+     * @return uint256 the total fees accrued
+     */
+    function feesAccrued() external view returns (uint256);
 }

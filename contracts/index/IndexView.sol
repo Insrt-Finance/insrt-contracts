@@ -48,4 +48,11 @@ contract IndexView is IndexInternal, IIndexView {
     function exitFee() external view returns (uint256) {
         return BASIS - EXIT_FEE_FACTOR_64x64.mulu(BASIS);
     }
+
+    /**
+     * @inheritdoc IIndexView
+     */
+    function feesAccrued() external view returns (uint256) {
+        return _feesAccrued();
+    }
 }
