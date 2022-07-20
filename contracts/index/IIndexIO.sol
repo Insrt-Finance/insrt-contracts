@@ -73,13 +73,14 @@ interface IIndexIO {
      * @param shareAmount quantity of Index shares to redeem
      * @param minPoolTokenAmounts the minimum amounts of pool tokens received for the withdraw
      * @param receiver recipient of withdrawn pool tokens
+     * @return assetAmount the amount of underlying asset returned for redeemed shares
      * @return poolTokenAmounts quantities of underlying pool tokens yielded
      */
     function redeem(
         uint256 shareAmount,
         uint256[] calldata minPoolTokenAmounts,
         address receiver
-    ) external returns (uint256[] memory poolTokenAmounts);
+    ) external returns (uint256 assetAmount, uint256[] memory poolTokenAmounts);
 
     /**
      * @notice function to withdraw Insrt-shares for a single underlying token
@@ -89,6 +90,7 @@ interface IIndexIO {
      * @param minPoolTokenAmounts minimum quantities of underlying pool tokens yielded
      * @param tokenId the id of the token to be received
      * @param receiver recipient of withdrawn pool tokens
+     * @return assetAmount the amount of underlying asset returned for redeemed shares
      * @return poolTokenAmount quantitiy of underlying pool token with tokenId returned
      */
     function redeem(
@@ -96,5 +98,5 @@ interface IIndexIO {
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address receiver
-    ) external returns (uint256 poolTokenAmount);
+    ) external returns (uint256 assetAmount, uint256 poolTokenAmount);
 }

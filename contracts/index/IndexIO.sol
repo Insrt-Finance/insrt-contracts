@@ -181,8 +181,11 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 shareAmount,
         uint256[] calldata minPoolTokenAmounts,
         address receiver
-    ) external returns (uint256[] memory poolTokenAmounts) {
-        uint256 assetAmount = _previewRedeem(shareAmount);
+    )
+        external
+        returns (uint256 assetAmount, uint256[] memory poolTokenAmounts)
+    {
+        assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
@@ -212,8 +215,8 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address receiver
-    ) external returns (uint256 poolTokenAmount) {
-        uint256 assetAmount = _previewRedeem(shareAmount);
+    ) external returns (uint256 assetAmount, uint256 poolTokenAmount) {
+        assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
