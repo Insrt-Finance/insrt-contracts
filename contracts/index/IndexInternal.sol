@@ -261,18 +261,20 @@ abstract contract IndexInternal is
      * @notice calculate and collect accrued streaming fees
      * @param account address which owes streaming fees
      * @param amount quantity of share tokens to subject to fee calculation
-     * @param exit whether fee collection is triggered by vault exit
+     * @param checkpoint whether to update fee collection timestamp (should be true if processing account's full balance)
+     * @param burn whether to burn tokens held by account corresponding to fee amount (should be true except on vault exit)
      */
     function _collectStreamingFee(
         address account,
         uint256 amount,
-        bool exit
+        bool checkpoint,
+        bool burn
     ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         uint256 feeUpdatedAt = l.feeUpdatedAt[account];
 
-        if (!exit) {
+        if (checkpoint) {
             l.feeUpdatedAt[account] = block.timestamp;
         }
 
@@ -283,10 +285,9 @@ abstract contract IndexInternal is
 
         if (account == address(0)) {
             l.feesAccrued += fee;
-        } else if (!exit) {
-            // `exit` is true in withdraw and redeem calls
-            // these functions execute burn internally, only burn if false
+        }
 
+        if (burn) {
             _burn(account, fee);
         }
 
@@ -363,13 +364,13 @@ abstract contract IndexInternal is
         address receiver,
         uint256 amount
     ) internal virtual override returns (bool) {
-        _collectStreamingFee(receiver, _balanceOf(receiver), false);
+        _collectStreamingFee(receiver, _balanceOf(receiver), true, true);
 
         return
             super._transfer(
                 holder,
                 receiver,
-                _collectStreamingFee(holder, amount, false)
+                _collectStreamingFee(holder, amount, false, true)
             );
     }
 
@@ -384,8 +385,11 @@ abstract contract IndexInternal is
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
-        _collectStreamingFee(address(0), _totalSupply(), false);
-        _collectExitFee(owner, _collectStreamingFee(owner, shareAmount, true));
+        _collectStreamingFee(address(0), _totalSupply(), true, false);
+        _collectExitFee(
+            owner,
+            _collectStreamingFee(owner, shareAmount, false, false)
+        );
     }
 
     /**
@@ -404,12 +408,14 @@ abstract contract IndexInternal is
             _collectStreamingFee(
                 address(0),
                 _totalSupply() - shareAmount,
+                true,
                 false
             );
             _collectStreamingFee(
                 receiver,
                 _balanceOf(receiver) - shareAmount,
-                false
+                true,
+                true
             );
         }
     }
