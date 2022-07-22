@@ -13,6 +13,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getBalancerContractAddress } from '@balancer-labs/v2-deployments';
 import { defaultAbiCoder } from 'ethers/lib/utils';
+import { totalmem } from 'os';
 
 export interface IndexIOBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
@@ -423,6 +424,7 @@ export function describeBehaviorOfIndexIO(
 
       it('burns BPT at 1:1 for shares - fee', async () => {
         const userBalance = await instance.balanceOf(depositor.address);
+        console.log('ub: ', userBalance);
         const userData = ethers.utils.solidityPack(
           ['uint256', 'uint256'],
           [ethers.BigNumber.from('1'), userBalance],
@@ -551,11 +553,6 @@ export function describeBehaviorOfIndexIO(
 
       it('increases fees accrued by sum of exit and streaming fees', async () => {
         const userBalance = await instance.balanceOf(depositor.address);
-        const protocolOwnerBalance = await instance.balanceOf(
-          protocolOwner.address,
-        );
-
-        const totalSupply = userBalance.add(protocolOwnerBalance);
 
         const userData = ethers.utils.solidityPack(
           ['uint256', 'uint256'],
@@ -606,23 +603,15 @@ export function describeBehaviorOfIndexIO(
 
         const duration = redeemTimestamp - depositTimeStamp;
 
-        const amountOutAfterStreamingFee = bptIn
+        const amountOutAfterFee = bptIn
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
-          .shr(64 * duration);
-
-        const amountOutAfterExitFee = amountOutAfterStreamingFee
+          .shr(64 * duration)
           .mul(EXIT_FEE_FACTOR_64x64)
           .shr(64);
 
-        const exitFee = amountOutAfterStreamingFee.sub(amountOutAfterExitFee);
+        const totalFee = bptIn.sub(amountOutAfterFee);
 
-        const totalSupplyStreamingFee = totalSupply.sub(
-          totalSupply
-            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
-            .shr(64 * duration),
-        );
-
-        expect(redeemFeesAccrued).to.eq(exitFee.add(totalSupplyStreamingFee));
+        expect(redeemFeesAccrued).to.eq(totalFee);
       });
     });
 
@@ -779,11 +768,6 @@ export function describeBehaviorOfIndexIO(
 
       it('increases fees accrued by sum of exit and streaming fees', async () => {
         const userBalance = await instance.balanceOf(depositor.address);
-        const protocolOwnerBalance = await instance.balanceOf(
-          protocolOwner.address,
-        );
-
-        const totalSupply = userBalance.add(protocolOwnerBalance);
 
         const tokenId = ethers.constants.Zero;
 
@@ -837,23 +821,15 @@ export function describeBehaviorOfIndexIO(
 
         const duration = redeemTimestamp - depositTimeStamp;
 
-        const amountOutAfterStreamingFee = bptIn
+        const amountOutAfterFee = bptIn
           .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
-          .shr(64 * duration);
-
-        const amountOutAfterExitFee = amountOutAfterStreamingFee
+          .shr(64 * duration)
           .mul(EXIT_FEE_FACTOR_64x64)
           .shr(64);
 
-        const exitFee = amountOutAfterStreamingFee.sub(amountOutAfterExitFee);
+        const totalFee = bptIn.sub(amountOutAfterFee);
 
-        const totalSupplyStreamingFee = totalSupply.sub(
-          totalSupply
-            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
-            .shr(64 * duration),
-        );
-
-        expect(redeemFeesAccrued).to.eq(totalSupplyStreamingFee.add(exitFee));
+        expect(redeemFeesAccrued).to.eq(totalFee);
       });
     });
   });
