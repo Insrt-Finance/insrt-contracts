@@ -157,7 +157,61 @@ export function describeBehaviorOfIndexIO(
     });
 
     describe('#collectStreamingFees(address[])', () => {
-      it('todo');
+      it('burns streaming fee amount of IIT in provided accounts', async () => {
+        const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+        const userData = defaultAbiCoder.encode(
+          ['uint256', 'uint256[]', 'uint256'],
+          [ethers.BigNumber.from('1'), poolTokenAmounts, minBptOut],
+        );
+
+        const request = {
+          assets: args.tokens,
+          maxAmountsIn: poolTokenAmounts,
+          userData: userData,
+          fromInternalBalance: false,
+        };
+
+        const [bptOut, requiredAmounts] = await balancerHelpers
+          .connect(depositor)
+          .callStatic.queryJoin(
+            await instance.callStatic.getPoolId(),
+            instance.address,
+            instance.address,
+            request,
+          );
+
+        await instance
+          .connect(depositor)
+          ['deposit(uint256[],uint256,address)'](
+            poolTokenAmounts,
+            minBptOut,
+            depositor.address,
+          );
+
+        const { timestamp: depositTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const duration = 100;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          depositTimeStamp + duration,
+        ]);
+
+        const streamingFee = bptOut.sub(
+          bptOut
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration),
+        );
+
+        await expect(() =>
+          instance.collectStreamingFees([depositor.address]),
+        ).to.changeTokenBalance(
+          instance,
+          depositor,
+          streamingFee.mul(ethers.constants.NegativeOne),
+        );
+      });
     });
 
     describe('#deposit(uint256[],uint256)', () => {
@@ -424,7 +478,7 @@ export function describeBehaviorOfIndexIO(
 
       it('burns BPT at 1:1 for shares - fee', async () => {
         const userBalance = await instance.balanceOf(depositor.address);
-        console.log('ub: ', userBalance);
+
         const userData = ethers.utils.solidityPack(
           ['uint256', 'uint256'],
           [ethers.BigNumber.from('1'), userBalance],
