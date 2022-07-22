@@ -272,13 +272,13 @@ abstract contract IndexInternal is
     ) internal returns (uint256 amountOut) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
-        if (amount == 0) return 0;
-
         uint256 feeUpdatedAt = l.feeUpdatedAt[account];
 
         if (checkpoint) {
             l.feeUpdatedAt[account] = block.timestamp;
         }
+
+        if (amount == 0) return 0;
 
         amountOut = _applyStreamingFee(amount, feeUpdatedAt);
         uint256 fee = amount - amountOut;
@@ -385,7 +385,7 @@ abstract contract IndexInternal is
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
-        _collectStreamingFee(address(0), _totalSupply(), true, false);
+        _collectStreamingFee(address(0), shareAmount, false, false);
         _collectExitFee(
             owner,
             _collectStreamingFee(owner, shareAmount, false, false)
@@ -411,6 +411,7 @@ abstract contract IndexInternal is
                 true,
                 false
             );
+
             _collectStreamingFee(
                 receiver,
                 _balanceOf(receiver) - shareAmount,
