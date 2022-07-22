@@ -267,7 +267,8 @@ describe('IndexProxy', () => {
     name: `Insrt Finance InfraIndex #${id}`,
     symbol: `IFII-${id}`,
     decimals: ethers.BigNumber.from('18'),
-    supply: ethers.constants.Zero,
+    // TODO: update SolidState to prevent need for magic number
+    supply: ethers.BigNumber.from('0x0de0b6b39db5e1ea'),
 
     tokens: tokensArg,
     weights: weightsArg,
