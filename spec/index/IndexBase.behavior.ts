@@ -82,6 +82,10 @@ export function describeBehaviorOfIndexBase(
     describeBehaviorOfSolidStateERC4626(deploy, args, [
       '#previewWithdraw(uint256)',
       '#previewRedeem(uint256)',
+      '#transfer(address,uint256)',
+      '#transferFrom(address,address,uint256)',
+      '#withdraw(uint256,address,address)',
+      '#redeem(uint256,address,address)',
       ...(skips ?? []),
     ]);
 
@@ -285,6 +289,18 @@ export function describeBehaviorOfIndexBase(
               .transfer(receiver.address, amount),
           ).to.changeTokenBalance(instance, receiver, receiverBalanceChange);
         });
+      });
+
+      describe('#transferFrom(address,address,uint256)', () => {
+        it('todo');
+      });
+
+      describe('#withdraw(uint256,address,address)', () => {
+        it('todo');
+      });
+
+      describe('#redeem(uint256,address,address)', () => {
+        it('todo');
       });
     });
   });
