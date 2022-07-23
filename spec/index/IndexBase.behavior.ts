@@ -230,7 +230,7 @@ export function describeBehaviorOfIndexBase(
           // TODO: no event emitted for receiver if receiver balance is 0
         });
 
-        it('transfers amount minus holder fee and burns receiver fee', async () => {
+        it('collects streaming fee from amount transferred by holder and balance of receiver', async () => {
           const minBptOut = ethers.utils.parseUnits('1', 'gwei');
           let tx = await instance
             .connect(nonProtocolOwner)
@@ -292,7 +292,112 @@ export function describeBehaviorOfIndexBase(
       });
 
       describe('#transferFrom(address,address,uint256)', () => {
-        it('todo');
+        it('emits StreamingFeePaid event', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const amount = await instance.balanceOf(nonProtocolOwner.address);
+
+          await instance
+            .connect(nonProtocolOwner)
+            .increaseAllowance(receiver.address, amount);
+
+          const duration = 100;
+          const transferTimestamp = depositTimestamp + duration;
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          const amountAfterFee = amount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration);
+
+          const fee = amount.sub(amountAfterFee);
+
+          await expect(
+            instance
+              .connect(receiver)
+              .transferFrom(nonProtocolOwner.address, receiver.address, amount),
+          )
+            .to.emit(instance, 'StreamingFeePaid')
+            .withArgs(nonProtocolOwner.address, fee);
+        });
+
+        it('collects streaming fee from amount transferred by holder and balance of receiver', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+          let tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber: nonProtocolOwnerNumber } = await tx.wait();
+          const { timestamp: nonProtocolOwnerDeposit } =
+            await ethers.provider.getBlock(nonProtocolOwnerNumber);
+
+          tx = await instance
+            .connect(receiver)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              receiver.address,
+            );
+
+          const { blockNumber: receiverNumber } = await tx.wait();
+          const { timestamp: receiverDeposit } = await ethers.provider.getBlock(
+            receiverNumber,
+          );
+
+          const duration = 100;
+          const transferTimestamp = nonProtocolOwnerDeposit + duration;
+          const receiverDuration = transferTimestamp - receiverDeposit;
+
+          const amount = await instance.callStatic.balanceOf(
+            nonProtocolOwner.address,
+          );
+          const receiverBalance = await instance.callStatic.balanceOf(
+            receiver.address,
+          );
+
+          await instance
+            .connect(nonProtocolOwner)
+            .increaseAllowance(receiver.address, amount);
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          const amountAfterFee = amount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration);
+
+          const receiverBalanceAfterFee = receiverBalance
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(receiverDuration))
+            .shr(64 * receiverDuration);
+
+          const receiverFee = receiverBalance.sub(receiverBalanceAfterFee);
+          const receiverBalanceChange = amountAfterFee.sub(receiverFee);
+
+          await expect(() =>
+            instance
+              .connect(receiver)
+              .transferFrom(nonProtocolOwner.address, receiver.address, amount),
+          ).to.changeTokenBalance(instance, receiver, receiverBalanceChange);
+        });
       });
 
       describe('#withdraw(uint256,address,address)', () => {
