@@ -614,12 +614,55 @@ export function describeBehaviorOfIndexBase(
                 ),
             ).to.be.revertedWith('ERC4626: maximum amount exceeded');
           });
-          it('owner is not caller', async () => {
+          it('share amount exceeds allowance', async () => {
+            const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+            await instance
+              .connect(nonProtocolOwner)
+              ['deposit(uint256[],uint256,address)'](
+                poolTokenAmounts,
+                minBptOut,
+                nonProtocolOwner.address,
+              );
+
+            const shareAmount = await instance.balanceOf(
+              nonProtocolOwner.address,
+            );
+
             await expect(
               instance
                 .connect(receiver)
                 ['withdraw(uint256,address,address)'](
-                  ethers.constants.MaxUint256,
+                  shareAmount,
+                  nonProtocolOwner.address,
+                  nonProtocolOwner.address,
+                ),
+            ).to.be.revertedWith('ERC4626: share amount exceeds allowance');
+          });
+
+          it('owner is not caller', async () => {
+            const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+            await instance
+              .connect(nonProtocolOwner)
+              ['deposit(uint256[],uint256,address)'](
+                poolTokenAmounts,
+                minBptOut,
+                nonProtocolOwner.address,
+              );
+
+            const shareAmount = await instance.balanceOf(
+              nonProtocolOwner.address,
+            );
+            await instance
+              .connect(nonProtocolOwner)
+              .approve(receiver.address, ethers.constants.MaxUint256);
+
+            await expect(
+              instance
+                .connect(receiver)
+                ['withdraw(uint256,address,address)'](
+                  shareAmount,
                   nonProtocolOwner.address,
                   nonProtocolOwner.address,
                 ),
