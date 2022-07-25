@@ -376,6 +376,20 @@ abstract contract IndexInternal is
 
     /**
      * @inheritdoc ERC4626BaseInternal
+     * @dev require statement necessary for correct fee calculations in previewWithdraw
+     */
+    function _withdraw(
+        uint256 assetAmount,
+        address receiver,
+        address owner
+    ) internal virtual override returns (uint256 shareAmount) {
+        require(owner == msg.sender, 'only owner can withdraw');
+
+        shareAmount = super._withdraw(assetAmount, receiver, owner);
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
      * @dev apply exit fee and streaming to shareAmount
      */
     function _beforeWithdraw(
@@ -384,6 +398,8 @@ abstract contract IndexInternal is
         uint256 shareAmount
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
+
+        //require(owner == msg.sender, 'only owner can withdraw');
 
         _collectStreamingFee(address(0), shareAmount, false, false);
         _collectExitFee(

@@ -159,4 +159,19 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     ) internal override(ERC4626BaseInternal, IndexInternal) {
         super._afterDeposit(receiver, assetAmount, shareAmount);
     }
+
+    /**
+     * @inheritdoc IndexInternal
+     */
+    function _withdraw(
+        uint256 assetAmount,
+        address receiver,
+        address owner
+    )
+        internal
+        override(ERC4626BaseInternal, IndexInternal)
+        returns (uint256 shareAmount)
+    {
+        shareAmount = super._withdraw(assetAmount, receiver, owner);
+    }
 }
