@@ -85,7 +85,7 @@ export function describeBehaviorOfIndexBase(
       '#transfer(address,uint256)',
       '#transferFrom(address,address,uint256)',
       '#withdraw(uint256,address,address)',
-      //'#redeem(uint256,address,address)',
+      '#redeem(uint256,address,address)',
       ...(skips ?? []),
     ]);
 
