@@ -85,7 +85,7 @@ export function describeBehaviorOfIndexBase(
       '#transfer(address,uint256)',
       '#transferFrom(address,address,uint256)',
       '#withdraw(uint256,address,address)',
-      '#redeem(uint256,address,address)',
+      //'#redeem(uint256,address,address)',
       ...(skips ?? []),
     ]);
 
@@ -401,11 +401,243 @@ export function describeBehaviorOfIndexBase(
       });
 
       describe('#withdraw(uint256,address,address)', () => {
-        it('todo');
+        it('transfers assets to receiver', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const shareAmount = await instance.balanceOf(
+            nonProtocolOwner.address,
+          );
+
+          const duration = 100;
+          const transferTimestamp = depositTimestamp + duration;
+
+          const assetAmount = shareAmount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration)
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .shr(64);
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          const investmentPooltoken = await ethers.getContractAt(
+            '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+            await instance.asset(),
+          );
+
+          await expect(() =>
+            instance
+              .connect(nonProtocolOwner)
+              ['withdraw(uint256,address,address)'](
+                assetAmount,
+                nonProtocolOwner.address,
+                nonProtocolOwner.address,
+              ),
+          ).to.changeTokenBalance(
+            investmentPooltoken,
+            nonProtocolOwner,
+            assetAmount,
+          );
+        });
+
+        it('burns shares held by depositor', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const shareAmount = await instance.balanceOf(
+            nonProtocolOwner.address,
+          );
+
+          const duration = 100;
+          const transferTimestamp = depositTimestamp + duration;
+
+          const assetAmount = shareAmount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration)
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .shr(64);
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          await expect(() =>
+            instance
+              .connect(nonProtocolOwner)
+              ['withdraw(uint256,address,address)'](
+                assetAmount,
+                nonProtocolOwner.address,
+                nonProtocolOwner.address,
+              ),
+          ).to.changeTokenBalance(
+            instance,
+            nonProtocolOwner,
+            ethers.constants.NegativeOne.mul(shareAmount),
+          );
+        });
+
+        it('emits Withdraw event', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const shareAmount = await instance.balanceOf(
+            nonProtocolOwner.address,
+          );
+
+          const duration = 100;
+          const transferTimestamp = depositTimestamp + duration;
+
+          const assetAmount = shareAmount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration)
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .shr(64);
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          await expect(
+            instance
+              .connect(nonProtocolOwner)
+              ['withdraw(uint256,address,address)'](
+                assetAmount,
+                nonProtocolOwner.address,
+                nonProtocolOwner.address,
+              ),
+          )
+            .to.emit(instance, 'Withdraw')
+            .withArgs(
+              nonProtocolOwner.address,
+              nonProtocolOwner.address,
+              nonProtocolOwner.address,
+              assetAmount,
+              shareAmount,
+            );
+        });
+
+        it('emits StreamingFeePaid event', async () => {
+          const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+          const tx = await instance
+            .connect(nonProtocolOwner)
+            ['deposit(uint256[],uint256,address)'](
+              poolTokenAmounts,
+              minBptOut,
+              nonProtocolOwner.address,
+            );
+
+          const { blockNumber } = await tx.wait();
+          const { timestamp: depositTimestamp } =
+            await ethers.provider.getBlock(blockNumber);
+
+          const shareAmount = await instance.balanceOf(
+            nonProtocolOwner.address,
+          );
+
+          const duration = 100;
+          const transferTimestamp = depositTimestamp + duration;
+
+          const assetAmount = shareAmount
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+            .shr(64 * duration)
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .shr(64);
+
+          const streamingFee = shareAmount.sub(
+            shareAmount
+              .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+              .shr(64 * duration),
+          );
+
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            transferTimestamp,
+          ]);
+
+          await expect(
+            instance
+              .connect(nonProtocolOwner)
+              ['withdraw(uint256,address,address)'](
+                assetAmount,
+                nonProtocolOwner.address,
+                nonProtocolOwner.address,
+              ),
+          )
+            .to.emit(instance, 'StreamingFeePaid')
+            .withArgs(nonProtocolOwner.address, streamingFee);
+        });
+
+        describe('reverts if', () => {
+          it('withdraw amount is too large', async () => {
+            await expect(
+              instance
+                .connect(nonProtocolOwner)
+                ['withdraw(uint256,address,address)'](
+                  ethers.constants.MaxUint256,
+                  nonProtocolOwner.address,
+                  nonProtocolOwner.address,
+                ),
+            ).to.be.revertedWith('ERC4626: maximum amount exceeded');
+          });
+          it('owner is not caller', async () => {
+            await expect(
+              instance
+                .connect(receiver)
+                ['withdraw(uint256,address,address)'](
+                  ethers.constants.MaxUint256,
+                  nonProtocolOwner.address,
+                  nonProtocolOwner.address,
+                ),
+            ).to.be.revertedWith('only owner can withdraw');
+          });
+        });
       });
 
       describe('#redeem(uint256,address,address)', () => {
-        it('todo');
+        it('transfers assets to receiver', async () => {});
+        it('burns shares held by depositor', async () => {});
+        it('emits Withdraw event', async () => {});
+        it('emits StreamingFeePaid event', async () => {});
+        describe('reverts if', () => {
+          it('redeem amount is too large', async () => {});
+
+          it('share amount exceeds allowance', async () => {});
+        });
       });
     });
   });
