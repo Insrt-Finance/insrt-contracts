@@ -54,6 +54,10 @@ contract IndexIO is IndexInternal, IIndexIO {
             receiver,
             _previewDeposit(IERC20(_asset()).balanceOf(address(this)))
         );
+
+        //no requirement for burning or accrual of fees since this is first mint
+        IndexStorage.layout().feeUpdatedAt[address(0)] = block.timestamp;
+        IndexStorage.layout().feeUpdatedAt[receiver] = block.timestamp;
     }
 
     /**
