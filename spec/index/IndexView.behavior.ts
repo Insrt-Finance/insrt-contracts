@@ -40,7 +40,7 @@ export function describeBehaviorOfIndexView(
     });
 
     describe('#getExitFee()', () => {
-      it('todo', async () => {});
+      it('todo');
     });
   });
 }

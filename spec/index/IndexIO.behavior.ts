@@ -153,7 +153,22 @@ export function describeBehaviorOfIndexIO(
     });
 
     describe('#initialize(uint256[], address)', () => {
-      it('todo');
+      describe('reverts if', () => {
+        it('called after deployment', async () => {
+          //error is "unhandled join" but balancer does not have anything for 'already initialized'
+          await expect(
+            instance
+              .connect(depositor)
+              ['initialize(uint256[],address)'](
+                [
+                  ethers.utils.parseEther('1.0'),
+                  ethers.utils.parseEther('1.0'),
+                ],
+                depositor.address,
+              ),
+          ).to.be.revertedWith('BAL#310');
+        });
+      });
     });
 
     describe('#collectStreamingFees(address[])', () => {
