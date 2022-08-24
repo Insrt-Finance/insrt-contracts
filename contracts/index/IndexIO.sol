@@ -25,8 +25,17 @@ contract IndexIO is IndexInternal, IIndexIO {
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee
-    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
+        uint256 exitFeeBP,
+        uint256 streamingFeeBP
+    )
+        IndexInternal(
+            balancerVault,
+            balancerHelpers,
+            swapper,
+            exitFeeBP,
+            streamingFeeBP
+        )
+    {}
 
     /**
      * @inheritdoc IIndexIO
@@ -45,6 +54,22 @@ contract IndexIO is IndexInternal, IIndexIO {
             receiver,
             _previewDeposit(IERC20(_asset()).balanceOf(address(this)))
         );
+
+        //no requirement for burning or accrual of fees since this is first mint
+        IndexStorage.layout().feeUpdatedAt[address(0)] = block.timestamp;
+        IndexStorage.layout().feeUpdatedAt[receiver] = block.timestamp;
+    }
+
+    /**
+     * @inheritdoc IIndexIO
+     */
+    function collectStreamingFees(address[] calldata accounts) external {
+        unchecked {
+            for (uint256 i; i < accounts.length; i++) {
+                address account = accounts[i];
+                _collectStreamingFee(account, _balanceOf(account), true, true);
+            }
+        }
     }
 
     /**
@@ -78,11 +103,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             }
         }
 
+        uint256 oldAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
         _joinPool(poolTokenAmounts, userData);
 
-        shareAmount =
-            IERC20(_asset()).balanceOf(address(this)) -
-            _totalSupply();
+        uint256 newAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
+        // because assets and shares are pegged 1:1, change in asset balance is equal to change in share balance
+        shareAmount = newAssetBalance - oldAssetBalance;
 
         _deposit(
             msg.sender,
@@ -131,11 +159,14 @@ contract IndexIO is IndexInternal, IIndexIO {
             minShareAmount
         );
 
+        uint256 oldAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
         _joinPool(poolTokenAmounts, userData);
 
-        shareAmount =
-            IERC20(_asset()).balanceOf(address(this)) -
-            _totalSupply();
+        uint256 newAssetBalance = IERC20(_asset()).balanceOf(address(this));
+
+        // because assets and shares are pegged 1:1, change in asset balance is equal to change in share balance
+        shareAmount = newAssetBalance - oldAssetBalance;
 
         _deposit(
             msg.sender,
@@ -154,35 +185,30 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256 shareAmount,
         uint256[] calldata minPoolTokenAmounts,
         address receiver
-    ) external returns (uint256[] memory poolTokenAmounts) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        // because assets and shares are pegged 1:1, output can be treated as share amount
-        uint256 shareAmountOut = _previewRedeem(shareAmount);
+    )
+        external
+        returns (uint256 assetAmount, uint256[] memory poolTokenAmounts)
+    {
+        assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT,
-            shareAmountOut
+            assetAmount
         );
 
-        poolTokenAmounts = _exitPool(
-            l,
-            minPoolTokenAmounts,
-            userData,
-            receiver
-        );
+        poolTokenAmounts = _exitPool(minPoolTokenAmounts, userData, receiver);
+
+        // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
 
         _withdraw(
             msg.sender,
             receiver,
             msg.sender,
-            shareAmountOut,
-            shareAmountOut,
-            shareAmountOut,
+            assetAmount,
+            shareAmount,
+            assetAmount,
             0
         );
-
-        // TODO: set poolTokenAmounts values
     }
 
     /**
@@ -193,36 +219,29 @@ contract IndexIO is IndexInternal, IIndexIO {
         uint256[] memory minPoolTokenAmounts,
         uint256 tokenId,
         address receiver
-    ) external returns (uint256 poolTokenAmount) {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        // because assets and shares are pegged 1:1, output can be treated as share amount
-        uint256 shareAmountOut = _previewRedeem(shareAmount);
+    ) external returns (uint256 assetAmount, uint256 poolTokenAmount) {
+        assetAmount = _previewRedeem(shareAmount);
 
         bytes memory userData = abi.encode(
             IInvestmentPool.ExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-            shareAmountOut,
+            assetAmount,
             tokenId
         );
 
-        uint256[] memory poolTokenAmounts = _exitPool(
-            l,
-            minPoolTokenAmounts,
-            userData,
-            receiver
-        );
-        poolTokenAmount = poolTokenAmounts[tokenId];
+        poolTokenAmount = _exitPool(minPoolTokenAmounts, userData, receiver)[
+            tokenId
+        ];
+
+        // set assetAmount as assetAmountOffset to avoid transferring BPT to receiver
 
         _withdraw(
             msg.sender,
             receiver,
             msg.sender,
-            shareAmountOut,
-            shareAmountOut,
-            shareAmountOut,
+            assetAmount,
+            shareAmount,
+            assetAmount,
             0
         );
-
-        // TODO: set poolTokenAmounts values
     }
 }

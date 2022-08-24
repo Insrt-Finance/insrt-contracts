@@ -1,4 +1,4 @@
-import { ethers } from 'hardhat';
+import hre, { ethers } from 'hardhat';
 import {
   ICore,
   ICore__factory,
@@ -26,6 +26,7 @@ import { BigNumber, ContractTransaction } from 'ethers';
 import { describeBehaviorOfERC20Metadata } from '@solidstate/spec';
 import { describeBehaviorOfIndexProxy } from '../../spec/index/IndexProxy.behavior';
 import { defaultAbiCoder } from 'ethers/lib/utils';
+import { expect } from 'chai';
 
 const BALANCER_HELPERS = '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab'; //arbitrum
 
@@ -33,12 +34,16 @@ describe('IndexProxy', () => {
   let snapshotId: number;
 
   let deployer: any;
+  let user1: any;
+  let user2: any;
+  let user3: any;
 
   let balancerVault: IVault;
   let core: ICore;
   let instance: IIndex;
   let balancerPool: IERC20;
 
+  let deploymentTS: number;
   const tokensArg: string[] = [];
   const weightsArg: BigNumber[] = [];
   const amountsArg: BigNumber[] = [];
@@ -46,11 +51,12 @@ describe('IndexProxy', () => {
   const swapperArg: string[] = [];
 
   const id = 1;
+  const EXIT_FEE_BP = ethers.utils.parseUnits('0.02', 4);
+  const STREAMING_FEE_BP = ethers.utils.parseUnits('0.015', 4);
 
   before(async () => {
-    [deployer] = await ethers.getSigners();
-
-    const EXIT_FEE = ethers.constants.Zero;
+    // TODO: must skip signers because they're not parameterized in SolidState spec
+    [, , , deployer, user1, user2, user3] = await ethers.getSigners();
 
     const balancerVaultAddress = await getBalancerContractAddress(
       '20210418-vault',
@@ -72,7 +78,6 @@ describe('IndexProxy', () => {
     const coreDiamond = await new Core__factory(deployer).deploy();
 
     const indexDiamond = await new IndexDiamond__factory(deployer).deploy();
-
     const coreFacetCuts = [
       await new IndexManager__factory(deployer).deploy(
         indexDiamond.address,
@@ -96,25 +101,29 @@ describe('IndexProxy', () => {
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new IndexIO__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new IndexView__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new IndexSettings__factory(deployer).deploy(
         balancerVault.address,
         BALANCER_HELPERS,
         swapper.address,
-        EXIT_FEE,
+        EXIT_FEE_BP,
+        STREAMING_FEE_BP,
       ),
       await new SolidStateERC20Mock__factory(deployer).deploy('', ''),
     ].map(function (f) {
@@ -189,8 +198,11 @@ describe('IndexProxy', () => {
       .connect(deployer)
       .deployIndex(tokensArg, weightsArg, amountsArg);
 
-    const { events } = await deployIndexTx.wait();
+    const { events, blockNumber } = await deployIndexTx.wait();
     const { deployment } = events.find((e) => e.event === 'IndexDeployed').args;
+    const { timestamp } = await ethers.provider.getBlock(blockNumber);
+
+    deploymentTS = timestamp;
 
     instance = IIndex__factory.connect(deployment, deployer);
 
@@ -209,6 +221,7 @@ describe('IndexProxy', () => {
   });
 
   describeBehaviorOfIndexProxy(async () => instance, {
+    getProtocolOwner: async () => deployer,
     // TODO: replace circular `asset` logic with Balancer event output
     getAsset: async () =>
       IERC20__factory.connect(
@@ -262,11 +275,14 @@ describe('IndexProxy', () => {
     name: `Insrt Finance InfraIndex #${id}`,
     symbol: `IFII-${id}`,
     decimals: ethers.BigNumber.from('18'),
-    supply: ethers.constants.Zero,
+    // TODO: update SolidState to prevent need for magic number
+    supply: ethers.BigNumber.from('0x0de0b6b39db5e1ea'),
 
     tokens: tokensArg,
     weights: weightsArg,
     swapper: swapperArg,
+    streamingFeeBP: STREAMING_FEE_BP,
+    exitFeeBP: EXIT_FEE_BP,
 
     implementationFunction: 'name()',
     implementationFunctionArgs: [],
@@ -282,5 +298,552 @@ describe('IndexProxy', () => {
         decimals: ethers.BigNumber.from('18'),
       },
     );
+  });
+
+  describe('multiple deposit and withdrawal scenarios', () => {
+    const mintAmount = ethers.utils.parseEther('100000000');
+    const timestep = 100;
+
+    const BASIS = ethers.utils.parseUnits('1', 4);
+    const EXIT_FEE_FACTOR_64x64 = BASIS.sub(EXIT_FEE_BP).shl(64).div(BASIS);
+    const STREAMING_FEE_FACTOR_PER_SECOND_64x64 = ethers.constants.One.shl(
+      64,
+    ).sub(
+      STREAMING_FEE_BP.shl(64)
+        .div(365.25 * 86400)
+        .div(BASIS),
+    );
+
+    const poolTokenAmounts: BigNumber[] = [];
+    let totalWeight: BigNumber = BigNumber.from('0');
+
+    before(async () => {
+      const tokens = await Promise.all(
+        tokensArg.map(
+          async (t) => await ethers.getContractAt('SolidStateERC20Mock', t),
+        ),
+      );
+
+      for (let i = 0; i < tokens.length; i++) {
+        await tokens[i].__mint(user1.address, mintAmount);
+        await tokens[i].__mint(user2.address, mintAmount);
+        await tokens[i].__mint(user3.address, mintAmount);
+
+        await tokens[i]
+          .connect(user1)
+          ['increaseAllowance(address,uint256)'](
+            instance.address,
+            ethers.constants.MaxUint256,
+          );
+        await tokens[i]
+          .connect(user2)
+          ['increaseAllowance(address,uint256)'](
+            instance.address,
+            ethers.constants.MaxUint256,
+          );
+        await tokens[i]
+          .connect(user3)
+          ['increaseAllowance(address,uint256)'](
+            instance.address,
+            ethers.constants.MaxUint256,
+          );
+      }
+
+      totalWeight = weightsArg.reduce((a, b) => {
+        return a.add(b);
+      });
+
+      for (let i = 0; i < tokensArg.length; i++) {
+        let unweightedAmount = ethers.utils.parseEther('0.01');
+        let depositAmount = unweightedAmount
+          .mul(weightsArg[i])
+          .div(totalWeight);
+        poolTokenAmounts.push(depositAmount);
+      }
+    });
+
+    it('accounts for feesAccrued after sequential deposits', async () => {
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+      const deposit1TS = deploymentTS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit1TS,
+      ]);
+
+      await instance
+        .connect(user1)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user1.address,
+        );
+
+      const user1Balance = await instance.callStatic['balanceOf(address)'](
+        user1.address,
+      );
+      let totalSupply = await instance.callStatic['totalSupply()']();
+      let supplyChange = totalSupply.sub(user1Balance);
+
+      let streamingFees = supplyChange.sub(
+        supplyChange
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+          .shr(64 * timestep),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const deposit2TS = deposit1TS + timestep;
+
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit2TS,
+      ]);
+
+      await instance
+        .connect(user2)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user2.address,
+        );
+
+      const user2Balance = await instance.callStatic['balanceOf(address)'](
+        user2.address,
+      );
+      totalSupply = await instance.callStatic['totalSupply()']();
+      supplyChange = totalSupply.sub(user2Balance);
+
+      streamingFees = streamingFees.add(
+        supplyChange.sub(
+          supplyChange
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+            .shr(64 * timestep),
+        ),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const deposit3TS = deposit2TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit3TS,
+      ]);
+
+      await instance
+        .connect(user3)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user3.address,
+        );
+
+      const user3Balance = await instance.callStatic['balanceOf(address)'](
+        user3.address,
+      );
+      totalSupply = await instance.callStatic['totalSupply()']();
+      supplyChange = totalSupply.sub(user3Balance);
+
+      streamingFees = streamingFees.add(
+        supplyChange.sub(
+          supplyChange
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+            .shr(64 * timestep),
+        ),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+    });
+
+    it('accounts for feesAccrued after sequential deposits and sequential redeems', async () => {
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+      const deposit1TS = deploymentTS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit1TS,
+      ]);
+
+      await instance
+        .connect(user1)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user1.address,
+        );
+
+      const shares1 = await instance.callStatic['balanceOf(address)'](
+        user1.address,
+      );
+      let totalSupply = await instance.callStatic['totalSupply()']();
+      let supplyChange = totalSupply.sub(shares1);
+
+      let streamingFees = supplyChange.sub(
+        supplyChange
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+          .shr(64 * timestep),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const deposit2TS = deposit1TS + timestep;
+
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit2TS,
+      ]);
+
+      await instance
+        .connect(user2)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user2.address,
+        );
+
+      const shares2 = await instance.callStatic['balanceOf(address)'](
+        user2.address,
+      );
+      totalSupply = await instance.callStatic['totalSupply()']();
+      supplyChange = totalSupply.sub(shares2);
+
+      streamingFees = streamingFees.add(
+        supplyChange.sub(
+          supplyChange
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+            .shr(64 * timestep),
+        ),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const deposit3TS = deposit2TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit3TS,
+      ]);
+
+      await instance
+        .connect(user3)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user3.address,
+        );
+
+      const shares3 = await instance.callStatic['balanceOf(address)'](
+        user3.address,
+      );
+      totalSupply = await instance.callStatic['totalSupply()']();
+      supplyChange = totalSupply.sub(shares3);
+
+      streamingFees = streamingFees.add(
+        supplyChange.sub(
+          supplyChange
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+            .shr(64 * timestep),
+        ),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const redeem1TS = deposit3TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [redeem1TS]);
+
+      const minPoolTokenAmounts = [minBptOut, minBptOut];
+
+      await instance
+        .connect(user1)
+        ['redeem(uint256,uint256[],address)'](
+          shares1,
+          minPoolTokenAmounts,
+          user1.address,
+        );
+
+      //duration for the user and the protocol are different
+      let protocolDuration = redeem1TS - deposit3TS;
+      let duration = redeem1TS - deposit1TS;
+      let amountAfterStreamingFee = shares1
+        .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+        .shr(64 * duration);
+
+      let amountAfterExitFee = amountAfterStreamingFee
+        .mul(EXIT_FEE_FACTOR_64x64)
+        .shr(64);
+
+      let exitFee = amountAfterStreamingFee.sub(amountAfterExitFee);
+
+      let protocolStreamingFees = shares1.sub(
+        shares1
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+          .shr(64 * protocolDuration),
+      );
+
+      streamingFees = streamingFees.add(protocolStreamingFees);
+
+      let fees = exitFee.add(streamingFees);
+
+      expect(fees).to.eq(await instance.feesAccrued());
+
+      const redeem2TS = redeem1TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [redeem2TS]);
+
+      await instance
+        .connect(user2)
+        ['redeem(uint256,uint256[],address)'](
+          shares2,
+          minPoolTokenAmounts,
+          user2.address,
+        );
+
+      //duration for the user and the protocol are different
+      protocolDuration = redeem2TS - deposit3TS;
+      duration = redeem2TS - deposit2TS;
+      amountAfterStreamingFee = shares2
+        .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+        .shr(64 * duration);
+
+      amountAfterExitFee = amountAfterStreamingFee
+        .mul(EXIT_FEE_FACTOR_64x64)
+        .shr(64);
+
+      exitFee = amountAfterStreamingFee.sub(amountAfterExitFee);
+
+      protocolStreamingFees = shares2.sub(
+        shares2
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+          .shr(64 * protocolDuration),
+      );
+
+      fees = fees.add(protocolStreamingFees).add(exitFee);
+
+      expect(fees).to.eq(await instance.feesAccrued());
+
+      const redeem3TS = redeem2TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [redeem3TS]);
+
+      await instance
+        .connect(user3)
+        ['redeem(uint256,uint256[],address)'](
+          shares3,
+          minPoolTokenAmounts,
+          user2.address,
+        );
+
+      //duration for the user and the protocol are different
+      protocolDuration = redeem3TS - deposit3TS;
+      duration = redeem3TS - deposit3TS;
+      amountAfterStreamingFee = shares3
+        .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+        .shr(64 * duration);
+
+      amountAfterExitFee = amountAfterStreamingFee
+        .mul(EXIT_FEE_FACTOR_64x64)
+        .shr(64);
+
+      exitFee = amountAfterStreamingFee.sub(amountAfterExitFee);
+
+      protocolStreamingFees = shares3.sub(
+        shares3
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+          .shr(64 * protocolDuration),
+      );
+
+      fees = fees.add(protocolStreamingFees).add(exitFee);
+
+      expect(fees).to.eq(await instance.feesAccrued());
+    });
+
+    it('accounts for fees accrued during non-sequential deposits, redeems and withdrawals', async () => {
+      const minBptOut = ethers.utils.parseUnits('1', 'gwei');
+
+      const deposit1TS = deploymentTS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit1TS,
+      ]);
+
+      await instance
+        .connect(user1)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user1.address,
+        );
+
+      const shares1 = await instance.callStatic['balanceOf(address)'](
+        user1.address,
+      );
+      let totalSupply = await instance.callStatic['totalSupply()']();
+      let supplyChange = totalSupply.sub(shares1);
+
+      let streamingFees = supplyChange.sub(
+        supplyChange
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+          .shr(64 * timestep),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const deposit2TS = deposit1TS + timestep;
+
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit2TS,
+      ]);
+
+      await instance
+        .connect(user2)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user2.address,
+        );
+
+      const shares2 = await instance.callStatic['balanceOf(address)'](
+        user2.address,
+      );
+      totalSupply = await instance.callStatic['totalSupply()']();
+      supplyChange = totalSupply.sub(shares2);
+
+      streamingFees = streamingFees.add(
+        supplyChange.sub(
+          supplyChange
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(timestep))
+            .shr(64 * timestep),
+        ),
+      );
+
+      expect(streamingFees).to.eq(await instance.feesAccrued());
+
+      const redeem2TS = deposit2TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [redeem2TS]);
+
+      const minPoolTokenAmounts = [minBptOut, minBptOut];
+
+      await instance
+        .connect(user2)
+        ['redeem(uint256,uint256[],address)'](
+          shares2,
+          minPoolTokenAmounts,
+          user1.address,
+        );
+
+      //duration for the user and the protocol are different
+      let protocolDuration = redeem2TS - deposit2TS;
+      let duration = redeem2TS - deposit2TS;
+      let amountAfterStreamingFee = shares2
+        .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+        .shr(64 * duration);
+
+      let amountAfterExitFee = amountAfterStreamingFee
+        .mul(EXIT_FEE_FACTOR_64x64)
+        .shr(64);
+
+      let exitFee = amountAfterStreamingFee.sub(amountAfterExitFee);
+
+      let protocolStreamingFees = shares2.sub(
+        shares2
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+          .shr(64 * protocolDuration),
+      );
+
+      streamingFees = streamingFees.add(protocolStreamingFees);
+
+      let fees = exitFee.add(streamingFees);
+
+      expect(fees).to.eq(await instance.feesAccrued());
+
+      const deposit3TS = redeem2TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [
+        deposit3TS,
+      ]);
+
+      await instance
+        .connect(user3)
+        ['deposit(uint256[],uint256,address)'](
+          poolTokenAmounts,
+          minBptOut,
+          user3.address,
+        );
+
+      //protocolDuration is no longer simply timestep  because of the sequence of deposits/withdrawals
+      protocolDuration = deposit3TS - deposit2TS;
+      const shares3 = await instance.callStatic['balanceOf(address)'](
+        user3.address,
+      );
+      totalSupply = await instance.callStatic['totalSupply()']();
+      supplyChange = totalSupply.sub(shares3);
+
+      fees = fees.add(
+        supplyChange.sub(
+          supplyChange
+            .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+            .shr(64 * protocolDuration),
+        ),
+      );
+
+      expect(fees).to.eq(await instance.feesAccrued());
+
+      const redeem3TS = deposit3TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [redeem3TS]);
+
+      await instance
+        .connect(user3)
+        ['redeem(uint256,uint256[],address)'](
+          shares3,
+          minPoolTokenAmounts,
+          user3.address,
+        );
+
+      //duration for the user and the protocol are different
+      protocolDuration = redeem3TS - deposit3TS;
+      duration = redeem3TS - deposit3TS;
+      amountAfterStreamingFee = shares3
+        .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+        .shr(64 * duration);
+
+      amountAfterExitFee = amountAfterStreamingFee
+        .mul(EXIT_FEE_FACTOR_64x64)
+        .shr(64);
+
+      exitFee = amountAfterStreamingFee.sub(amountAfterExitFee);
+
+      protocolStreamingFees = shares3.sub(
+        shares3
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+          .shr(64 * protocolDuration),
+      );
+
+      fees = fees.add(exitFee).add(protocolStreamingFees);
+
+      expect(fees).to.eq(await instance.feesAccrued());
+
+      const redeem1TS = redeem3TS + timestep;
+      await hre.network.provider.send('evm_setNextBlockTimestamp', [redeem1TS]);
+
+      await instance
+        .connect(user1)
+        ['redeem(uint256,uint256[],address)'](
+          shares1,
+          minPoolTokenAmounts,
+          user1.address,
+        );
+
+      //duration for the user and the protocol are different
+      protocolDuration = redeem1TS - deposit3TS;
+      duration = redeem1TS - deposit1TS;
+      amountAfterStreamingFee = shares1
+        .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(duration))
+        .shr(64 * duration);
+
+      amountAfterExitFee = amountAfterStreamingFee
+        .mul(EXIT_FEE_FACTOR_64x64)
+        .shr(64);
+
+      exitFee = amountAfterStreamingFee.sub(amountAfterExitFee);
+
+      protocolStreamingFees = shares1.sub(
+        shares1
+          .mul(STREAMING_FEE_FACTOR_PER_SECOND_64x64.pow(protocolDuration))
+          .shr(64 * protocolDuration),
+      );
+
+      fees = fees.add(exitFee).add(protocolStreamingFees);
+
+      expect(fees).to.eq(await instance.feesAccrued());
+    });
   });
 });

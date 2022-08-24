@@ -40,7 +40,7 @@ interface IVault {
      * @param fromInternalBalance boolean indicating whether funds are coming from a user's internal Balancer Vault balance
      */
     struct JoinPoolRequest {
-        IAsset[] assets;
+        IERC20[] assets;
         uint256[] maxAmountsIn;
         bytes userData;
         bool fromInternalBalance;
@@ -68,7 +68,7 @@ interface IVault {
      * @param toInternalBalance boolean indicating whether funds are to be sent to a user's internal Balancer Vault balance
      */
     struct ExitPoolRequest {
-        IAsset[] assets;
+        IERC20[] assets;
         uint256[] minAmountsOut;
         bytes userData;
         bool toInternalBalance;

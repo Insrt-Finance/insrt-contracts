@@ -6,10 +6,14 @@ import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
+import { ERC20BaseInternal } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
+import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
+import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
 
+import { IIndexInternal } from './IIndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
 import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
@@ -20,28 +24,41 @@ import { IAsset, IVault } from '../balancer/IVault.sol';
  * @dev inherited by all Index implementation contracts
  */
 abstract contract IndexInternal is
-    ERC4626BaseInternal,
+    IIndexInternal,
     ERC20MetadataInternal,
-    OwnableInternal
+    OwnableInternal,
+    ERC4626BaseInternal
 {
     using UintUtils for uint256;
+    using ABDKMath64x64 for int128;
+    using SafeERC20 for IERC20;
 
     address internal immutable BALANCER_VAULT;
     address internal immutable BALANCER_HELPERS;
     address internal immutable SWAPPER;
-    uint256 internal immutable EXIT_FEE;
-    uint256 internal constant FEE_BASIS = 10000;
+
+    int128 internal immutable EXIT_FEE_FACTOR_64x64;
+    int128 internal immutable STREAMING_FEE_FACTOR_PER_SECOND_64x64;
+    int128 internal constant ONE_64x64 = 0x10000000000000000;
+
+    uint256 internal constant BASIS = 10000;
 
     constructor(
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee
+        uint256 exitFeeBP,
+        uint256 streamingFeeBP
     ) {
         BALANCER_VAULT = balancerVault;
         BALANCER_HELPERS = balancerHelpers;
         SWAPPER = swapper;
-        EXIT_FEE = exitFee;
+
+        EXIT_FEE_FACTOR_64x64 = ABDKMath64x64.divu(BASIS - exitFeeBP, BASIS);
+
+        STREAMING_FEE_FACTOR_PER_SECOND_64x64 = ONE_64x64.sub(
+            ABDKMath64x64.divu(streamingFeeBP, BASIS * 365.25 days)
+        );
     }
 
     modifier onlyProtocolOwner() {
@@ -58,99 +75,11 @@ abstract contract IndexInternal is
     }
 
     /**
-     * @notice construct Balancer join request and exchange underlying pool tokens for BPT
-     * @param amounts token quantities to deposit, in asset-sorted order
-     * @param userData encoded join parameters
+     * @notice return total fees accrued
+     * @return uint256 total fees accrued
      */
-    function _joinPool(uint256[] memory amounts, bytes memory userData)
-        internal
-    {
-        IndexStorage.Layout storage l = IndexStorage.layout();
-
-        IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(
-            _tokensToAssets(l.tokens),
-            amounts,
-            userData,
-            false
-        );
-
-        IVault(BALANCER_VAULT).joinPool(
-            _poolId(),
-            address(this),
-            address(this),
-            request
-        );
-    }
-
-    /**
-     * @notice construct Balancer exit request, exchange BPT for underlying pool token(s)
-     * @param l index layout struct
-     * @param minAmountsOut minimum amounts to be returned by Balancer
-     * @param userData encoded exit parameters
-     * @param receiver recipient of withdrawn pool tokens
-     */
-    function _exitPool(
-        IndexStorage.Layout storage l,
-        uint256[] memory minAmountsOut,
-        bytes memory userData,
-        address receiver
-    ) internal returns (uint256[] memory poolTokenAmounts) {
-        IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
-            _tokensToAssets(l.tokens),
-            minAmountsOut,
-            userData,
-            false
-        );
-
-        (, poolTokenAmounts) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
-            l.poolId,
-            address(this),
-            payable(receiver),
-            request
-        );
-
-        IVault(BALANCER_VAULT).exitPool(
-            l.poolId,
-            address(this),
-            payable(receiver),
-            request
-        );
-    }
-
-    /**
-     * @notice function to calculate the totalFee and remainder when a fee is applied on an amount
-     * @param fee the fee as 0-10000 value representing a two decimal point percentage
-     * @param amount the amount to apply the fee on
-     * @return totalFee the actual value of the fee (not percent)
-     * @return remainder the remaining amount after the fee has been subtracted from it
-     */
-    function _applyFee(uint256 fee, uint256 amount)
-        internal
-        view
-        returns (uint256 totalFee, uint256 remainder)
-    {
-        if (msg.sender != _owner()) {
-            totalFee = (fee * amount) / FEE_BASIS;
-        }
-
-        remainder = amount - totalFee;
-    }
-
-    //remove and save assets instead, saved on deployment?
-    /**
-     * @notice function to convert IERC20 to IAsset used in Balancer
-     * @param tokens an array of IERC20-wrapped addresses
-     * @return assets an array of IAsset-wrapped addresses
-     */
-    function _tokensToAssets(IERC20[] memory tokens)
-        internal
-        pure
-        returns (IAsset[] memory assets)
-    {
-        assets = new IAsset[](tokens.length);
-        for (uint256 i; i < tokens.length; i++) {
-            assets[i] = (IAsset(address(tokens[i])));
-        }
+    function _feesAccrued() internal view returns (uint256) {
+        return IndexStorage.layout().feesAccrued;
     }
 
     /**
@@ -159,14 +88,6 @@ abstract contract IndexInternal is
      */
     function _poolId() internal view virtual returns (bytes32) {
         return IndexStorage.layout().poolId;
-    }
-
-    /**
-     * @notice get the exit fee in basis points
-     * @return exitFee
-     */
-    function _exitFee() internal view virtual returns (uint256) {
-        return EXIT_FEE;
     }
 
     /**
@@ -260,12 +181,18 @@ abstract contract IndexInternal is
         override
         returns (uint256 shareAmount)
     {
-        shareAmount = _previewRedeem(assetAmount);
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        shareAmount = STREAMING_FEE_FACTOR_PER_SECOND_64x64
+            .pow(block.timestamp - l.feeUpdatedAt[msg.sender])
+            .mul(EXIT_FEE_FACTOR_64x64)
+            .inv()
+            .mulu(assetAmount);
     }
 
     /**
      * @inheritdoc ERC4626BaseInternal
-     * @dev apply exit fee to amount out
+     * @dev apply exit fee and streaming fee to amount out
      */
     function _previewRedeem(uint256 shareAmount)
         internal
@@ -274,9 +201,183 @@ abstract contract IndexInternal is
         override
         returns (uint256 assetAmount)
     {
-        (, assetAmount) = _applyFee(EXIT_FEE, _convertToAssets(shareAmount));
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        assetAmount = _applyExitFee(
+            _applyStreamingFee(shareAmount, l.feeUpdatedAt[msg.sender])
+        );
     }
 
+    /**
+     * @notice calculate exit fee for given principal amount
+     * @param principal the token amount to which fee is applied
+     * @return amountOut amount after fee
+     */
+    function _applyExitFee(uint256 principal)
+        internal
+        view
+        returns (uint256 amountOut)
+    {
+        amountOut = EXIT_FEE_FACTOR_64x64.mulu(principal);
+    }
+
+    /**
+     * @notice calculate streaming fee for a given principal amount and duration of accrual
+     * @dev uses exponential decay formula to calculate streaming fee over a given duration
+     * @param principal the token amount to which fee is applied
+     * @param timestamp timestamp of beginning of fee accrual period
+     * @return amountOut amount after fee
+     */
+    function _applyStreamingFee(uint256 principal, uint256 timestamp)
+        internal
+        view
+        returns (uint256 amountOut)
+    {
+        amountOut = STREAMING_FEE_FACTOR_PER_SECOND_64x64
+            .pow(block.timestamp - timestamp)
+            .mulu(principal);
+    }
+
+    /*
+     * @notice calculate and collect exit fee
+     * @notice calculate and collect accrued streaming fees
+     * @param account address which owes streaming fees
+     * @param amount quantity of share tokens to subject to fee calculation
+     */
+    function _collectExitFee(address account, uint256 amount) internal {
+        if (amount == 0) return;
+
+        uint256 fee = amount - _applyExitFee(amount);
+
+        IndexStorage.layout().feesAccrued += fee;
+
+        // exit fees are only applied when calling withdraw and redeem functions
+        // these functions execute burn internally, so do not burn here
+
+        emit ExitFeePaid(account, fee);
+    }
+
+    /**
+     * @notice calculate and collect accrued streaming fees
+     * @param account address which owes streaming fees
+     * @param amount quantity of share tokens to subject to fee calculation
+     * @param checkpoint whether to update fee collection timestamp (should be true if processing account's full balance)
+     * @param burn whether to burn tokens held by account corresponding to fee amount (should be true except on vault exit)
+     */
+    function _collectStreamingFee(
+        address account,
+        uint256 amount,
+        bool checkpoint,
+        bool burn
+    ) internal returns (uint256 amountOut) {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        uint256 feeUpdatedAt = l.feeUpdatedAt[account];
+
+        if (checkpoint) {
+            l.feeUpdatedAt[account] = block.timestamp;
+        }
+
+        if (amount == 0) return 0;
+
+        amountOut = _applyStreamingFee(amount, feeUpdatedAt);
+        uint256 fee = amount - amountOut;
+
+        if (account == address(0)) {
+            l.feesAccrued += fee;
+        }
+
+        if (burn) {
+            _burn(account, fee);
+        }
+
+        emit StreamingFeePaid(account, fee);
+    }
+
+    /**
+     * @notice construct Balancer join request and exchange underlying pool tokens for BPT
+     * @param amounts token quantities to deposit, in asset-sorted order
+     * @param userData encoded join parameters
+     */
+    function _joinPool(uint256[] memory amounts, bytes memory userData)
+        internal
+    {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(
+            l.tokens,
+            amounts,
+            userData,
+            false
+        );
+
+        IVault(BALANCER_VAULT).joinPool(
+            _poolId(),
+            address(this),
+            address(this),
+            request
+        );
+    }
+
+    /**
+     * @notice construct Balancer exit request, exchange BPT for underlying pool token(s)
+     * @param minAmountsOut minimum amounts to be returned by Balancer
+     * @param userData encoded exit parameters
+     * @param receiver recipient of withdrawn pool tokens
+     * @return poolTokenAmounts quantities of underlying pool tokens yielded
+     */
+    function _exitPool(
+        uint256[] memory minAmountsOut,
+        bytes memory userData,
+        address receiver
+    ) internal returns (uint256[] memory poolTokenAmounts) {
+        IndexStorage.Layout storage l = IndexStorage.layout();
+
+        IVault.ExitPoolRequest memory request = IVault.ExitPoolRequest(
+            l.tokens,
+            minAmountsOut,
+            userData,
+            false
+        );
+
+        (, poolTokenAmounts) = IBalancerHelpers(BALANCER_HELPERS).queryExit(
+            l.poolId,
+            address(this),
+            payable(receiver),
+            request
+        );
+
+        IVault(BALANCER_VAULT).exitPool(
+            l.poolId,
+            address(this),
+            payable(receiver),
+            request
+        );
+    }
+
+    /**
+     * @inheritdoc ERC20BaseInternal
+     * @dev collects accrued streaming fees from holder and receiver, and reduces amount transferred accordingly
+     */
+    function _transfer(
+        address holder,
+        address receiver,
+        uint256 amount
+    ) internal virtual override returns (bool) {
+        _collectStreamingFee(receiver, _balanceOf(receiver), true, true);
+
+        return
+            super._transfer(
+                holder,
+                receiver,
+                _collectStreamingFee(holder, amount, false, true)
+            );
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev apply exit fee and streaming to shareAmount
+     */
     function _beforeWithdraw(
         address owner,
         uint256 assetAmount,
@@ -284,13 +385,41 @@ abstract contract IndexInternal is
     ) internal virtual override {
         super._beforeWithdraw(owner, assetAmount, shareAmount);
 
-        (uint256 feeAmount, ) = _applyFee(
-            EXIT_FEE,
-            _convertToAssets(shareAmount)
-        );
+        require(owner == msg.sender, 'only owner can withdraw');
 
-        if (feeAmount > 0) {
-            _transfer(owner, _owner(), feeAmount);
+        _collectStreamingFee(address(0), shareAmount, false, false);
+        _collectExitFee(
+            owner,
+            _collectStreamingFee(owner, shareAmount, false, false)
+        );
+    }
+
+    /**
+     * @inheritdoc ERC4626BaseInternal
+     * @dev collects accrued streaming fees from receiver of deposit
+     */
+    function _afterDeposit(
+        address receiver,
+        uint256 assetAmount,
+        uint256 shareAmount
+    ) internal virtual override {
+        super._afterDeposit(receiver, assetAmount, shareAmount);
+
+        unchecked {
+            // apply fee to previous balance, ignoring newly minted shareAmount
+            _collectStreamingFee(
+                address(0),
+                _totalSupply() - shareAmount,
+                true,
+                false
+            );
+
+            _collectStreamingFee(
+                receiver,
+                _balanceOf(receiver) - shareAmount,
+                true,
+                true
+            );
         }
     }
 }

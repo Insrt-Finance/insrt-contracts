@@ -21,8 +21,17 @@ contract IndexSettings is IndexInternal, IIndexSettings {
         address balancerVault,
         address balancerHelpers,
         address swapper,
-        uint256 exitFee
-    ) IndexInternal(balancerVault, balancerHelpers, swapper, exitFee) {}
+        uint256 exitFeeBP,
+        uint256 streamingFeeBP
+    )
+        IndexInternal(
+            balancerVault,
+            balancerHelpers,
+            swapper,
+            exitFeeBP,
+            streamingFeeBP
+        )
+    {}
 
     /**
      * @inheritdoc IIndexSettings
