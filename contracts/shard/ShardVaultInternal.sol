@@ -8,6 +8,7 @@ import { ERC1155BaseInternal } from '@solidstate/contracts/token/ERC1155/base/ER
 import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/metadata/ERC1155MetadataStorage.sol';
 
 import { Errors } from './Errors.sol';
+import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
@@ -17,6 +18,12 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 abstract contract ShardVaultInternal is ERC1155BaseInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
+
+    address internal immutable PUNKS;
+
+    constructor(address punkMarket) {
+        PUNKS = punkMarket;
+    }
 
     /**
      * @notice deposits ETH in exchange for owed shards
@@ -61,5 +68,20 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         }
 
         payable(msg.sender).sendValue(shards * l.shardSize);
+    }
+
+    function _purchasePunk(uint256 punkId) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (l.collection != PUNKS) {
+            revert Errors.CollectionNotPunks();
+        }
+        uint256 price = ICryptoPunkMarket(PUNKS)
+            .punksOfferedForSale(punkId)
+            .minValue;
+
+        ICryptoPunkMarket(PUNKS).buyPunk{ value: price }(punkId);
+
+        l.invested = true;
     }
 }

@@ -22,4 +22,9 @@ library Errors {
      * @notice thrown when a depositor attempts to withdraw but the vault has already invested
      */
     error WithdrawalPeriodElapsed();
+
+    /**
+     * @notice thrown when attempt to purchase a punk is made when collection is not punks
+     */
+    error CollectionNotPunks();
 }
