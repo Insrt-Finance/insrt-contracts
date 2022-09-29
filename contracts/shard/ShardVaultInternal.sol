@@ -18,6 +18,9 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    /**
+     * @notice deposits ETH in exchange for owed shards
+     */
     function _deposit() internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -36,6 +39,10 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         l.depositors.add(msg.sender);
     }
 
+    /**
+     * @notice withdraws ETH for an amount of shards
+     * @param shards the amount of shards to "burn" for ETH
+     */
     function _withdraw(uint256 shards) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
