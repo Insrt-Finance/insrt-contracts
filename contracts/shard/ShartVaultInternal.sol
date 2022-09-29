@@ -35,4 +35,24 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         l.totalShards += shards;
         l.depositors.add(msg.sender);
     }
+
+    function _withdraw(uint256 shards) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (l.invested) {
+            revert Errors.WithdrawalPeriodElapsed();
+        }
+        if (l.owedShards[msg.sender] < shards) {
+            revert Errors.InsufficientShards();
+        }
+
+        l.owedShards[msg.sender] -= shards;
+        l.totalShards -= shards;
+
+        if (l.owedShards[msg.sender] == 0) {
+            l.depositors.remove(msg.sender);
+        }
+
+        payable(msg.sender).sendValue(shards * l.shardSize);
+    }
 }
