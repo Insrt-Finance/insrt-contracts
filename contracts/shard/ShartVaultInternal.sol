@@ -23,7 +23,7 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
 
         uint256 amount = msg.value;
 
-        if (amount % l.shardSize != 0) {
+        if (amount % l.shardSize != 0 || amount == 0) {
             revert Errors.InvalidDepositAmount();
         }
         if (address(this).balance + amount > l.maxCapital) {
