@@ -27,4 +27,9 @@ library Errors {
      * @notice thrown when attempt to purchase a punk is made when collection is not punks
      */
     error CollectionNotPunks();
+
+    /**
+     * @notice thrown when attempting to act on an unowned asset
+     */
+    error NotOwned();
 }

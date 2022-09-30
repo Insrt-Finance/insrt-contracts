@@ -9,6 +9,7 @@ import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/meta
 
 import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
+import { INFTVault } from '../jpegd/INFTVault.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
@@ -70,12 +71,13 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         payable(msg.sender).sendValue(shards * l.shardSize);
     }
 
-    function _purchasePunk(uint256 punkId) internal {
-        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
+    function _purchasePunk(ShardVaultStorage.Layout storage l, uint256 punkId)
+        internal
+    {
         if (l.collection != PUNKS) {
             revert Errors.CollectionNotPunks();
         }
+
         uint256 price = ICryptoPunkMarket(PUNKS)
             .punksOfferedForSale(punkId)
             .minValue;
@@ -83,5 +85,23 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         ICryptoPunkMarket(PUNKS).buyPunk{ value: price }(punkId);
 
         l.invested = true;
+    }
+
+    function _collateralizePunk(
+        ShardVaultStorage.Layout storage l,
+        uint256 punkId,
+        bool insure
+    ) internal {
+        if (
+            ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
+        ) {
+            revert Errors.NotOwned();
+        }
+
+        INFTVault(l.jpegdVault).borrow(
+            punkId,
+            INFTVault(l.jpegdVault).getNFTValueUSD(punkId),
+            insure
+        );
     }
 }
