@@ -8,6 +8,43 @@ pragma solidity ^0.8.0;
  * @dev Only whitelisted contracts may call these functions
  */
 interface ILPFarming {
+    /// @dev Data relative to an LP pool
+    /// @param lpToken The LP token accepted by the pool
+    /// @param allocPoint Allocation points assigned to the pool. Determines the share of `rewardPerBlock` allocated to this pool
+    /// @param lastRewardBlock Last block number in which reward distribution occurred
+    /// @param accRewardPerShare Accumulated rewards per share, times 1e36. The amount of rewards the pool has accumulated per unit of LP token deposited
+    /// @param depositedAmount Total number of tokens deposited in the pool.
+    struct PoolInfo {
+        address lpToken;
+        uint256 allocPoint;
+        uint256 lastRewardBlock;
+        uint256 accRewardPerShare;
+        uint256 depositedAmount;
+    }
+
+    /// @dev Data relative to a user's staking position
+    /// @param amount The amount of LP tokens the user has provided
+    /// @param lastAccRewardPerShare The `accRewardPerShare` pool value at the time of the user's last claim
+    struct UserInfo {
+        uint256 amount;
+        uint256 lastAccRewardPerShare;
+    }
+
+    /**
+     * @notice getter for the PoolInfo array in JPEGd LPFarming contract
+     * @return PoolInfo[] array of PoolInfo structs
+     */
+    function poolInfo() external view returns (PoolInfo[] memory);
+
+    /**
+     * @notice getter for the userInfo mapping in JPEGd LPFarming contract
+     * @return UserInfo userInfo struct for user in JPEGd LPFarming pool with poolId
+     */
+    function userInfo(uint256 poolId, address user)
+        external
+        view
+        returns (UserInfo memory);
+
     /// @notice Frontend function used to calculate the amount of rewards `_user` can claim from the pool with id `_pid`
     /// @param _pid The pool id
     /// @param _user The address of the user
