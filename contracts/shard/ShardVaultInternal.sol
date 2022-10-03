@@ -6,6 +6,7 @@ import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
 import { ERC1155BaseInternal } from '@solidstate/contracts/token/ERC1155/base/ERC1155BaseInternal.sol';
 import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/metadata/ERC1155MetadataStorage.sol';
+import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 
 import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
@@ -22,11 +23,13 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    address internal immutable PUSD;
     address internal immutable PUNKS;
     address internal immutable AUTO_COMPOUNDER;
     address internal immutable LP_FARM;
 
     constructor(
+        address pUSD,
         address punkMarket,
         address compounder,
         address lpFarm
@@ -34,6 +37,7 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         PUNKS = punkMarket;
         AUTO_COMPOUNDER = compounder;
         LP_FARM = lpFarm;
+        PUSD = pUSD;
     }
 
     /**
@@ -101,7 +105,7 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
         bool insure
-    ) internal {
+    ) internal returns (uint256 pUSD) {
         if (
             ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
         ) {
@@ -113,6 +117,8 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
             INFTVault(l.jpegdVault).getNFTValueUSD(punkId),
             insure
         );
+
+        pUSD = IERC20(PUSD).balanceOf(address(this));
     }
 
     function _stake(ShardVaultStorage.Layout storage l, uint256 amount)
@@ -122,5 +128,14 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         shares = IVault(AUTO_COMPOUNDER).deposit(address(this), amount);
 
         ILPFarming(LP_FARM).deposit(l.citadelId, shares);
+    }
+
+    function _investPunk(
+        ShardVaultStorage.Layout storage l,
+        uint256 punkId,
+        bool insure
+    ) internal {
+        _purchasePunk(l, punkId);
+        _stake(l, _collateralizePunk(l, punkId, insure));
     }
 }
