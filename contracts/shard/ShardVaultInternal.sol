@@ -9,7 +9,9 @@ import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/meta
 
 import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
+import { ILPFarming } from '../jpegd/ILPFarming.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
+import { IVault } from '../jpegd/IVault.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
@@ -21,9 +23,17 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     address internal immutable PUNKS;
+    address internal immutable AUTO_COMPOUNDER;
+    address internal immutable LP_FARM;
 
-    constructor(address punkMarket) {
+    constructor(
+        address punkMarket,
+        address compounder,
+        address lpFarm
+    ) {
         PUNKS = punkMarket;
+        AUTO_COMPOUNDER = compounder;
+        LP_FARM = lpFarm;
     }
 
     /**
@@ -103,5 +113,14 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
             INFTVault(l.jpegdVault).getNFTValueUSD(punkId),
             insure
         );
+    }
+
+    function _stake(ShardVaultStorage.Layout storage l, uint256 amount)
+        internal
+        returns (uint256 shares)
+    {
+        shares = IVault(AUTO_COMPOUNDER).deposit(address(this), amount);
+
+        ILPFarming(LP_FARM).deposit(l.citadelId, shares);
     }
 }

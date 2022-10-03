@@ -10,8 +10,10 @@ library ShardVaultStorage {
         uint256 shardSize;
         uint256 maxCapital;
         uint256 totalShards;
+        uint256 citadelId;
         address collection;
         address jpegdVault;
+        address jpegdLP;
         bool invested;
         bool divested;
         mapping(address => uint256) owedShards;
