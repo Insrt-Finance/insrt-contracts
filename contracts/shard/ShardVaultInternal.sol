@@ -138,14 +138,19 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
      * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
      * @param l ShardVaultStorage layout
      * @param amount amount of pUSD to stake
-     * @return shares given for depositing into JPEGd autocompounder
+     * @return shares deposited into JPEGd autocompounder
      */
     function _stake(ShardVaultStorage.Layout storage l, uint256 amount)
         internal
         returns (uint256 shares)
     {
+        IERC20(PUSD).approve(AUTO_COMPOUNDER, amount);
         shares = IVault(AUTO_COMPOUNDER).deposit(address(this), amount);
 
+        IERC20(ILPFarming(LP_FARM).poolInfo()[l.citadelId].lpToken).approve(
+            LP_FARM,
+            shares
+        );
         ILPFarming(LP_FARM).deposit(l.citadelId, shares);
     }
 
