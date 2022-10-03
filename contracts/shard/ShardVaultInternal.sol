@@ -85,6 +85,11 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         payable(msg.sender).sendValue(shards * l.shardSize);
     }
 
+    /**
+     * @notice purchases a punk from CryptoPunkMarket
+     * @param l ShardVaultStorage layout
+     * @param punkId id of punk
+     */
     function _purchasePunk(ShardVaultStorage.Layout storage l, uint256 punkId)
         internal
     {
@@ -101,6 +106,14 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         l.invested = true;
     }
 
+    /**
+     * @notice borrows pUSD in exchange for collaterlizing a punk
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
+     * @param l ShardVaultStorage layout
+     * @param punkId id of punk
+     * @param insure whether to insure
+     * @return pUSD the amount of pUSD received for the collateralized punk
+     */
     function _collateralizePunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
@@ -121,6 +134,12 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         pUSD = IERC20(PUSD).balanceOf(address(this));
     }
 
+    /**
+     * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
+     * @param l ShardVaultStorage layout
+     * @param amount amount of pUSD to stake
+     * @return shares given for depositing into JPEGd autocompounder
+     */
     function _stake(ShardVaultStorage.Layout storage l, uint256 amount)
         internal
         returns (uint256 shares)
@@ -130,6 +149,12 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         ILPFarming(LP_FARM).deposit(l.citadelId, shares);
     }
 
+    /**
+     * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
+     * @param l ShardVaultStorage layout
+     * @param punkId id of punk
+     * @param insure whether to insure
+     */
     function _investPunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
