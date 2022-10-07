@@ -56,14 +56,22 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         if (amount % l.shardSize != 0 || amount == 0) {
             revert Errors.InvalidDepositAmount();
         }
-        if (address(this).balance + amount > l.maxCapital) {
-            revert Errors.MaxCapitalExceeded();
+        if (l.invested || l.capped) {
+            revert Errors.DepositForbidden();
+        }
+        if (address(this).balance > l.maxCapital) {
+            l.capped = true;
+            amount = msg.value + l.maxCapital - address(this).balance;
         }
 
         uint256 shards = amount / l.shardSize;
         l.owedShards[msg.sender] += shards;
         l.totalShards += shards;
         l.depositors.add(msg.sender);
+
+        if (msg.value - amount > 0) {
+            payable(msg.sender).sendValue(msg.value - amount);
+        }
     }
 
     /**
@@ -73,8 +81,8 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     function _withdraw(uint256 shards) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested) {
-            revert Errors.WithdrawalPeriodElapsed();
+        if (l.invested || l.capped) {
+            revert Errors.WithdrawalForbidden();
         }
         if (l.owedShards[msg.sender] < shards) {
             revert Errors.InsufficientShards();

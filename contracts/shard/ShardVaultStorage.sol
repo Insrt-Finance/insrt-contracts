@@ -15,6 +15,7 @@ library ShardVaultStorage {
         address collection;
         address jpegdVault;
         address jpegdLP;
+        bool capped;
         bool invested;
         bool divested;
         mapping(address => uint256) owedShards;
