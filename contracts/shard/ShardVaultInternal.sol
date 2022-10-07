@@ -22,6 +22,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 abstract contract ShardVaultInternal is ERC1155BaseInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     address internal immutable PUSD;
     address internal immutable PUNKS;
@@ -166,6 +167,7 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         bool insure
     ) internal {
         _purchasePunk(l, punkId);
+        l.ownedTokenIds.add(punkId);
         _stake(l, _collateralizePunk(l, punkId, insure));
     }
 }
