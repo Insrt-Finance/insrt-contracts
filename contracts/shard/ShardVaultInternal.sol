@@ -28,6 +28,10 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     address internal immutable PUNKS;
     address internal immutable AUTO_COMPOUNDER;
     address internal immutable LP_FARM;
+    uint256 internal constant BASIS_POINTS = 10000;
+    uint256 internal constant SALES_FEE_BP = 200;
+    uint256 internal constant FUNDRAISING_FEE_BP = 100;
+    uint256 internal constant YIELD_FEE = 1000;
 
     constructor(
         address pUSD,
@@ -166,6 +170,11 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         uint256 punkId,
         bool insure
     ) internal {
+        if (l.ownedTokenIds.length() == 0) {
+            payable(l.treasury).sendValue(
+                (address(this).balance * FUNDRAISING_FEE_BP) / BASIS_POINTS
+            );
+        }
         _purchasePunk(l, punkId);
         l.ownedTokenIds.add(punkId);
         _stake(l, _collateralizePunk(l, punkId, insure));

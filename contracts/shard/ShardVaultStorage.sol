@@ -11,6 +11,7 @@ library ShardVaultStorage {
         uint256 maxCapital;
         uint256 totalShards;
         uint256 citadelId;
+        address treasury;
         address collection;
         address jpegdVault;
         address jpegdLP;
