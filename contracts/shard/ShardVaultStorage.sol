@@ -11,9 +11,9 @@ library ShardVaultStorage {
         uint256 maxCapital;
         uint256 totalShards;
         uint256 citadelId;
-        address collection;
+        uint256 ownedTokenId; //perhaps convert to [] => multiple punks/tokens per vault
+        address collection; // convert to [] => V2
         address jpegdVault;
-        address jpegdLP;
         bool invested;
         bool divested;
         mapping(address => uint256) owedShards;

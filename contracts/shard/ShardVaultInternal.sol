@@ -27,17 +27,20 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     address internal immutable PUNKS;
     address internal immutable AUTO_COMPOUNDER;
     address internal immutable LP_FARM;
+    uint256 internal immutable INTEREST_BUFFER;
 
     constructor(
         address pUSD,
         address punkMarket,
         address compounder,
-        address lpFarm
+        address lpFarm,
+        uint256 interestBuffer
     ) {
         PUNKS = punkMarket;
         AUTO_COMPOUNDER = compounder;
         LP_FARM = lpFarm;
         PUSD = pUSD;
+        INTEREST_BUFFER = interestBuffer;
     }
 
     /**
@@ -167,5 +170,41 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     ) internal {
         _purchasePunk(l, punkId);
         _stake(l, _collateralizePunk(l, punkId, insure));
+    }
+
+    function _closePosition(ShardVaultStorage.Layout storage l, uint256 ask)
+        internal
+    {
+        _unstake(
+            l,
+            ILPFarming(LP_FARM).userInfo(l.citadelId, address(this)).amount
+        );
+
+        uint256 debt = _totalDebt(l);
+
+        INFTVault(l.jpegdVault).repay(l.ownedTokenId, debt + INTEREST_BUFFER);
+        INFTVault(l.jpegdVault).closePosition(l.ownedTokenId);
+
+        ICryptoPunkMarket(PUNKS).offerPunkForSale(l.ownedTokenId, ask);
+    }
+
+    //NOTE: CHECK IF RETURN IS INDEED PUSD
+    function _unstake(ShardVaultStorage.Layout storage l, uint256 amount)
+        internal
+        returns (uint256 pUSD)
+    {
+        ILPFarming(LP_FARM).withdraw(l.citadelId, amount);
+        ILPFarming(LP_FARM).claim(l.citadelId);
+        pUSD = IVault(AUTO_COMPOUNDER).withdraw(address(this), amount);
+    }
+
+    function _totalDebt(ShardVaultStorage.Layout storage l)
+        internal
+        view
+        returns (uint256 debt)
+    {
+        debt =
+            INFTVault(l.jpegdVault).getDebtInterest(l.ownedTokenId) +
+            INFTVault(l.jpegdVault).positions(l.ownedTokenId).debtPrincipal;
     }
 }
