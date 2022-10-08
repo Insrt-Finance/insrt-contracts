@@ -200,12 +200,20 @@ abstract contract ShardVaultInternal is OwnableInternal {
         bool insure
     ) internal {
         if (l.ownedTokenIds.length() == 0) {
-            payable(l.treasury).sendValue(
-                (address(this).balance * FUNDRAISING_FEE_BP) / BASIS_POINTS
-            );
+            _collectFee(l, l.fundraiseFeeBP);
         }
         _purchasePunk(l, punkId);
         l.ownedTokenIds.add(punkId);
         _stake(l, _collateralizePunk(l, punkId, insure));
+    }
+
+    function _collectFee(ShardVaultStorage.Layout storage l, uint256 fee)
+        internal
+        view
+    {
+        uint256 accruedFees = l.accruedFees;
+        accruedFees +=
+            ((address(this).balance - accruedFees) * fee) /
+            BASIS_POINTS;
     }
 }
