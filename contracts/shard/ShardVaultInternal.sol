@@ -29,20 +29,26 @@ abstract contract ShardVaultInternal is OwnableInternal {
     address internal immutable AUTO_COMPOUNDER;
     address internal immutable LP_FARM;
     uint256 internal constant BASIS_POINTS = 10000;
-    uint256 internal constant SALES_FEE_BP = 200;
-    uint256 internal constant FUNDRAISING_FEE_BP = 100;
-    uint256 internal constant YIELD_FEE = 1000;
 
     constructor(
         address pUSD,
         address punkMarket,
         address compounder,
-        address lpFarm
+        address lpFarm,
+        uint256 saleFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP
     ) {
         PUNKS = punkMarket;
         AUTO_COMPOUNDER = compounder;
         LP_FARM = lpFarm;
         PUSD = pUSD;
+
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        l.saleFeeBP = saleFeeBP;
+        l.fundraiseFeeBP = fundraiseFeeBP;
+        l.yieldFeeBP = yieldFeeBP;
     }
 
     /**
