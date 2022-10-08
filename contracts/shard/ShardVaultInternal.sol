@@ -35,7 +35,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         address punkMarket,
         address compounder,
         address lpFarm,
-        uint256 saleFeeBP,
+        uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
     ) {
@@ -46,7 +46,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        l.saleFeeBP = saleFeeBP;
+        l.saleFeeBP = salesFeeBP;
         l.fundraiseFeeBP = fundraiseFeeBP;
         l.yieldFeeBP = yieldFeeBP;
     }
@@ -215,5 +215,20 @@ abstract contract ShardVaultInternal is OwnableInternal {
         accruedFees +=
             ((address(this).balance - accruedFees) * fee) /
             BASIS_POINTS;
+    }
+
+    function _setSalesFee(uint256 feeBP) internal {
+        if (feeBP > 10000) revert Errors.BasisExceeded();
+        ShardVaultStorage.layout().salesFeeBP = feeBP;
+    }
+
+    function _setFundraiseFee(uint256 feeBP) internal {
+        if (feeBP > 10000) revert Errors.BasisExceeded();
+        ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
+    }
+
+    function _setYieldFee(uint256 feeBP) internal {
+        if (feeBP > 10000) revert Errors.BasisExceeded();
+        ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 }

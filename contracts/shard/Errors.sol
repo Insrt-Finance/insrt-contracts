@@ -37,4 +37,9 @@ library Errors {
      * @notice thrown when caller is not protocol owner
      */
     error NotProtocolOwner();
+
+    /**
+     * @notice thrown when setting a basis point fee value larger than 10000
+     */
+    error BasisExceeded();
 }
