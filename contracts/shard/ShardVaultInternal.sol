@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
-import { ERC1155BaseInternal } from '@solidstate/contracts/token/ERC1155/base/ERC1155BaseInternal.sol';
 import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/metadata/ERC1155MetadataStorage.sol';
+import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
+import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { Errors } from './Errors.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
@@ -14,9 +15,22 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
  */
-abstract contract ShardVaultInternal is ERC1155BaseInternal {
+abstract contract ShardVaultInternal is OwnableInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
+
+    modifier onlyProtocolOwner() {
+        require(msg.sender == _protocolOwner(), 'Not protocol owner');
+        _;
+    }
+
+    /**
+     * @notice returns the protocol owner
+     * @return address of the protocol owner
+     */
+    function _protocolOwner() internal view returns (address) {
+        return IERC173(_owner()).owner();
+    }
 
     /**
      * @notice deposits ETH in exchange for owed shards
