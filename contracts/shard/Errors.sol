@@ -32,4 +32,9 @@ library Errors {
      * @notice thrown when attempting to act on an unowned asset
      */
     error NotOwned();
+
+    /**
+     * @notice thrown when caller is not protocol owner
+     */
+    error NotProtocolOwner();
 }

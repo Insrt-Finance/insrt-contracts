@@ -45,9 +45,11 @@ abstract contract ShardVaultInternal is OwnableInternal {
         PUSD = pUSD;
     }
 
-    modifier onlyProtocolOwner() {
-        require(msg.sender == _protocolOwner(), 'Not protocol owner');
-        _;
+    /**
+     * @notice ensure caller is protocol owner
+     */
+    function _onlyProtocolOwner() internal view {
+        if (msg.sender != _protocolOwner()) revert Errors.NotProtocolOwner();
     }
 
     /**
