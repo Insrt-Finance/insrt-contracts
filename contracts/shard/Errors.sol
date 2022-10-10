@@ -9,9 +9,9 @@ library Errors {
     error InvalidDepositAmount();
 
     /**
-     * @notice thrown when the deposit amount added to ETH balance would exceed
+     * @notice thrown when the maximum capital has been reached or vault has invested
      */
-    error MaxCapitalExceeded();
+    error DepositForbidden();
 
     /**
      * @notice thrown when the withdraw amount exceeds the owed shards to the sender
@@ -19,9 +19,9 @@ library Errors {
     error InsufficientShards();
 
     /**
-     * @notice thrown when a depositor attempts to withdraw but the vault has already invested
+     * @notice thrown when the maximum capital has been reached or vault has invested
      */
-    error WithdrawalPeriodElapsed();
+    error WithdrawalForbidden();
 
     /**
      * @notice thrown when attempt to purchase a punk is made when collection is not punks
@@ -32,4 +32,14 @@ library Errors {
      * @notice thrown when attempting to act on an unowned asset
      */
     error NotOwned();
+
+    /**
+     * @notice thrown when caller is not protocol owner
+     */
+    error NotProtocolOwner();
+
+    /**
+     * @notice thrown when setting a basis point fee value larger than 10000
+     */
+    error BasisExceeded();
 }

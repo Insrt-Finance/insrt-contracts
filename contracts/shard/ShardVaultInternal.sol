@@ -4,12 +4,13 @@ pragma solidity ^0.8.0;
 
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
-import { ERC1155BaseInternal } from '@solidstate/contracts/token/ERC1155/base/ERC1155BaseInternal.sol';
-import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/metadata/ERC1155MetadataStorage.sol';
 import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
+import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
+import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
@@ -19,28 +20,57 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
  */
-abstract contract ShardVaultInternal is ERC1155BaseInternal {
+abstract contract ShardVaultInternal is OwnableInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     address internal immutable PUSD;
     address internal immutable PUNKS;
-    address internal immutable AUTO_COMPOUNDER;
+    address internal immutable CITADEL;
     address internal immutable LP_FARM;
+    address internal immutable CURVE_PUSD_POOL;
     uint256 internal immutable INTEREST_BUFFER;
+    uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
         address pUSD,
         address punkMarket,
-        address compounder,
+        address citadel,
         address lpFarm,
-        uint256 interestBuffer
+        address curvePUSDPool,
+        uint256 interestBuffer,
+        uint256 salesFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP
     ) {
         PUNKS = punkMarket;
-        AUTO_COMPOUNDER = compounder;
-        LP_FARM = lpFarm;
         PUSD = pUSD;
+        CITADEL = citadel;
+        LP_FARM = lpFarm;
+        CURVE_PUSD_POOL = curvePUSDPool;
         INTEREST_BUFFER = interestBuffer;
+
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        l.salesFeeBP = salesFeeBP;
+        l.fundraiseFeeBP = fundraiseFeeBP;
+        l.yieldFeeBP = yieldFeeBP;
+    }
+
+    /**
+     * @notice ensure caller is protocol owner
+     */
+    function _onlyProtocolOwner() internal view {
+        if (msg.sender != _protocolOwner()) revert Errors.NotProtocolOwner();
+    }
+
+    /**
+     * @notice returns the protocol owner
+     * @return address of the protocol owner
+     */
+    function _protocolOwner() internal view returns (address) {
+        return IERC173(_owner()).owner();
     }
 
     /**
@@ -54,14 +84,22 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
         if (amount % l.shardSize != 0 || amount == 0) {
             revert Errors.InvalidDepositAmount();
         }
-        if (address(this).balance + amount > l.maxCapital) {
-            revert Errors.MaxCapitalExceeded();
+        if (l.invested || l.capped) {
+            revert Errors.DepositForbidden();
+        }
+        if (address(this).balance > l.maxCapital) {
+            l.capped = true;
+            amount = msg.value + l.maxCapital - address(this).balance;
         }
 
         uint256 shards = amount / l.shardSize;
         l.owedShards[msg.sender] += shards;
         l.totalShards += shards;
         l.depositors.add(msg.sender);
+
+        if (msg.value - amount > 0) {
+            payable(msg.sender).sendValue(msg.value - amount);
+        }
     }
 
     /**
@@ -71,8 +109,8 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
     function _withdraw(uint256 shards) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested) {
-            revert Errors.WithdrawalPeriodElapsed();
+        if (l.invested || l.capped) {
+            revert Errors.WithdrawalForbidden();
         }
         if (l.owedShards[msg.sender] < shards) {
             revert Errors.InsufficientShards();
@@ -126,7 +164,7 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
             ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
         ) {
             revert Errors.NotOwned();
-        }
+        } // probably remove this error
 
         INFTVault(l.jpegdVault).borrow(
             punkId,
@@ -141,35 +179,92 @@ abstract contract ShardVaultInternal is ERC1155BaseInternal {
      * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
      * @param l ShardVaultStorage layout
      * @param amount amount of pUSD to stake
+     * @param minCurveLP minimum LP to receive from pUSD staking into curve
      * @return shares deposited into JPEGd autocompounder
      */
-    function _stake(ShardVaultStorage.Layout storage l, uint256 amount)
-        internal
-        returns (uint256 shares)
-    {
-        IERC20(PUSD).approve(AUTO_COMPOUNDER, amount);
-        shares = IVault(AUTO_COMPOUNDER).deposit(address(this), amount);
+    function _stake(
+        ShardVaultStorage.Layout storage l,
+        uint256 amount,
+        uint256 minCurveLP
+    ) internal returns (uint256 shares) {
+        IERC20(PUSD).approve(CURVE_PUSD_POOL, amount);
+        //pUSD is in position 0 in the curve meta pool
+        uint256 curveLP = ICurveMetaPool(CURVE_PUSD_POOL).add_liquidity(
+            [amount, 0],
+            minCurveLP
+        );
 
-        IERC20(ILPFarming(LP_FARM).poolInfo()[l.citadelId].lpToken).approve(
+        IERC20(CURVE_PUSD_POOL).approve(CITADEL, curveLP);
+        shares = IVault(CITADEL).deposit(address(this), curveLP);
+
+        IERC20(ILPFarming(LP_FARM).poolInfo()[l.lpFarmId].lpToken).approve(
             LP_FARM,
             shares
         );
-        ILPFarming(LP_FARM).deposit(l.citadelId, shares);
+        ILPFarming(LP_FARM).deposit(l.lpFarmId, shares);
     }
 
     /**
      * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
      * @param l ShardVaultStorage layout
      * @param punkId id of punk
+     * @param minCurveLP minimum LP to receive from curve LP
      * @param insure whether to insure
      */
     function _investPunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
+        uint256 minCurveLP,
         bool insure
     ) internal {
+        if (l.ownedTokenIds.length() == 0) {
+            _collectFee(l, l.fundraiseFeeBP);
+        }
         _purchasePunk(l, punkId);
-        _stake(l, _collateralizePunk(l, punkId, insure));
+        l.ownedTokenIds.add(punkId);
+        _stake(l, _collateralizePunk(l, punkId, insure), minCurveLP);
+    }
+
+    /**
+     * @notice increment accrued fees
+     * @param l storage layout
+     * @param feeBP fee basis points
+     */
+    function _collectFee(ShardVaultStorage.Layout storage l, uint256 feeBP)
+        internal
+        view
+    {
+        uint256 accruedFees = l.accruedFees;
+        accruedFees +=
+            ((address(this).balance - accruedFees) * feeBP) /
+            BASIS_POINTS;
+    }
+
+    /**
+     * @notice sets the sales fee BP
+     * @param feeBP basis points value of fee
+     */
+    function _setSalesFee(uint256 feeBP) internal {
+        if (feeBP > 10000) revert Errors.BasisExceeded();
+        ShardVaultStorage.layout().salesFeeBP = feeBP;
+    }
+
+    /**
+     * @notice sets the fundraise fee BP
+     * @param feeBP basis points value of fee
+     */
+    function _setFundraiseFee(uint256 feeBP) internal {
+        if (feeBP > 10000) revert Errors.BasisExceeded();
+        ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
+    }
+
+    /**
+     * @notice sets the Yield fee BP
+     * @param feeBP basis points value of fee
+     */
+    function _setYieldFee(uint256 feeBP) internal {
+        if (feeBP > 10000) revert Errors.BasisExceeded();
+        ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 
     function _closePosition(ShardVaultStorage.Layout storage l, uint256 ask)

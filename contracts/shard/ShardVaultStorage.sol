@@ -11,13 +11,20 @@ library ShardVaultStorage {
         uint256 maxCapital;
         uint256 totalShards;
         uint256 citadelId;
-        uint256 ownedTokenId; //perhaps convert to [] => multiple punks/tokens per vault
         address collection; // convert to [] => V2
+        uint256 salesFeeBP;
+        uint256 fundraiseFeeBP;
+        uint256 yieldFeeBP;
+        uint256 accruedFees;
+        address treasury;
         address jpegdVault;
+        address jpegdLP;
+        bool capped;
         bool invested;
         bool divested;
         mapping(address => uint256) owedShards;
         EnumerableSet.AddressSet depositors;
+        EnumerableSet.UintSet ownedTokenIds;
     }
 
     bytes32 internal constant STORAGE_SLOT =
