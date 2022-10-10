@@ -26,23 +26,26 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
     address internal immutable PUSD;
     address internal immutable PUNKS;
-    address internal immutable AUTO_COMPOUNDER;
+    address internal immutable CITADEL;
     address internal immutable LP_FARM;
+    address internal immutable CURVE_PUSD_POOL;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
         address pUSD,
         address punkMarket,
-        address compounder,
+        address citadel,
         address lpFarm,
+        address curvePUSDPool,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
     ) {
         PUNKS = punkMarket;
-        AUTO_COMPOUNDER = compounder;
-        LP_FARM = lpFarm;
         PUSD = pUSD;
+        CITADEL = citadel;
+        LP_FARM = lpFarm;
+        CURVE_PUSD_POOL = curvePUSDPool;
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -178,8 +181,8 @@ abstract contract ShardVaultInternal is OwnableInternal {
         internal
         returns (uint256 shares)
     {
-        IERC20(PUSD).approve(AUTO_COMPOUNDER, amount);
-        shares = IVault(AUTO_COMPOUNDER).deposit(address(this), amount);
+        IERC20(PUSD).approve(CITADEL, amount);
+        shares = IVault(CITADEL).deposit(address(this), amount);
 
         IERC20(ILPFarming(LP_FARM).poolInfo()[l.citadelId].lpToken).approve(
             LP_FARM,

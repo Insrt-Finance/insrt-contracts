@@ -9,9 +9,24 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     constructor(
         address pUSD,
         address punkMarket,
-        address compounder,
-        address lpFarm
-    ) ShardVaultInternal(pUSD, punkMarket, compounder, lpFarm) {}
+        address citadel,
+        address lpFarm,
+        address curvePUSDPool,
+        uint256 salesFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP
+    )
+        ShardVaultInternal(
+            pUSD,
+            punkMarket,
+            citadel,
+            lpFarm,
+            curvePUSDPool,
+            salesFeeBP,
+            fundraiseFeeBP,
+            yieldFeeBP
+        )
+    {}
 
     /**
      * @inheritdoc IShardVaultIO
