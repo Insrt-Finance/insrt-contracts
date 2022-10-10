@@ -222,13 +222,18 @@ abstract contract ShardVaultInternal is OwnableInternal {
         _stake(l, _collateralizePunk(l, punkId, insure), minCurveLP);
     }
 
-    function _collectFee(ShardVaultStorage.Layout storage l, uint256 fee)
+    /**
+     * @notice increment accrued fees
+     * @param l storage layout
+     * @param fee fee basis points
+     */
+    function _collectFee(ShardVaultStorage.Layout storage l, uint256 feeBP)
         internal
         view
     {
         uint256 accruedFees = l.accruedFees;
         accruedFees +=
-            ((address(this).balance - accruedFees) * fee) /
+            ((address(this).balance - accruedFees) * feeBP) /
             BASIS_POINTS;
     }
 
