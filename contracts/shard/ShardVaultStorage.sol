@@ -10,7 +10,7 @@ library ShardVaultStorage {
         uint256 shardSize;
         uint256 maxCapital;
         uint256 totalShards;
-        uint256 citadelId;
+        uint256 lpFarmId;
         uint256 salesFeeBP;
         uint256 fundraiseFeeBP;
         uint256 yieldFeeBP;

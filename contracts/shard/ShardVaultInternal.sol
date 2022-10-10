@@ -10,6 +10,7 @@ import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInt
 
 import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
+import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
@@ -175,31 +176,42 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
      * @param l ShardVaultStorage layout
      * @param amount amount of pUSD to stake
+     * @param minCurveLP minimum LP to receive from pUSD staking into curve
      * @return shares deposited into JPEGd autocompounder
      */
-    function _stake(ShardVaultStorage.Layout storage l, uint256 amount)
-        internal
-        returns (uint256 shares)
-    {
-        IERC20(PUSD).approve(CITADEL, amount);
-        shares = IVault(CITADEL).deposit(address(this), amount);
+    function _stake(
+        ShardVaultStorage.Layout storage l,
+        uint256 amount,
+        uint256 minCurveLP
+    ) internal returns (uint256 shares) {
+        IERC20(PUSD).approve(CURVE_PUSD_POOL, amount);
+        //pUSD is in position 0 in the curve meta pool
+        uint256 curveLP = ICurveMetaPool(CURVE_PUSD_POOL).add_liquidity(
+            [amount, 0],
+            minCurveLP
+        );
 
-        IERC20(ILPFarming(LP_FARM).poolInfo()[l.citadelId].lpToken).approve(
+        IERC20(CURVE_PUSD_POOL).approve(CITADEL, curveLP);
+        shares = IVault(CITADEL).deposit(address(this), curveLP);
+
+        IERC20(ILPFarming(LP_FARM).poolInfo()[l.lpFarmId].lpToken).approve(
             LP_FARM,
             shares
         );
-        ILPFarming(LP_FARM).deposit(l.citadelId, shares);
+        ILPFarming(LP_FARM).deposit(l.lpFarmId, shares);
     }
 
     /**
      * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
      * @param l ShardVaultStorage layout
      * @param punkId id of punk
+     * @param minCurveLP minimum LP to receive from curve LP
      * @param insure whether to insure
      */
     function _investPunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
+        uint256 minCurveLP,
         bool insure
     ) internal {
         if (l.ownedTokenIds.length() == 0) {
@@ -207,7 +219,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         }
         _purchasePunk(l, punkId);
         l.ownedTokenIds.add(punkId);
-        _stake(l, _collateralizePunk(l, punkId, insure));
+        _stake(l, _collateralizePunk(l, punkId, insure), minCurveLP);
     }
 
     function _collectFee(ShardVaultStorage.Layout storage l, uint256 fee)
