@@ -161,7 +161,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
             ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
         ) {
             revert Errors.NotOwned();
-        }
+        } // probably remove this error
 
         INFTVault(l.jpegdVault).borrow(
             punkId,
@@ -225,7 +225,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
     /**
      * @notice increment accrued fees
      * @param l storage layout
-     * @param fee fee basis points
+     * @param feeBP fee basis points
      */
     function _collectFee(ShardVaultStorage.Layout storage l, uint256 feeBP)
         internal
