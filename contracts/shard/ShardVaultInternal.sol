@@ -161,7 +161,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
             ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
         ) {
             revert Errors.NotOwned();
-        }
+        } //check exists in CPM contract, only here to save gas but probably remove
 
         INFTVault(l.jpegdVault).borrow(
             punkId,
