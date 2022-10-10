@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
  * @dev 3USD and JPEG'd underlying
  * @dev 3PoolMetaPool contract address: 0x8EE017541375F6Bcd802ba119bdDC94dad6911A1
  */
-interface CurveMetaPool {
+interface ICurveMetaPool {
     /**
      * @notice Perform an exchange between two underlying coins
      * @param i Index value for the underlying coin to send
