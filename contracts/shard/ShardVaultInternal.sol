@@ -217,16 +217,28 @@ abstract contract ShardVaultInternal is OwnableInternal {
             BASIS_POINTS;
     }
 
+    /**
+     * @notice sets the sales fee BP
+     * @param feeBP basis points value of fee
+     */
     function _setSalesFee(uint256 feeBP) internal {
         if (feeBP > 10000) revert Errors.BasisExceeded();
         ShardVaultStorage.layout().salesFeeBP = feeBP;
     }
 
+    /**
+     * @notice sets the fundraise fee BP
+     * @param feeBP basis points value of fee
+     */
     function _setFundraiseFee(uint256 feeBP) internal {
         if (feeBP > 10000) revert Errors.BasisExceeded();
         ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
     }
 
+    /**
+     * @notice sets the Yield fee BP
+     * @param feeBP basis points value of fee
+     */
     function _setYieldFee(uint256 feeBP) internal {
         if (feeBP > 10000) revert Errors.BasisExceeded();
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
