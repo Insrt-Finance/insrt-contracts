@@ -46,7 +46,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        l.saleFeeBP = salesFeeBP;
+        l.salesFeeBP = salesFeeBP;
         l.fundraiseFeeBP = fundraiseFeeBP;
         l.yieldFeeBP = yieldFeeBP;
     }
