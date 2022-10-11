@@ -16,6 +16,8 @@ import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
+//CHECK IF ALL VAULTS USE PUSD OR IF SOME HAVE BUSD eg
+
 /**
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
@@ -267,39 +269,72 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 
-    function _closePosition(ShardVaultStorage.Layout storage l, uint256 ask)
-        internal
-    {
-        _unstake(
-            l,
-            ILPFarming(LP_FARM).userInfo(l.citadelId, address(this)).amount
+    /**
+     * @notice unstakes from JPEG,d auto-compounder, then from JPEG'd citadel, then from curve LP
+     * @param l storage layout
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPUSD minimum pUSD to receive from curve pool
+     * @return pUSD pUSD amount returned
+     */
+    function _unstake(
+        ShardVaultStorage.Layout storage l,
+        uint256 amount,
+        uint256 minPUSD
+    ) internal returns (uint256 pUSD) {
+        ILPFarming(LP_FARM).withdraw(1, amount);
+        uint256 citadelLP = IVault(CITADEL).withdraw(
+            address(this),
+            IERC20(ILPFarming(LP_FARM).poolInfo()[1].lpToken).balanceOf(
+                address(this)
+            )
         );
 
-        uint256 debt = _totalDebt(l);
+        //note: can remove initialCurveLP functionality, ask Daniel
+        uint256 initialCurveLP = IERC20(CURVE_PUSD_POOL).balanceOf(
+            address(this)
+        );
 
-        INFTVault(l.jpegdVault).repay(l.ownedTokenId, debt + INTEREST_BUFFER);
-        INFTVault(l.jpegdVault).closePosition(l.ownedTokenId);
-
-        ICryptoPunkMarket(PUNKS).offerPunkForSale(l.ownedTokenId, ask);
-    }
-
-    //NOTE: CHECK IF RETURN IS INDEED PUSD
-    function _unstake(ShardVaultStorage.Layout storage l, uint256 amount)
-        internal
-        returns (uint256 pUSD)
-    {
-        ILPFarming(LP_FARM).withdraw(l.citadelId, amount);
+        ILPFarming(LP_FARM).withdraw(l.citadelId, citadelLP);
         ILPFarming(LP_FARM).claim(l.citadelId);
-        pUSD = IVault(AUTO_COMPOUNDER).withdraw(address(this), amount);
+
+        uint256 curveLP = IERC20(CURVE_PUSD_POOL).balanceOf(address(this)) -
+            initialCurveLP;
+
+        pUSD = ICurveMetaPool(CURVE_PUSD_POOL).remove_liquidity_one_coin(
+            curveLP,
+            0, //id of pUSD in curve pool
+            minPUSD
+        );
     }
 
-    function _totalDebt(ShardVaultStorage.Layout storage l)
+    function _closePunkPosition(
+        ShardVaultStorage.Layout storage l,
+        uint256 tokenId,
+        uint256 minPUSD,
+        uint256 ask
+    ) internal {
+        _unstake(
+            l,
+            ILPFarming(LP_FARM).userInfo(l.citadelId, address(this)).amount,
+            minPUSD
+        );
+
+        uint256 debt = _totalDebt(l, tokenId);
+
+        IERC20(PUSD).approve(l.jpegdVault, debt + INTEREST_BUFFER);
+        INFTVault(l.jpegdVault).repay(tokenId, debt + INTEREST_BUFFER);
+        INFTVault(l.jpegdVault).closePosition(tokenId);
+
+        ICryptoPunkMarket(PUNKS).offerPunkForSale(tokenId, ask);
+    }
+
+    function _totalDebt(ShardVaultStorage.Layout storage l, uint256 tokenId)
         internal
         view
         returns (uint256 debt)
     {
         debt =
-            INFTVault(l.jpegdVault).getDebtInterest(l.ownedTokenId) +
-            INFTVault(l.jpegdVault).positions(l.ownedTokenId).debtPrincipal;
+            INFTVault(l.jpegdVault).getDebtInterest(tokenId) +
+            INFTVault(l.jpegdVault).positions(tokenId).debtPrincipal;
     }
 }

@@ -11,14 +11,15 @@ library ShardVaultStorage {
         uint256 maxCapital;
         uint256 totalShards;
         uint256 citadelId;
-        address collection; // convert to [] => V2
+        uint256 lpFarmId;
         uint256 salesFeeBP;
         uint256 fundraiseFeeBP;
         uint256 yieldFeeBP;
         uint256 accruedFees;
         address treasury;
+        address collection; // convert to [] => V2
         address jpegdVault;
-        address jpegdLP;
+        address jpegdLP; //remove
         bool capped;
         bool invested;
         bool divested;
