@@ -12,6 +12,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
+        uint256 interestBuffer,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
@@ -22,6 +23,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
             citadel,
             lpFarm,
             curvePUSDPool,
+            interestBuffer,
             salesFeeBP,
             fundraiseFeeBP,
             yieldFeeBP
