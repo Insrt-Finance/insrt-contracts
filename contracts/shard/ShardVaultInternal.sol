@@ -328,6 +328,14 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ICryptoPunkMarket(PUNKS).offerPunkForSale(tokenId, ask);
     }
 
+    function _withdrawPunkProceeds(
+        ShardVaultStorage.Layout storage l,
+        uint256 punkId
+    ) internal {
+        ICryptoPunkMarket(PUNKS).withdraw();
+        l.ownedTokenIds.remove(punkId);
+    }
+
     function _totalDebt(ShardVaultStorage.Layout storage l, uint256 tokenId)
         internal
         view
