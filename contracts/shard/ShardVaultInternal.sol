@@ -40,6 +40,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         uint256 amount = msg.value;
         uint256 shardSize = l.shardSize;
+        uint256 owedShards = l.owedShards;
 
         if (amount % shardSize != 0 || amount == 0) {
             revert Errors.InvalidDepositAmount();
@@ -51,16 +52,16 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 shards = amount / l.shardSize;
         uint256 excessShards;
 
-        if (shards + l.currentShards > l.maxShards) {
+        if (shards + owedShards > l.maxShards) {
             l.vaultFull = true;
-            excessShards = shards + l.currentShards - l.maxShards;
+            excessShards = shards + owedShards - l.maxShards;
         }
 
         shards -= excessShards;
 
-        l.owedShards[msg.sender] += shards;
-        l.currentShards += shards;
+        l.depositorShards[msg.sender] += shards;
         l.depositors.add(msg.sender);
+        owedShards += shards;
 
         if (excessShards > 0) {
             payable(msg.sender).sendValue(excessShards * shardSize);
