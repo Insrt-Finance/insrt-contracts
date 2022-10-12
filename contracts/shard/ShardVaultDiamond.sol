@@ -8,6 +8,6 @@ import { SolidStateDiamond } from '@solidstate/contracts/proxy/diamond/SolidStat
  * @title Diamond proxy used as centrally controlled ShardVault implementation
  * @dev deployed standalone and passed to ShardVaultManager constructor
  */
-contract IndexDiamond is SolidStateDiamond {
+contract ShardVaultDiamond is SolidStateDiamond {
 
 }
