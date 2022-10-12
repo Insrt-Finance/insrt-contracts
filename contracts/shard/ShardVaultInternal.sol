@@ -39,17 +39,17 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 amount = msg.value;
-        uint256 shardSize = l.shardSize;
+        uint256 shardValue = l.shardValue;
         uint256 owedShards = l.owedShards;
 
-        if (amount % shardSize != 0 || amount == 0) {
+        if (amount % shardValue != 0 || amount == 0) {
             revert Errors.InvalidDepositAmount();
         }
         if (l.invested || l.vaultFull) {
             revert Errors.DepositForbidden();
         }
 
-        uint256 shards = amount / l.shardSize;
+        uint256 shards = amount / l.shardValue;
         uint256 excessShards;
 
         if (shards + owedShards > l.maxShards) {
@@ -64,7 +64,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         owedShards += shards;
 
         if (excessShards > 0) {
-            payable(msg.sender).sendValue(excessShards * shardSize);
+            payable(msg.sender).sendValue(excessShards * shardValue);
         }
     }
 
@@ -91,7 +91,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
             l.depositors.remove(msg.sender);
         }
 
-        payable(msg.sender).sendValue(shards * l.shardSize);
+        payable(msg.sender).sendValue(shards * l.shardValue);
     }
 
     /**
@@ -113,6 +113,6 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @notice returns ETH value of shard
      */
     function _shardSize() internal view returns (uint256) {
-        return ShardVaultStorage.layout().shardSize;
+        return ShardVaultStorage.layout().shardValue;
     }
 }
