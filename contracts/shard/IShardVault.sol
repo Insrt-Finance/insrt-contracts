@@ -8,6 +8,6 @@ import { IShardVaultView } from './IShardVaultView.sol';
 /**
  * @title complete ShardVault interface
  */
-interface IShardVault is IShardVaultIO {
+interface IShardVault is IShardVaultIO, IShardVaultView {
 
 }

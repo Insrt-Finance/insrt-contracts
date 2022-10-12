@@ -52,7 +52,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 shards = amount / l.shardValue;
         uint256 excessShards;
 
-        if (shards + owedShards > l.maxShards) {
+        if (shards + owedShards >= l.maxShards) {
             l.vaultFull = true;
             excessShards = shards + owedShards - l.maxShards;
         }
@@ -61,7 +61,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         l.depositorShards[msg.sender] += shards;
         l.depositors.add(msg.sender);
-        owedShards += shards;
+        l.owedShards += shards;
 
         if (excessShards > 0) {
             payable(msg.sender).sendValue(excessShards * shardValue);
