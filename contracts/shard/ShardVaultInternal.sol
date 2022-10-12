@@ -93,4 +93,26 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         payable(msg.sender).sendValue(shards * l.shardSize);
     }
+
+    /**
+     * @notice returns amount of shards escrowed by vault for an account
+     * @param account address of account owed shards
+     */
+    function _depositorShards(address account) internal view returns (uint256) {
+        return ShardVaultStorage.layout().depositorShards[account];
+    }
+
+    /**
+     * @notice returns total shards escrowed by vault
+     */
+    function _owedShards() internal view returns (uint256) {
+        return ShardVaultStorage.layout().owedShards;
+    }
+
+    /**
+     * @notice returns ETH value of shard
+     */
+    function _shardSize() internal view returns (uint256) {
+        return ShardVaultStorage.layout().shardSize;
+    }
 }
