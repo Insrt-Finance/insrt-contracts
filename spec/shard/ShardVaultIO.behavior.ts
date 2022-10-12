@@ -35,14 +35,14 @@ export function describeBehaviorOfShardVaultIO(
         [depositAmount, depositAmount.mul(ethers.constants.NegativeOne)],
       );
     });
-    it('tracks shards owed to depositor', async () => {
+    it('increases shards owed to depositor', async () => {
       await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
       expect(await instance.depositorShards(depositor.address)).to.eq(
         depositAmount.div(shardValue),
       );
     });
-    it('tracks total shards owed', async () => {
+    it('increases total shards owed', async () => {
       await instance.connect(depositor)['deposit()']({ value: depositAmount });
       await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
@@ -89,6 +89,59 @@ export function describeBehaviorOfShardVaultIO(
       });
 
       it('shard vault has invested', async () => {
+        //TODO
+        console.log('TODO');
+      });
+    });
+  });
+
+  describe('#withdraw(uint256)', () => {
+    const withdrawAmount = ethers.constants.One;
+    const depositAmount = ethers.utils.parseEther('10');
+    it('transfers ether from vault to deposit analogous to shards withdrawn', async () => {
+      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+
+      await expect(() =>
+        instance.connect(depositor)['withdraw(uint256)'](withdrawAmount),
+      ).to.changeEtherBalances(
+        [instance, depositor],
+        [
+          ethers.utils
+            .parseEther(withdrawAmount.toString())
+            .mul(ethers.constants.NegativeOne),
+          ethers.utils.parseEther(withdrawAmount.toString()),
+        ],
+      );
+    });
+    it('decreasess shards owed to depositor', async () => {
+      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+      await instance.connect(depositor)['withdraw(uint256)'](withdrawAmount);
+
+      expect(await instance.depositorShards(depositor.address)).to.eq(
+        depositAmount.div(ethers.utils.parseEther('1.0')).sub(withdrawAmount),
+      );
+    });
+    it('decreases total shards owed', async () => {
+      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+
+      await instance.connect(depositor)['withdraw(uint256)'](withdrawAmount);
+      expect(await instance.owedShards()).to.eq(
+        depositAmount.div(ethers.utils.parseEther('1.0')).sub(withdrawAmount),
+      );
+    });
+    describe('reverts if', () => {
+      it('depositor is owed less shards than shards withdrawn', async () => {
+        await instance
+          .connect(depositor)
+          ['deposit()']({ value: depositAmount });
+
+        await expect(
+          instance
+            .connect(depositor)
+            ['withdraw(uint256)'](withdrawAmount.mul(BigNumber.from('50'))),
+        ).to.be.revertedWith('InsufficientShards()');
+      });
+      it('vault is full', async () => {
         //TODO
         console.log('TODO');
       });
