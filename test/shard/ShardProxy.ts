@@ -13,6 +13,7 @@ import {
 
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
 import { expect } from 'chai';
+import { BigNumber } from 'ethers';
 
 describe('ShardVaultProxy', () => {
   const ethers = hre.ethers;
@@ -23,6 +24,7 @@ describe('ShardVaultProxy', () => {
   let deployer: any;
   const id = 1;
   const shardValue = ethers.utils.parseEther('1.0');
+  const maxShards = BigNumber.from('20');
 
   const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB'; //mainnet
 
@@ -82,7 +84,11 @@ describe('ShardVaultProxy', () => {
 
     const deployShardVaultTx = await core
       .connect(deployer)
-      ['deployShardVault(address,uint256)'](CRYPTO_PUNKS_MARKET, shardValue);
+      ['deployShardVault(address,uint256,uint256)'](
+        CRYPTO_PUNKS_MARKET,
+        shardValue,
+        maxShards,
+      );
 
     const { events } = await deployShardVaultTx.wait();
     const { deployment } = events.find(
@@ -98,7 +104,7 @@ describe('ShardVaultProxy', () => {
     afterEach(async () => {
       await ethers.provider.send('evm_revert', [snapshotId]);
     });
-
-    describeBehaviorOfShardVaultProxy(async () => instance, {});
   });
+
+  describeBehaviorOfShardVaultProxy(async () => instance, {});
 });
