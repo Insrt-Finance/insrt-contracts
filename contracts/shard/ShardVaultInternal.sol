@@ -74,7 +74,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
     function _withdraw(uint256 shards) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.capped) {
+        if (l.invested || l.vaultFull) {
             revert Errors.WithdrawalForbidden();
         }
         if (l.owedShards[msg.sender] < shards) {
@@ -82,7 +82,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         }
 
         l.owedShards[msg.sender] -= shards;
-        l.totalShards -= shards;
+        l.currentShards -= shards;
 
         if (l.owedShards[msg.sender] == 0) {
             l.depositors.remove(msg.sender);
