@@ -59,8 +59,10 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         shards -= excessShards;
 
+        if (!l.depositors.contains(msg.sender)) {
+            l.depositors.add(msg.sender);
+        }
         l.depositorShards[msg.sender] += shards;
-        l.depositors.add(msg.sender);
         l.owedShards += shards;
 
         if (excessShards > 0) {
@@ -84,7 +86,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
             revert Errors.InsufficientShards();
         }
 
-        depositorShards -= shards;
+        l.depositorShards[msg.sender] -= shards;
         l.owedShards -= shards;
 
         if (depositorShards == 0) {
