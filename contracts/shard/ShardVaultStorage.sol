@@ -9,12 +9,12 @@ library ShardVaultStorage {
         uint256 id;
         uint256 shardSize;
         uint256 maxShards;
-        uint256 currentShards;
+        uint256 owedShards;
         address collection;
         bool vaultFull;
         bool invested;
         bool divested;
-        mapping(address => uint256) owedShards;
+        mapping(address => uint256) depositorShards;
         EnumerableSet.AddressSet depositors;
     }
 
