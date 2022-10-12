@@ -8,10 +8,10 @@ library ShardVaultStorage {
     struct Layout {
         uint256 id;
         uint256 shardSize;
-        uint256 maxCapital;
-        uint256 totalShards;
+        uint256 maxShards;
+        uint256 currentShards;
         address collection;
-        bool capped;
+        bool vaultFull;
         bool invested;
         bool divested;
         mapping(address => uint256) owedShards;
