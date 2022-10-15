@@ -9,24 +9,21 @@ import { IShardVaultView } from './IShardVaultView.sol';
  * @title ShardVaultView facet containing view functions
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
+    constructor(address shardsCollection)
+        ShardVaultInternal(shardsCollection)
+    {}
+
     /**
      * @inheritdoc IShardVaultView
      */
-    function depositorShards(address account) external view returns (uint256) {
-        return _depositorShards(account);
+    function mintedShards() external view returns (uint256) {
+        return _mintedShards();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function owedShards() external view returns (uint256) {
-        return _owedShards();
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function shardSize() external view returns (uint256) {
-        return _shardSize();
+    function shardValue() external view returns (uint256) {
+        return _shardValue();
     }
 }

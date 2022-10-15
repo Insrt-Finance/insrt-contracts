@@ -119,7 +119,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
     /**
      * @notice returns ETH value of shard
      */
-    function _shardSize() internal view returns (uint256) {
+    function _shardValue() internal view returns (uint256) {
         return ShardVaultStorage.layout().shardValue;
     }
 
