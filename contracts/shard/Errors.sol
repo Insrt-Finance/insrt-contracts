@@ -22,4 +22,14 @@ library Errors {
      * @notice thrown when the maximum capital has been reached or vault has invested
      */
     error WithdrawalForbidden();
+
+    /**
+     * @notice thrown when function called by non-shard vault
+     */
+    error OnlyVault();
+
+    /**
+     * @notice thrown when function called by non-protocol owner
+     */
+    error OnlyProtocolOwner();
 }
