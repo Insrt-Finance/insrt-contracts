@@ -16,7 +16,9 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
  */
-abstract contract ShardVaultInternal is ERC1155BaseInternal {
+abstract contract ShardVaultInternal is OwnableInternal {
+    using AddressUtils for address payable;
+
     address internal immutable SHARDS;
 
     constructor(address shardCollection) {
