@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
+import { ISolidStateERC721 } from '@solidstate/contracts/token/ERC721/ISolidStateERC721.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { Errors } from './Errors.sol';
@@ -84,43 +85,35 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
     /**
      * @notice withdraws ETH for an amount of shards
-     * @param shards the amount of shards to "burn" for ETH
+     * @param tokenIds the tokenIds of shards to burn
      */
-    function _withdraw(uint256 shards) internal {
+    function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
-        uint256 depositorShards = l.depositorShards[msg.sender];
 
         if (l.invested || l.vaultFull) {
             revert Errors.WithdrawalForbidden();
         }
-        if (depositorShards < shards) {
-            revert Errors.InsufficientShards();
+
+        uint256 tokens = tokenIds.length;
+
+        for (uint256 i; i < tokens; ) {
+            if (ISolidStateERC721(SHARDS).ownerOf(tokenIds[i]) != msg.sender) {
+                revert Errors.OnlyShardOwner();
+            }
+
+            IShardCollection(SHARDS).burn(tokenIds[i]);
         }
 
-        l.depositorShards[msg.sender] -= shards;
-        l.owedShards -= shards;
+        l.mintedShards -= tokens;
 
-        if (depositorShards == 0) {
-            l.depositors.remove(msg.sender);
-        }
-
-        payable(msg.sender).sendValue(shards * l.shardValue);
+        payable(msg.sender).sendValue(tokens * l.shardValue);
     }
 
     /**
-     * @notice returns amount of shards escrowed by vault for an account
-     * @param account address of account owed shards
+     * @notice returns total minted shards amount
      */
-    function _depositorShards(address account) internal view returns (uint256) {
-        return ShardVaultStorage.layout().depositorShards[account];
-    }
-
-    /**
-     * @notice returns total shards escrowed by vault
-     */
-    function _owedShards() internal view returns (uint256) {
-        return ShardVaultStorage.layout().owedShards;
+    function _mintedShards() internal view returns (uint256) {
+        return ShardVaultStorage.layout().mintedShards;
     }
 
     /**

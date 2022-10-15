@@ -32,4 +32,9 @@ library Errors {
      * @notice thrown when function called by non-protocol owner
      */
     error OnlyProtocolOwner();
+
+    /**
+     * @notice thrown when function called by non-shard owner
+     */
+    error OnlyShardOwner();
 }
