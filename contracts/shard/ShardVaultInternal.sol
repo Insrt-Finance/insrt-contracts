@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
-import { ERC1155MetadataStorage } from '@solidstate/contracts/token/ERC1155/metadata/ERC1155MetadataStorage.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { Errors } from './Errors.sol';
+import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
@@ -19,9 +19,16 @@ abstract contract ShardVaultInternal is OwnableInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    modifier onlyProtocolOwner() {
-        require(msg.sender == _protocolOwner(), 'Not protocol owner');
-        _;
+    address internal immutable SHARDS;
+
+    constructor(address shardCollection) {
+        SHARDS = shardCollection;
+    }
+
+    function _onlyProtocolOwner(address account) internal view {
+        if (account != _protocolOwner()) {
+            revert Errors.OnlyProtocolOwner();
+        }
     }
 
     /**
@@ -40,7 +47,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
-        uint256 owedShards = l.owedShards;
+        uint256 mintedShards = l.mintedShards;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert Errors.InvalidDepositAmount();
@@ -52,18 +59,23 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 shards = amount / l.shardValue;
         uint256 excessShards;
 
-        if (shards + owedShards >= l.maxShards) {
+        if (shards + mintedShards >= l.maxShards) {
             l.vaultFull = true;
-            excessShards = shards + owedShards - l.maxShards;
+            excessShards = shards + mintedShards - l.maxShards;
         }
 
         shards -= excessShards;
+        l.mintedShards += shards;
 
-        if (!l.depositors.contains(msg.sender)) {
-            l.depositors.add(msg.sender);
+        for (uint256 i; i < shards; ) {
+            unchecked {
+                IShardCollection(SHARDS).mint(
+                    msg.sender,
+                    _generateTokenId(++l.count)
+                );
+                ++i;
+            }
         }
-        l.depositorShards[msg.sender] += shards;
-        l.owedShards += shards;
 
         if (excessShards > 0) {
             payable(msg.sender).sendValue(excessShards * shardValue);
@@ -116,5 +128,15 @@ abstract contract ShardVaultInternal is OwnableInternal {
      */
     function _shardSize() internal view returns (uint256) {
         return ShardVaultStorage.layout().shardValue;
+    }
+
+    function _generateTokenId(uint256 count)
+        private
+        view
+        returns (uint256 tokenId)
+    {
+        assembly {
+            tokenId := or(shl(12, address()), count)
+        }
     }
 }
