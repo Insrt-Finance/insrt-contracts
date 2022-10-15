@@ -15,8 +15,6 @@ library ShardVaultStorage {
         bool vaultFull;
         bool invested;
         bool divested;
-        mapping(address => uint256) depositorShards;
-        EnumerableSet.AddressSet depositors;
     }
 
     bytes32 internal constant STORAGE_SLOT =
