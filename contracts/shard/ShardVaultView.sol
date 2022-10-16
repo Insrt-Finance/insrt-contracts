@@ -26,4 +26,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function shardValue() external view returns (uint256) {
         return _shardValue();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function shardCollection() external view returns (address) {
+        return _shardCollection();
+    }
 }

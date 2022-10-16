@@ -15,4 +15,9 @@ interface IShardVaultView {
      * @notice returns ETH value of shard at time of mint
      */
     function shardValue() external view returns (uint256);
+
+    /**
+     * @notice return ShardCollection address
+     */
+    function shardCollection() external view returns (address);
 }

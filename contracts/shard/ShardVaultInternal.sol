@@ -133,6 +133,13 @@ abstract contract ShardVaultInternal is OwnableInternal {
         return ShardVaultStorage.layout().shardValue;
     }
 
+    /**
+     * @notice return ShardCollection address
+     */
+    function _shardCollection() internal view returns (address) {
+        return SHARD_COLLECTION;
+    }
+
     function _generateTokenId(uint256 count)
         private
         view
