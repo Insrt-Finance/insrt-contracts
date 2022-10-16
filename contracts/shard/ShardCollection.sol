@@ -15,13 +15,16 @@ contract ShardCollection is
     OwnableInternal,
     IShardCollection
 {
-    function mint(address to, uint256 tokenId) external {
+    modifier onlyVault() {
         _onlyVault(msg.sender);
+        _;
+    }
+
+    function mint(address to, uint256 tokenId) external onlyVault {
         _mint(to, tokenId);
     }
 
-    function burn(uint256 tokenId) external {
-        _onlyVault(msg.sender);
+    function burn(uint256 tokenId) external onlyVault {
         _burn(tokenId);
     }
 
