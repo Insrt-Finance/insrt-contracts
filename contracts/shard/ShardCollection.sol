@@ -33,12 +33,12 @@ contract ShardCollection is
         _burn(tokenId);
     }
 
-    function approveVault(address vault) external {
+    function addToWhitelist(address vault) external {
         _onlyProtocolOwner(msg.sender);
         ShardCollectionStorage.layout().vaults[vault] = true;
     }
 
-    function removeVault(address vault) external {
+    function removeFromWhitelist(address vault) external {
         _onlyProtocolOwner(msg.sender);
         ShardCollectionStorage.layout().vaults[vault] = false;
     }

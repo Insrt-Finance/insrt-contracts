@@ -20,11 +20,11 @@ interface IShardCollection {
      * @notice whitelists an address for minting/burning tokens
      * @param vault address of vault
      */
-    function approveVault(address vault) external;
+    function addToWhitelist(address vault) external;
 
     /**
      * @notice removes a vault from whitelist
      * @param vault address of vault
      */
-    function removeVault(address vault) external;
+    function removeFromWhitelist(address vault) external;
 }
