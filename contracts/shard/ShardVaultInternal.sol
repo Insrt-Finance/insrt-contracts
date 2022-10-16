@@ -128,7 +128,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         returns (uint256 tokenId)
     {
         assembly {
-            tokenId := or(shl(12, address()), count)
+            tokenId := or(shl(96, address()), count)
         }
     }
 }
