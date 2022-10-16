@@ -12,6 +12,11 @@ interface IShardVaultView {
     function totalSupply() external view returns (uint256);
 
     /**
+     * @notice returns maximum possible minted shards
+     */
+    function maxSupply() external view returns (uint256);
+
+    /**
      * @notice returns ETH value of shard at time of mint
      */
     function shardValue() external view returns (uint256);
@@ -20,4 +25,10 @@ interface IShardVaultView {
      * @notice return ShardCollection address
      */
     function shardCollection() external view returns (address);
+
+    /**
+     * @notice return minted token count
+     * @dev does not reduce when tokens are burnt
+     */
+    function count() external view returns (uint256);
 }

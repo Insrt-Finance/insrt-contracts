@@ -127,6 +127,13 @@ abstract contract ShardVaultInternal is OwnableInternal {
     }
 
     /**
+     * @notice returns maximum possible minted shards
+     */
+    function _maxSupply() internal view returns (uint256) {
+        return ShardVaultStorage.layout().maxSupply;
+    }
+
+    /**
      * @notice returns ETH value of shard
      */
     function _shardValue() internal view returns (uint256) {
@@ -138,6 +145,14 @@ abstract contract ShardVaultInternal is OwnableInternal {
      */
     function _shardCollection() internal view returns (address) {
         return SHARD_COLLECTION;
+    }
+
+    /**
+     * @notice return minted token count
+     * @dev does not reduce when tokens are burnt
+     */
+    function _count() internal view returns (uint256) {
+        return ShardVaultStorage.layout().count;
     }
 
     function _generateTokenId(uint256 count)

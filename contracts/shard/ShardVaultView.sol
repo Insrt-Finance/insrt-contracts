@@ -23,6 +23,13 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function maxSupply() external view returns (uint256) {
+        return _maxSupply();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function shardValue() external view returns (uint256) {
         return _shardValue();
     }
@@ -32,5 +39,12 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function shardCollection() external view returns (address) {
         return _shardCollection();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function count() external view returns (uint256) {
+        return _count();
     }
 }
