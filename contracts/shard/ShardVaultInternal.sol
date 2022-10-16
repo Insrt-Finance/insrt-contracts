@@ -99,6 +99,9 @@ abstract contract ShardVaultInternal is OwnableInternal {
             if (ISolidStateERC721(SHARDS).ownerOf(tokenIds[i]) != msg.sender) {
                 revert Errors.OnlyShardOwner();
             }
+            if (_addressFromTokenId(tokenIds[i]) != address(this)) {
+                revert Errors.VaultTokenIdMismatch();
+            }
 
             IShardCollection(SHARDS).burn(tokenIds[i]);
         }
@@ -127,6 +130,14 @@ abstract contract ShardVaultInternal is OwnableInternal {
         view
         returns (uint256 tokenId)
     {
-        tokenId = ((uint256(uint160(address(this))) << 96) ^ count);
+        tokenId = ((uint256(uint160(address(this))) << 96) | count);
+    }
+
+    function _addressFromTokenId(uint256 tokenId)
+        private
+        pure
+        returns (address)
+    {
+        return address(uint160(tokenId >> 96));
     }
 }
