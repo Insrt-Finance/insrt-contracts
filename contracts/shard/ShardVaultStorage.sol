@@ -9,8 +9,8 @@ library ShardVaultStorage {
         uint256 id;
         uint256 count;
         uint256 shardValue;
-        uint256 maxShards;
-        uint256 mintedShards;
+        uint256 maxSupply;
+        uint256 totalSupply;
         address collection;
         bool vaultFull;
         bool invested;

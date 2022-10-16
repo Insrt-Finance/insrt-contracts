@@ -18,7 +18,7 @@ contract ShardVaultProxy is Proxy {
         address shardVaultDiamond,
         address collection,
         uint256 shardValue,
-        uint256 maxShards,
+        uint256 maxSupply,
         uint256 id
     ) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
@@ -30,7 +30,7 @@ contract ShardVaultProxy is Proxy {
         l.id = id;
         l.collection = collection;
         l.shardValue = shardValue;
-        l.maxShards = maxShards;
+        l.maxSupply = maxSupply;
     }
 
     /**

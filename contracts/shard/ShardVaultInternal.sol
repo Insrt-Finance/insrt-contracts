@@ -47,7 +47,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
-        uint256 mintedShards = l.mintedShards;
+        uint256 totalSupply = l.totalSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert Errors.ShardVault__InvalidDepositAmount();
@@ -59,13 +59,13 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 shards = amount / l.shardValue;
         uint256 excessShards;
 
-        if (shards + mintedShards >= l.maxShards) {
+        if (shards + totalSupply >= l.maxSupply) {
             l.vaultFull = true;
-            excessShards = shards + mintedShards - l.maxShards;
+            excessShards = shards + totalSupply - l.maxSupply;
         }
 
         shards -= excessShards;
-        l.mintedShards += shards;
+        l.totalSupply += shards;
 
         for (uint256 i; i < shards; ) {
             unchecked {
@@ -106,7 +106,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
             IShardCollection(SHARDS).burn(tokenIds[i]);
         }
 
-        l.mintedShards -= tokens;
+        l.totalSupply -= tokens;
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }
@@ -114,8 +114,8 @@ abstract contract ShardVaultInternal is OwnableInternal {
     /**
      * @notice returns total minted shards amount
      */
-    function _mintedShards() internal view returns (uint256) {
-        return ShardVaultStorage.layout().mintedShards;
+    function _totalSupply() internal view returns (uint256) {
+        return ShardVaultStorage.layout().totalSupply;
     }
 
     /**

@@ -7,9 +7,9 @@ pragma solidity ^0.8.0;
  */
 interface IShardVaultView {
     /**
-     * @notice returns total shards escrowed by vault
+     * @notice returns total shards minted
      */
-    function mintedShards() external view returns (uint256);
+    function totalSupply() external view returns (uint256);
 
     /**
      * @notice returns ETH value of shard at time of mint
