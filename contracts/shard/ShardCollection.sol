@@ -15,19 +15,6 @@ contract ShardCollection is
     OwnableInternal,
     IShardCollection
 {
-    modifier onlyProtocolOwner() {
-        _onlyProtocolOwner(msg.sender);
-        _;
-    }
-
-    /**
-     * @notice returns the protocol owner
-     * @return address of the protocol owner
-     */
-    function _protocolOwner() internal view returns (address) {
-        return IERC173(_owner()).owner();
-    }
-
     function mint(address to, uint256 tokenId) external {
         _onlyVault(msg.sender);
         _mint(to, tokenId);
@@ -38,24 +25,17 @@ contract ShardCollection is
         _burn(tokenId);
     }
 
-    function addToWhitelist(address vault) external onlyProtocolOwner {
+    function addToWhitelist(address vault) external onlyOwner {
         ShardCollectionStorage.layout().vaults[vault] = true;
     }
 
-    function removeFromWhitelist(address vault) external onlyProtocolOwner {
-        _onlyProtocolOwner(msg.sender);
+    function removeFromWhitelist(address vault) external onlyOwner {
         ShardCollectionStorage.layout().vaults[vault] = false;
     }
 
     function _onlyVault(address account) internal view {
         if (!ShardCollectionStorage.layout().vaults[account]) {
             revert Errors.ShardCollection__OnlyVault();
-        }
-    }
-
-    function _onlyProtocolOwner(address account) internal view {
-        if (account != _protocolOwner()) {
-            revert Errors.ShardCollection__OnlyProtocolOwner();
         }
     }
 }
