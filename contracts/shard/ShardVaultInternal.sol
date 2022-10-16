@@ -100,6 +100,12 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         uint256 tokens = tokenIds.length;
 
+        if (
+            ISolidStateERC721(SHARD_COLLECTION).balanceOf(msg.sender) < tokens
+        ) {
+            revert Errors.ShardVault__InsufficientShards();
+        }
+
         for (uint256 i; i < tokens; ) {
             if (
                 ISolidStateERC721(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
