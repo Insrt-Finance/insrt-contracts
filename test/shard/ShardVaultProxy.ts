@@ -9,6 +9,13 @@ import {
   ShardVaultManager__factory,
   ShardVaultIO__factory,
   ShardVaultView__factory,
+  ShardCollection,
+  ShardCollection__factory,
+  ShardCollectionDiamond,
+  ShardCollectionDiamond__factory,
+  ERC165__factory,
+  IShardCollection__factory,
+  IShardCollection,
 } from '../../typechain-types';
 
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
@@ -20,6 +27,7 @@ describe('ShardVaultProxy', () => {
   let snapshotId: number;
   let core: ICore;
   let instance: IShardVault;
+  let shardCollectionInstance: IShardCollection;
 
   let deployer: any;
   const id = 1;
@@ -32,10 +40,32 @@ describe('ShardVaultProxy', () => {
     // TODO: must skip signers because they're not parameterized in SolidState spec
     [, , , deployer] = await ethers.getSigners();
 
+    const ERC165Selectors = new Set();
+    const IERC165 = ERC165__factory.createInterface();
+
+    IERC165.fragments.map((f) => ERC165Selectors.add(IERC165.getSighash(f)));
+
     const coreDiamond = await new Core__factory(deployer).deploy();
     const shardVaultDiamond = await new ShardVaultDiamond__factory(
       deployer,
     ).deploy();
+    const shardCollectionDiamond = await new ShardCollectionDiamond__factory(
+      deployer,
+    ).deploy('ShardVaultCollection', 'SVC', 'shards/');
+
+    const shardCollectionFacetCuts = [
+      await new ShardCollection__factory(deployer).deploy(),
+    ].map(function (f) {
+      return {
+        target: f.address,
+        action: 0,
+        selectors: Object.keys(f.interface.functions)
+          .filter((fn) => !ERC165Selectors.has(f.interface.getSighash(fn)))
+          .map((fn) => f.interface.getSighash(fn)),
+      };
+    });
+
+    console.log(shardCollectionFacetCuts);
 
     const coreFacetCuts = [
       await new ShardVaultManager__factory(deployer).deploy(
@@ -54,8 +84,12 @@ describe('ShardVaultProxy', () => {
     const shardVaultSelectors = new Set();
 
     const shardVaultFacetCuts = [
-      await new ShardVaultIO__factory(deployer).deploy(),
-      await new ShardVaultView__factory(deployer).deploy(),
+      await new ShardVaultIO__factory(deployer).deploy(
+        shardCollectionDiamond.address,
+      ),
+      await new ShardVaultView__factory(deployer).deploy(
+        shardCollectionDiamond.address,
+      ),
     ].map(function (f) {
       return {
         target: f.address,
@@ -80,6 +114,12 @@ describe('ShardVaultProxy', () => {
       '0x',
     );
 
+    await shardCollectionDiamond.diamondCut(
+      shardCollectionFacetCuts,
+      ethers.constants.AddressZero,
+      '0x',
+    );
+
     core = ICore__factory.connect(coreDiamond.address, ethers.provider);
 
     const deployShardVaultTx = await core
@@ -96,6 +136,15 @@ describe('ShardVaultProxy', () => {
     ).args;
 
     instance = IShardVault__factory.connect(deployment, deployer);
+
+    shardCollectionInstance = IShardCollection__factory.connect(
+      shardCollectionDiamond.address,
+      deployer,
+    );
+
+    await shardCollectionInstance
+      .connect(deployer)
+      ['addToWhitelist(address)'](deployment);
 
     beforeEach(async () => {
       snapshotId = await ethers.provider.send('evm_snapshot', []);
