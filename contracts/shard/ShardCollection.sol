@@ -45,13 +45,13 @@ contract ShardCollection is
 
     function _onlyVault(address account) internal view {
         if (!ShardCollectionStorage.layout().vaults[account]) {
-            revert Errors.OnlyVault();
+            revert Errors.ShardCollection__OnlyVault();
         }
     }
 
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
-            revert Errors.OnlyProtocolOwner();
+            revert Errors.ShardCollection__OnlyProtocolOwner();
         }
     }
 }

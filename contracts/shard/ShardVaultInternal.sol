@@ -27,7 +27,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
-            revert Errors.OnlyProtocolOwner();
+            revert Errors.ShardVault__OnlyProtocolOwner();
         }
     }
 
@@ -50,10 +50,10 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 mintedShards = l.mintedShards;
 
         if (amount % shardValue != 0 || amount == 0) {
-            revert Errors.InvalidDepositAmount();
+            revert Errors.ShardVault__InvalidDepositAmount();
         }
         if (l.invested || l.vaultFull) {
-            revert Errors.DepositForbidden();
+            revert Errors.ShardVault__DepositForbidden();
         }
 
         uint256 shards = amount / l.shardValue;
@@ -90,17 +90,17 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         if (l.invested || l.vaultFull) {
-            revert Errors.WithdrawalForbidden();
+            revert Errors.ShardVault__WithdrawalForbidden();
         }
 
         uint256 tokens = tokenIds.length;
 
         for (uint256 i; i < tokens; ) {
             if (ISolidStateERC721(SHARDS).ownerOf(tokenIds[i]) != msg.sender) {
-                revert Errors.OnlyShardOwner();
+                revert Errors.ShardVault__OnlyShardOwner();
             }
             if (_addressFromTokenId(tokenIds[i]) != address(this)) {
-                revert Errors.VaultTokenIdMismatch();
+                revert Errors.ShardVault__VaultTokenIdMismatch();
             }
 
             IShardCollection(SHARDS).burn(tokenIds[i]);
