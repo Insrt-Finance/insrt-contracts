@@ -25,6 +25,11 @@ abstract contract ShardVaultInternal is OwnableInternal {
         SHARD_COLLECTION = shardCollection;
     }
 
+    modifier onlyProtocolOwner() {
+        _onlyProtocolOwner(msg.sender);
+        _;
+    }
+
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
             revert Errors.ShardVault__OnlyProtocolOwner();

@@ -15,6 +15,11 @@ contract ShardCollection is
     OwnableInternal,
     IShardCollection
 {
+    modifier onlyProtocolOwner() {
+        _onlyProtocolOwner(msg.sender);
+        _;
+    }
+
     /**
      * @notice returns the protocol owner
      * @return address of the protocol owner
@@ -33,12 +38,11 @@ contract ShardCollection is
         _burn(tokenId);
     }
 
-    function addToWhitelist(address vault) external {
-        _onlyProtocolOwner(msg.sender);
+    function addToWhitelist(address vault) external onlyProtocolOwner {
         ShardCollectionStorage.layout().vaults[vault] = true;
     }
 
-    function removeFromWhitelist(address vault) external {
+    function removeFromWhitelist(address vault) external onlyProtocolOwner {
         _onlyProtocolOwner(msg.sender);
         ShardCollectionStorage.layout().vaults[vault] = false;
     }
