@@ -19,10 +19,10 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 abstract contract ShardVaultInternal is OwnableInternal {
     using AddressUtils for address payable;
 
-    address internal immutable SHARDS;
+    address internal immutable SHARD_COLLECTION;
 
     constructor(address shardCollection) {
-        SHARDS = shardCollection;
+        SHARD_COLLECTION = shardCollection;
     }
 
     function _onlyProtocolOwner(address account) internal view {
@@ -69,7 +69,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         for (uint256 i; i < shards; ) {
             unchecked {
-                IShardCollection(SHARDS).mint(
+                IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
                     _generateTokenId(++l.count)
                 );
@@ -96,14 +96,17 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 tokens = tokenIds.length;
 
         for (uint256 i; i < tokens; ) {
-            if (ISolidStateERC721(SHARDS).ownerOf(tokenIds[i]) != msg.sender) {
+            if (
+                ISolidStateERC721(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                msg.sender
+            ) {
                 revert Errors.ShardVault__OnlyShardOwner();
             }
             if (_addressFromTokenId(tokenIds[i]) != address(this)) {
                 revert Errors.ShardVault__VaultTokenIdMismatch();
             }
 
-            IShardCollection(SHARDS).burn(tokenIds[i]);
+            IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
         }
 
         l.totalSupply -= tokens;
