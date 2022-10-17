@@ -107,17 +107,20 @@ abstract contract ShardVaultInternal is OwnableInternal {
         }
 
         for (uint256 i; i < tokens; ) {
-            if (
-                ISolidStateERC721(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
-                msg.sender
-            ) {
-                revert Errors.ShardVault__OnlyShardOwner();
-            }
-            if (_addressFromTokenId(tokenIds[i]) != address(this)) {
-                revert Errors.ShardVault__VaultTokenIdMismatch();
-            }
+            unchecked {
+                if (
+                    ISolidStateERC721(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                    msg.sender
+                ) {
+                    revert Errors.ShardVault__OnlyShardOwner();
+                }
+                if (_addressFromTokenId(tokenIds[i]) != address(this)) {
+                    revert Errors.ShardVault__VaultTokenIdMismatch();
+                }
 
-            IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+                IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+                ++i;
+            }
         }
 
         l.totalSupply -= tokens;
