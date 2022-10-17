@@ -1,5 +1,5 @@
 import hre, { ethers } from 'hardhat';
-import { IShardVault } from '../../typechain-types';
+import { IShardCollection, IShardVault } from '../../typechain-types';
 import {
   describeBehaviorOfShardVaultIO,
   ShardVaultIOBehaviorArgs,

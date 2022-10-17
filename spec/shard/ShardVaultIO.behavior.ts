@@ -1,9 +1,15 @@
 import hre, { ethers } from 'hardhat';
-import { IShardVault } from '../../typechain-types';
+import {
+  IShardCollection,
+  IShardVault,
+  ShardCollection,
+  ShardCollection__factory,
+} from '../../typechain-types';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { shard } from '../../typechain-types/contracts';
 
 export interface ShardVaultIOBehaviorArgs {}
 
@@ -13,16 +19,20 @@ export function describeBehaviorOfShardVaultIO(
   skips?: string[],
 ) {
   let depositor: SignerWithAddress;
+  let secondDepositor: SignerWithAddress;
   let instance: IShardVault;
-
-  const shardValue = ethers.utils.parseEther('1.0');
+  let shardCollection: ShardCollection;
 
   before(async () => {
-    [depositor] = await ethers.getSigners();
+    [depositor, secondDepositor] = await ethers.getSigners();
   });
 
   beforeEach(async () => {
     instance = await deploy();
+    shardCollection = ShardCollection__factory.connect(
+      await instance['shardCollection()'](),
+      depositor,
+    );
   });
 
   describe('#deposit()', () => {
@@ -35,19 +45,25 @@ export function describeBehaviorOfShardVaultIO(
         [depositAmount, depositAmount.mul(ethers.constants.NegativeOne)],
       );
     });
-    it('increases shards owed to depositor', async () => {
+    it('mintstokens from ShardCollection to depositor', async () => {
       await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
-      expect(await instance.depositorShards(depositor.address)).to.eq(
-        depositAmount.div(shardValue),
+      expect(await shardCollection.balanceOf(depositor.address)).to.eq(
+        depositAmount.div(ethers.utils.parseEther('1.0')),
       );
     });
-    it('increases total shards owed', async () => {
-      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+    it('increases total shard supply', async () => {
       await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
-      expect(await instance.depositorShards(depositor.address)).to.eq(
-        depositAmount.div(shardValue).mul(ethers.constants.Two),
+      expect(await instance.totalSupply()).to.eq(
+        depositAmount.div(ethers.utils.parseEther('1.0')),
+      );
+    });
+    it('increases count', async () => {
+      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+
+      expect(await instance['count()']()).to.eq(
+        depositAmount.div(ethers.utils.parseEther('1.0')),
       );
     });
     it('returns any excess ETH sent past maximum fundraise target', async () => {
@@ -73,7 +89,7 @@ export function describeBehaviorOfShardVaultIO(
           instance
             .connect(depositor)
             ['deposit()']({ value: invalidDepositAmount }),
-        ).to.be.revertedWith('InvalidDepositAmount()');
+        ).to.be.revertedWith('ShardVault__InvalidDepositAmount()');
       });
 
       it('vault is full', async () => {
@@ -85,7 +101,7 @@ export function describeBehaviorOfShardVaultIO(
           ['deposit()']({ value: depositAmount });
         await expect(
           instance.connect(depositor)['deposit()']({ value: depositAmount }),
-        ).to.be.revertedWith('DepositForbidden()');
+        ).to.be.revertedWith('ShardVault__DepositForbidden()');
       });
 
       it('shard vault has invested', async () => {
@@ -95,54 +111,105 @@ export function describeBehaviorOfShardVaultIO(
     });
   });
 
-  describe('#withdraw(uint256)', () => {
-    const withdrawAmount = ethers.constants.One;
+  describe('#withdraw(uint256[])', () => {
     const depositAmount = ethers.utils.parseEther('10');
-    it('transfers ether from vault to deposit analogous to shards withdrawn', async () => {
-      await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
-      await expect(() =>
-        instance.connect(depositor)['withdraw(uint256)'](withdrawAmount),
+    it('returns ETH analogous to tokens burnt', async () => {
+      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+      const withdrawTokens = 5;
+      const tokens = [];
+      for (let i = 0; i < withdrawTokens; i++) {
+        tokens.push(
+          await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+        );
+      }
+
+      expect(() =>
+        instance.connect(depositor)['withdraw(uint256[])'](tokens),
       ).to.changeEtherBalances(
         [instance, depositor],
         [
           ethers.utils
-            .parseEther(withdrawAmount.toString())
+            .parseEther(withdrawTokens.toString())
             .mul(ethers.constants.NegativeOne),
-          ethers.utils.parseEther(withdrawAmount.toString()),
+          ethers.utils.parseEther(withdrawTokens.toString()),
         ],
       );
     });
-    it('decreasess shards owed to depositor', async () => {
-      await instance.connect(depositor)['deposit()']({ value: depositAmount });
-      await instance.connect(depositor)['withdraw(uint256)'](withdrawAmount);
 
-      expect(await instance.depositorShards(depositor.address)).to.eq(
-        depositAmount.div(ethers.utils.parseEther('1.0')).sub(withdrawAmount),
+    it('decreases total supply by tokens burnt', async () => {
+      await instance.connect(depositor)['deposit()']({ value: depositAmount });
+      const withdrawTokens = 5;
+      const tokens = [];
+      for (let i = 0; i < withdrawTokens; i++) {
+        tokens.push(
+          await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+        );
+      }
+
+      expect(await instance.totalSupply()).to.eq(
+        depositAmount.div(ethers.utils.parseEther('1.0')),
+      );
+
+      await instance.connect(depositor)['withdraw(uint256[])'](tokens);
+
+      expect(await instance.totalSupply()).to.eq(
+        depositAmount
+          .sub(ethers.utils.parseEther(withdrawTokens.toString()))
+          .div(ethers.utils.parseEther('1.0')),
       );
     });
-    it('decreases total shards owed', async () => {
-      await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
-      await instance.connect(depositor)['withdraw(uint256)'](withdrawAmount);
-      expect(await instance.owedShards()).to.eq(
-        depositAmount.div(ethers.utils.parseEther('1.0')).sub(withdrawAmount),
-      );
-    });
     describe('reverts if', () => {
-      it('depositor is owed less shards than shards withdrawn', async () => {
+      it('caller does not have enough shards', async () => {
+        await expect(
+          instance.connect(depositor).withdraw([ethers.constants.Zero]),
+        ).to.be.revertedWith('ShardVault__InsufficientShards()');
+      });
+      it('caller is not shard owner', async () => {
         await instance
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
+        await instance
+          .connect(secondDepositor)
+          ['deposit()']({ value: depositAmount.div(ethers.constants.Two) });
+
+        const withdrawTokens = 5;
+        const tokens = [];
+        for (let i = 0; i < withdrawTokens; i++) {
+          tokens.push(
+            await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+          );
+        }
 
         await expect(
-          instance
-            .connect(depositor)
-            ['withdraw(uint256)'](withdrawAmount.mul(BigNumber.from('50'))),
-        ).to.be.revertedWith('InsufficientShards()');
+          instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
+        ).to.be.revertedWith('ShardVault__OnlyShardOwner()');
+      });
+      it('owned shards correspond to different vault', async () => {
+        console.log('TODO');
       });
       it('vault is full', async () => {
-        //TODO
+        await instance
+          .connect(depositor)
+          ['deposit()']({ value: depositAmount });
+        await instance
+          .connect(secondDepositor)
+          ['deposit()']({ value: depositAmount });
+
+        const withdrawTokens = 5;
+        const tokens = [];
+        for (let i = 0; i < withdrawTokens; i++) {
+          tokens.push(
+            await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+          );
+        }
+
+        await expect(
+          instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
+        ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
+      });
+      it('vault is invested', async () => {
         console.log('TODO');
       });
     });

@@ -65,8 +65,6 @@ describe('ShardVaultProxy', () => {
       };
     });
 
-    console.log(shardCollectionFacetCuts);
-
     const coreFacetCuts = [
       await new ShardVaultManager__factory(deployer).deploy(
         shardVaultDiamond.address,
