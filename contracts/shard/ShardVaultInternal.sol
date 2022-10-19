@@ -166,14 +166,25 @@ abstract contract ShardVaultInternal is OwnableInternal {
         return ShardVaultStorage.layout().count;
     }
 
-    function _formatTokenId(uint256 count)
+    /**
+     * @notice formats a tokenId given the internalId and address of ShardVault contract
+     * @param internalId the internal ID
+     * @return tokenId the formatted tokenId
+     */
+    function _formatTokenId(uint256 internalId)
         internal
         view
         returns (uint256 tokenId)
     {
-        tokenId = ((uint256(uint160(address(this))) << 96) | count);
+        tokenId = ((uint256(uint160(address(this))) << 96) | internalId);
     }
 
+    /**
+     * @notice parses a tokenId to extract seeded vault address and internalId
+     * @param tokenId tokenId to parse
+     * @return vault seeded vault address
+     * @return internalId internal ID
+     */
     function _parseTokenId(uint256 tokenId)
         internal
         pure

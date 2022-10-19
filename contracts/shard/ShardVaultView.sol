@@ -47,4 +47,26 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function count() external view returns (uint256) {
         return _count();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function formatTokenId(uint256 internalId)
+        external
+        view
+        returns (uint256 tokenId)
+    {
+        tokenId = _formatTokenId(internalId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function parseTokenId(uint256 tokenId)
+        external
+        pure
+        returns (address vault, uint256 internalId)
+    {
+        (vault, internalId) = _parseTokenId(tokenId);
+    }
 }
