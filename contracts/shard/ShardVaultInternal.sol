@@ -76,7 +76,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
             unchecked {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    _generateTokenId(++l.count)
+                    _formatTokenId(++l.count)
                 );
                 ++i;
             }
@@ -114,7 +114,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
                 ) {
                     revert Errors.ShardVault__OnlyShardOwner();
                 }
-                if (_addressFromTokenId(tokenIds[i]) != address(this)) {
+                if (_parseTokenId(tokenIds[i]) != address(this)) {
                     revert Errors.ShardVault__VaultTokenIdMismatch();
                 }
 
@@ -164,19 +164,20 @@ abstract contract ShardVaultInternal is OwnableInternal {
         return ShardVaultStorage.layout().count;
     }
 
-    function _generateTokenId(uint256 count)
-        private
+    function _formatTokenId(uint256 count)
+        internal
         view
         returns (uint256 tokenId)
     {
         tokenId = ((uint256(uint160(address(this))) << 96) | count);
     }
 
-    function _addressFromTokenId(uint256 tokenId)
-        private
+    function _parseTokenId(uint256 tokenId)
+        internal
         pure
-        returns (address)
+        returns (address vault, uint256 internalId)
     {
-        return address(uint160(tokenId >> 96));
+        vault = address(uint160(tokenId >> 96));
+        internalId = uint256(uint24(tokenId << 160));
     }
 }
