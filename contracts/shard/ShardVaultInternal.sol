@@ -114,7 +114,9 @@ abstract contract ShardVaultInternal is OwnableInternal {
                 ) {
                     revert Errors.ShardVault__OnlyShardOwner();
                 }
-                if (_parseTokenId(tokenIds[i]) != address(this)) {
+
+                (address vault, ) = _parseTokenId(tokenIds[i]);
+                if (vault != address(this)) {
                     revert Errors.ShardVault__VaultTokenIdMismatch();
                 }
 
@@ -178,6 +180,6 @@ abstract contract ShardVaultInternal is OwnableInternal {
         returns (address vault, uint256 internalId)
     {
         vault = address(uint160(tokenId >> 96));
-        internalId = uint256(uint24(tokenId << 160));
+        internalId = uint256(uint96(tokenId << 160));
     }
 }
