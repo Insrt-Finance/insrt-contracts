@@ -191,6 +191,6 @@ abstract contract ShardVaultInternal is OwnableInternal {
         returns (address vault, uint256 internalId)
     {
         vault = address(uint160(tokenId >> 96));
-        internalId = uint256(uint96(tokenId << 160));
+        internalId = 0xFFFFFFFFFFFFFFFFFFFFFFFF & tokenId;
     }
 }
