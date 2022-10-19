@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
-import { ISolidStateERC721 } from '@solidstate/contracts/token/ERC721/ISolidStateERC721.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { Errors } from './Errors.sol';
@@ -100,27 +99,26 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
         uint256 tokens = tokenIds.length;
 
-        if (
-            ISolidStateERC721(SHARD_COLLECTION).balanceOf(msg.sender) < tokens
-        ) {
+        if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
             revert Errors.ShardVault__InsufficientShards();
         }
 
         for (uint256 i; i < tokens; ) {
+            if (
+                IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                msg.sender
+            ) {
+                revert Errors.ShardVault__OnlyShardOwner();
+            }
+
+            (address vault, ) = _parseTokenId(tokenIds[i]);
+            if (vault != address(this)) {
+                revert Errors.ShardVault__VaultTokenIdMismatch();
+            }
+
+            IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+
             unchecked {
-                if (
-                    ISolidStateERC721(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
-                    msg.sender
-                ) {
-                    revert Errors.ShardVault__OnlyShardOwner();
-                }
-
-                (address vault, ) = _parseTokenId(tokenIds[i]);
-                if (vault != address(this)) {
-                    revert Errors.ShardVault__VaultTokenIdMismatch();
-                }
-
-                IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
                 ++i;
             }
         }

@@ -2,7 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-interface IShardCollection {
+import { ISolidStateERC721 } from '@solidstate/contracts/token/ERC721/ISolidStateERC721.sol';
+
+interface IShardCollection is ISolidStateERC721 {
     /**
      * @notice mints a token
      * @param to address to mint to
