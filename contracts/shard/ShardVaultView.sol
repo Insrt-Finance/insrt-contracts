@@ -9,8 +9,28 @@ import { IShardVaultView } from './IShardVaultView.sol';
  * @title ShardVaultView facet containing view functions
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
-    constructor(address shardsCollection)
-        ShardVaultInternal(shardsCollection)
+    constructor(
+        address shardCollection,
+        address pUSD,
+        address punkMarket,
+        address citadel,
+        address lpFarm,
+        address curvePUSDPool,
+        uint256 salesFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP
+    )
+        ShardVaultInternal(
+            shardCollection,
+            pUSD,
+            punkMarket,
+            citadel,
+            lpFarm,
+            curvePUSDPool,
+            salesFeeBP,
+            fundraiseFeeBP,
+            yieldFeeBP
+        )
     {}
 
     /**
