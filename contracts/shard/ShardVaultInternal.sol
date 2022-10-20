@@ -246,6 +246,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ICryptoPunkMarket(PUNKS).buyPunk{ value: price }(punkId);
 
         l.invested = true;
+        l.ownedTokenIds.add(punkId);
     }
 
     /**
@@ -261,12 +262,6 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 punkId,
         bool insure
     ) internal returns (uint256 pUSD) {
-        if (
-            ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
-        ) {
-            revert Errors.ShardVault__NotOwned();
-        } // probably remove this error
-
         INFTVault(l.jpegdVault).borrow(
             punkId,
             INFTVault(l.jpegdVault).getNFTValueUSD(punkId),
@@ -322,7 +317,6 @@ abstract contract ShardVaultInternal is OwnableInternal {
             _collectFee(l, l.fundraiseFeeBP);
         }
         _purchasePunk(l, punkId);
-        l.ownedTokenIds.add(punkId);
         _stake(l, _collateralizePunk(l, punkId, insure), minCurveLP);
     }
 
