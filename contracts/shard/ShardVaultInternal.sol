@@ -14,6 +14,7 @@ import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
+import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
@@ -25,6 +26,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    address internal immutable SHARD_COLLECTION;
     address internal immutable PUSD;
     address internal immutable PUNKS;
     address internal immutable CITADEL;
@@ -33,6 +35,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
+        address shardCollection,
         address pUSD,
         address punkMarket,
         address citadel,
@@ -42,6 +45,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
     ) {
+        SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
         PUSD = pUSD;
         CITADEL = citadel;
@@ -55,11 +59,15 @@ abstract contract ShardVaultInternal is OwnableInternal {
         l.yieldFeeBP = yieldFeeBP;
     }
 
-    /**
-     * @notice ensure caller is protocol owner
-     */
-    function _onlyProtocolOwner() internal view {
-        if (msg.sender != _protocolOwner()) revert Errors.NotProtocolOwner();
+    modifier onlyProtocolOwner() {
+        _onlyProtocolOwner(msg.sender);
+        _;
+    }
+
+    function _onlyProtocolOwner(address account) internal view {
+        if (account != _protocolOwner()) {
+            revert Errors.ShardVault__OnlyProtocolOwner();
+        }
     }
 
     /**
@@ -77,50 +85,146 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 amount = msg.value;
+        uint256 shardValue = l.shardValue;
+        uint256 totalSupply = l.totalSupply;
 
-        if (amount % l.shardSize != 0 || amount == 0) {
-            revert Errors.InvalidDepositAmount();
+        if (amount % shardValue != 0 || amount == 0) {
+            revert Errors.ShardVault__InvalidDepositAmount();
         }
-        if (l.invested || l.capped) {
-            revert Errors.DepositForbidden();
-        }
-        if (address(this).balance > l.maxCapital) {
-            l.capped = true;
-            amount = msg.value + l.maxCapital - address(this).balance;
+        if (l.invested || l.vaultFull) {
+            revert Errors.ShardVault__DepositForbidden();
         }
 
-        uint256 shards = amount / l.shardSize;
-        l.owedShards[msg.sender] += shards;
-        l.totalShards += shards;
-        l.depositors.add(msg.sender);
+        uint256 shards = amount / l.shardValue;
+        uint256 excessShards;
 
-        if (msg.value - amount > 0) {
-            payable(msg.sender).sendValue(msg.value - amount);
+        if (shards + totalSupply >= l.maxSupply) {
+            l.vaultFull = true;
+            excessShards = shards + totalSupply - l.maxSupply;
+        }
+
+        shards -= excessShards;
+        l.totalSupply += shards;
+
+        for (uint256 i; i < shards; ) {
+            unchecked {
+                IShardCollection(SHARD_COLLECTION).mint(
+                    msg.sender,
+                    _formatTokenId(++l.count)
+                );
+                ++i;
+            }
+        }
+
+        if (excessShards > 0) {
+            payable(msg.sender).sendValue(excessShards * shardValue);
         }
     }
 
     /**
      * @notice withdraws ETH for an amount of shards
-     * @param shards the amount of shards to "burn" for ETH
+     * @param tokenIds the tokenIds of shards to burn
      */
-    function _withdraw(uint256 shards) internal {
+    function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.capped) {
-            revert Errors.WithdrawalForbidden();
-        }
-        if (l.owedShards[msg.sender] < shards) {
-            revert Errors.InsufficientShards();
+        if (l.invested || l.vaultFull) {
+            revert Errors.ShardVault__WithdrawalForbidden();
         }
 
-        l.owedShards[msg.sender] -= shards;
-        l.totalShards -= shards;
+        uint256 tokens = tokenIds.length;
 
-        if (l.owedShards[msg.sender] == 0) {
-            l.depositors.remove(msg.sender);
+        if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
+            revert Errors.ShardVault__InsufficientShards();
         }
 
-        payable(msg.sender).sendValue(shards * l.shardSize);
+        for (uint256 i; i < tokens; ) {
+            if (
+                IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                msg.sender
+            ) {
+                revert Errors.ShardVault__OnlyShardOwner();
+            }
+
+            (address vault, ) = _parseTokenId(tokenIds[i]);
+            if (vault != address(this)) {
+                revert Errors.ShardVault__VaultTokenIdMismatch();
+            }
+
+            IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        l.totalSupply -= tokens;
+
+        payable(msg.sender).sendValue(tokens * l.shardValue);
+    }
+
+    /**
+     * @notice returns total minted shards amount
+     */
+    function _totalSupply() internal view returns (uint256) {
+        return ShardVaultStorage.layout().totalSupply;
+    }
+
+    /**
+     * @notice returns maximum possible minted shards
+     */
+    function _maxSupply() internal view returns (uint256) {
+        return ShardVaultStorage.layout().maxSupply;
+    }
+
+    /**
+     * @notice returns ETH value of shard
+     */
+    function _shardValue() internal view returns (uint256) {
+        return ShardVaultStorage.layout().shardValue;
+    }
+
+    /**
+     * @notice return ShardCollection address
+     */
+    function _shardCollection() internal view returns (address) {
+        return SHARD_COLLECTION;
+    }
+
+    /**
+     * @notice return minted token count
+     * @dev does not reduce when tokens are burnt
+     */
+    function _count() internal view returns (uint256) {
+        return ShardVaultStorage.layout().count;
+    }
+
+    /**
+     * @notice formats a tokenId given the internalId and address of ShardVault contract
+     * @param internalId the internal ID
+     * @return tokenId the formatted tokenId
+     */
+    function _formatTokenId(uint256 internalId)
+        internal
+        view
+        returns (uint256 tokenId)
+    {
+        tokenId = ((uint256(uint160(address(this))) << 96) | internalId);
+    }
+
+    /**
+     * @notice parses a tokenId to extract seeded vault address and internalId
+     * @param tokenId tokenId to parse
+     * @return vault seeded vault address
+     * @return internalId internal ID
+     */
+    function _parseTokenId(uint256 tokenId)
+        internal
+        pure
+        returns (address vault, uint256 internalId)
+    {
+        vault = address(uint160(tokenId >> 96));
+        internalId = 0xFFFFFFFFFFFFFFFFFFFFFFFF & tokenId;
     }
 
     /**

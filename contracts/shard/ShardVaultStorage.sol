@@ -7,23 +7,22 @@ import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
 library ShardVaultStorage {
     struct Layout {
         uint256 id;
-        uint256 shardSize;
-        uint256 maxCapital;
-        uint256 totalShards;
+        uint256 count;
+        uint256 shardValue;
+        uint256 maxSupply;
+        uint256 totalSupply;
         uint256 lpFarmId;
         uint256 salesFeeBP;
         uint256 fundraiseFeeBP;
         uint256 yieldFeeBP;
         uint256 accruedFees;
         address treasury;
-        address collection;
         address jpegdVault;
         address jpegdLP;
-        bool capped;
+        address collection;
+        bool vaultFull;
         bool invested;
         bool divested;
-        mapping(address => uint256) owedShards;
-        EnumerableSet.AddressSet depositors;
         EnumerableSet.UintSet ownedTokenIds;
     }
 
