@@ -26,17 +26,17 @@ library Errors {
     /**
      * @notice thrown when attempt to purchase a punk is made when collection is not punks
      */
-    error CollectionNotPunks();
+    error ShardVault__CollectionNotPunks();
 
     /**
      * @notice thrown when attempting to act on an unowned asset
      */
-    error NotOwned();
+    error ShardVault__NotOwned();
 
     /**
      * @notice thrown when setting a basis point fee value larger than 10000
      */
-    error BasisExceeded();
+    error ShardVault__BasisExceeded();
 
     /**
      * @notice thrown when function called by non-protocol owner

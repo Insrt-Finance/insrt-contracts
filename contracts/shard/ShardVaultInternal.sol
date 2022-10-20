@@ -236,7 +236,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         internal
     {
         if (l.collection != PUNKS) {
-            revert Errors.CollectionNotPunks();
+            revert Errors.ShardVault__CollectionNotPunks();
         }
 
         uint256 price = ICryptoPunkMarket(PUNKS)
@@ -264,7 +264,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         if (
             ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
         ) {
-            revert Errors.NotOwned();
+            revert Errors.ShardVault__NotOwned();
         } // probably remove this error
 
         INFTVault(l.jpegdVault).borrow(
@@ -346,7 +346,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setSalesFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.BasisExceeded();
+        if (feeBP > 10000) revert Errors.ShardVault__BasisExceeded();
         ShardVaultStorage.layout().salesFeeBP = feeBP;
     }
 
@@ -355,7 +355,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setFundraiseFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.BasisExceeded();
+        if (feeBP > 10000) revert Errors.ShardVault__BasisExceeded();
         ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
     }
 
@@ -364,7 +364,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setYieldFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.BasisExceeded();
+        if (feeBP > 10000) revert Errors.ShardVault__BasisExceeded();
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 }
