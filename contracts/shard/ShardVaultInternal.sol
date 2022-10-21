@@ -52,20 +52,21 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
         uint256 totalSupply = l.totalSupply;
+        uint256 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert Errors.ShardVault__InvalidDepositAmount();
         }
-        if (l.invested || l.vaultFull) {
+        if (l.invested || totalSupply == maxSupply) {
             revert Errors.ShardVault__DepositForbidden();
         }
 
-        uint256 shards = amount / l.shardValue;
+        uint256 shards = amount / shardValue;
         uint256 excessShards;
 
-        if (shards + totalSupply >= l.maxSupply) {
+        if (shards + totalSupply >= maxSupply) {
             l.vaultFull = true;
-            excessShards = shards + totalSupply - l.maxSupply;
+            excessShards = shards + totalSupply - maxSupply;
         }
 
         shards -= excessShards;
