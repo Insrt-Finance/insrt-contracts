@@ -97,7 +97,7 @@ export function describeBehaviorOfShardVaultIO(
           ['deposit()']({ value: depositAmount });
         await instance
           .connect(depositor)
-          ['deposit()']({ value: depositAmount });
+          ['deposit()']({ value: depositAmount.mul(ethers.constants.Two) });
         await expect(
           instance.connect(depositor)['deposit()']({ value: depositAmount }),
         ).to.be.revertedWith('ShardVault__DepositForbidden()');
@@ -205,7 +205,7 @@ export function describeBehaviorOfShardVaultIO(
         }
 
         await expect(
-          instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
+          instance.connect(depositor)['withdraw(uint256[])'](tokens),
         ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
       });
       it('vault is invested', async () => {

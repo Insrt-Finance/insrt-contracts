@@ -65,7 +65,6 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 excessShards;
 
         if (shards + totalSupply >= maxSupply) {
-            l.vaultFull = true;
             excessShards = shards + totalSupply - maxSupply;
         }
 
@@ -94,7 +93,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
     function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.vaultFull) {
+        if (l.invested || l.totalSupply == l.maxSupply) {
             revert Errors.ShardVault__WithdrawalForbidden();
         }
 

@@ -12,7 +12,6 @@ library ShardVaultStorage {
         uint256 maxSupply;
         uint256 totalSupply;
         address collection;
-        bool vaultFull;
         bool invested;
         bool divested;
     }
