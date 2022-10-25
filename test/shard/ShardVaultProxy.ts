@@ -34,7 +34,16 @@ describe('ShardVaultProxy', () => {
   const shardValue = ethers.utils.parseEther('1.0');
   const maxShards = BigNumber.from('20');
 
-  const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB'; //mainnet
+  //mainnet
+  const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+  const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
+  const citadel = '0xF6Cbf5e56a8575797069c7A7FBED218aDF17e3b2';
+  const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
+  const curvePUSDPool = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
+  const salesFeeBP = BigNumber.from('200');
+  const fundraiseFeeBP = BigNumber.from('100');
+  const yieldFeeBP = BigNumber.from('1000');
+  const BASIS = BigNumber.from('10000');
 
   before(async () => {
     // TODO: must skip signers because they're not parameterized in SolidState spec
@@ -84,9 +93,25 @@ describe('ShardVaultProxy', () => {
     const shardVaultFacetCuts = [
       await new ShardVaultIO__factory(deployer).deploy(
         shardCollectionDiamond.address,
+        PUSD,
+        CRYPTO_PUNKS_MARKET,
+        citadel,
+        lpFarm,
+        curvePUSDPool,
+        salesFeeBP,
+        fundraiseFeeBP,
+        yieldFeeBP,
       ),
       await new ShardVaultView__factory(deployer).deploy(
         shardCollectionDiamond.address,
+        PUSD,
+        CRYPTO_PUNKS_MARKET,
+        citadel,
+        lpFarm,
+        curvePUSDPool,
+        salesFeeBP,
+        fundraiseFeeBP,
+        yieldFeeBP,
       ),
     ].map(function (f) {
       return {
