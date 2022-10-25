@@ -23,4 +23,8 @@ interface INFTVault {
     /// @param _nftIndex The NFT to return the value of
     /// @return The value in USD of the NFT at index `_nftIndex`, with 18 decimals.
     function getNFTValueUSD(uint256 _nftIndex) external view returns (uint256);
+
+    /// @param _nftIndex The NFT to return the credit limit of
+    /// @return The PUSD credit limit of the NFT at index `_nftIndex`.
+    function getCreditLimit(uint256 _nftIndex) external view returns (uint256);
 }

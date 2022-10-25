@@ -15,10 +15,15 @@ interface IShardVaultPermissioned {
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
      * @param punkId id of punk
+     * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
-    function collateralizePunk(uint256 punkId, bool insure) external;
+    function collateralizePunk(
+        uint256 punkId,
+        uint256 borrowAmount,
+        bool insure
+    ) external;
 
     /**
      * @notice stakes pUSD in curve meta pool, then stakes curve LP in JPEG'd citadel,
@@ -32,11 +37,13 @@ interface IShardVaultPermissioned {
      * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve
      *         & JPEG'd
      * @param punkId id of punk
+     * @param borrowAmount amount to be borrowed
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param insure whether to insure position
      */
     function investPunk(
         uint256 punkId,
+        uint256 borrowAmount,
         uint256 minCurveLP,
         bool insure
     ) external;

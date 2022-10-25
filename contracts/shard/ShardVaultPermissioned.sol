@@ -41,11 +41,17 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     /**
      * @inheritdoc IShardVaultPermissioned
      */
-    function collateralizePunk(uint256 punkId, bool insure)
-        external
-        onlyProtocolOwner
-    {
-        _collateralizePunk(ShardVaultStorage.layout(), punkId, insure);
+    function collateralizePunk(
+        uint256 punkId,
+        uint256 borrowAmount,
+        bool insure
+    ) external onlyProtocolOwner {
+        _collateralizePunk(
+            ShardVaultStorage.layout(),
+            punkId,
+            borrowAmount,
+            insure
+        );
     }
 
     /**
@@ -63,10 +69,17 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
      */
     function investPunk(
         uint256 punkId,
+        uint256 borrowAmount,
         uint256 minCurveLP,
         bool insure
     ) external onlyProtocolOwner {
-        _investPunk(ShardVaultStorage.layout(), punkId, minCurveLP, insure);
+        _investPunk(
+            ShardVaultStorage.layout(),
+            punkId,
+            borrowAmount,
+            minCurveLP,
+            insure
+        );
     }
 
     /**

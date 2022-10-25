@@ -260,13 +260,21 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _collateralizePunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
+        uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pUSD) {
-        INFTVault(l.jpegdVault).borrow(
-            punkId,
-            INFTVault(l.jpegdVault).getNFTValueUSD(punkId),
-            insure
-        );
+        uint256 creditLimit = INFTVault(l.jpegdVault).getCreditLimit(punkId);
+
+        if (
+            borrowAmount >
+            creditLimit -
+                ((creditLimit * (BASIS_POINTS - l.bufferBP - l.deviationBP)) /
+                    BASIS_POINTS)
+        ) {
+            revert ShardVault__TargetLTVExceeded();
+        }
+
+        INFTVault(l.jpegdVault).borrow(punkId, borrowAmount, insure);
 
         pUSD = IERC20(PUSD).balanceOf(address(this));
     }
@@ -310,6 +318,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _investPunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
+        uint256 borrowAmount,
         uint256 minCurveLP,
         bool insure
     ) internal {
@@ -317,7 +326,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             _collectFee(l, l.fundraiseFeeBP);
         }
         _purchasePunk(l, punkId);
-        _stake(l, _collateralizePunk(l, punkId, insure), minCurveLP);
+        _stake(
+            l,
+            _collateralizePunk(l, punkId, borrowAmount, insure),
+            minCurveLP
+        );
     }
 
     /**
