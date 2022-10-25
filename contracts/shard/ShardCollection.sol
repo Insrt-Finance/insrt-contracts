@@ -6,7 +6,6 @@ import { SolidStateERC721 } from '@solidstate/contracts/token/ERC721/SolidStateE
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
-import { Errors } from './Errors.sol';
 import { IShardCollection } from './IShardCollection.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
 
@@ -38,7 +37,7 @@ contract ShardCollection is
 
     function _onlyVault(address account) internal view {
         if (!ShardCollectionStorage.layout().vaults[account]) {
-            revert Errors.ShardCollection__OnlyVault();
+            revert ShardCollection__OnlyVault();
         }
     }
 }

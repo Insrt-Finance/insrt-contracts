@@ -20,7 +20,6 @@ library ShardVaultStorage {
         address jpegdVault;
         address jpegdLP;
         address collection;
-        bool vaultFull;
         bool invested;
         bool divested;
         EnumerableSet.UintSet ownedTokenIds;

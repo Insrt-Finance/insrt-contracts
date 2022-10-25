@@ -8,12 +8,12 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
-import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
+import { IShardVaultInternal } from './IShardVaultInternal.sol';
 import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
@@ -21,7 +21,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
  */
-abstract contract ShardVaultInternal is OwnableInternal {
+abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -66,7 +66,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
-            revert Errors.ShardVault__OnlyProtocolOwner();
+            revert ShardVault__OnlyProtocolOwner();
         }
     }
 
@@ -87,20 +87,20 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
         uint256 totalSupply = l.totalSupply;
+        uint256 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
-            revert Errors.ShardVault__InvalidDepositAmount();
+            revert ShardVault__InvalidDepositAmount();
         }
-        if (l.invested || l.vaultFull) {
-            revert Errors.ShardVault__DepositForbidden();
+        if (l.invested || totalSupply == maxSupply) {
+            revert ShardVault__DepositForbidden();
         }
 
-        uint256 shards = amount / l.shardValue;
+        uint256 shards = amount / shardValue;
         uint256 excessShards;
 
-        if (shards + totalSupply >= l.maxSupply) {
-            l.vaultFull = true;
-            excessShards = shards + totalSupply - l.maxSupply;
+        if (shards + totalSupply >= maxSupply) {
+            excessShards = shards + totalSupply - maxSupply;
         }
 
         shards -= excessShards;
@@ -128,14 +128,14 @@ abstract contract ShardVaultInternal is OwnableInternal {
     function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.vaultFull) {
-            revert Errors.ShardVault__WithdrawalForbidden();
+        if (l.invested || l.totalSupply == l.maxSupply) {
+            revert ShardVault__WithdrawalForbidden();
         }
 
         uint256 tokens = tokenIds.length;
 
         if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
-            revert Errors.ShardVault__InsufficientShards();
+            revert ShardVault__InsufficientShards();
         }
 
         for (uint256 i; i < tokens; ) {
@@ -143,12 +143,12 @@ abstract contract ShardVaultInternal is OwnableInternal {
                 IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
                 msg.sender
             ) {
-                revert Errors.ShardVault__OnlyShardOwner();
+                revert ShardVault__OnlyShardOwner();
             }
 
             (address vault, ) = _parseTokenId(tokenIds[i]);
             if (vault != address(this)) {
-                revert Errors.ShardVault__VaultTokenIdMismatch();
+                revert ShardVault__VaultTokenIdMismatch();
             }
 
             IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
@@ -236,7 +236,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
         internal
     {
         if (l.collection != PUNKS) {
-            revert Errors.ShardVault__CollectionNotPunks();
+            revert ShardVault__CollectionNotPunks();
         }
 
         uint256 price = ICryptoPunkMarket(PUNKS)
@@ -340,7 +340,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setSalesFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.ShardVault__BasisExceeded();
+        if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().salesFeeBP = feeBP;
     }
 
@@ -349,7 +349,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setFundraiseFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.ShardVault__BasisExceeded();
+        if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
     }
 
@@ -358,7 +358,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setYieldFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.ShardVault__BasisExceeded();
+        if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 }
