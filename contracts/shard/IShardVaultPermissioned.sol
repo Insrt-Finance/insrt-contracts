@@ -65,4 +65,10 @@ interface IShardVaultPermissioned {
      * @param feeBP basis points value of fee
      */
     function setYieldFee(uint256 feeBP) external;
+
+    /**
+     * @notice sets the maxSupply of shards
+     * @param maxSupply the maxSupply of shards
+     */
+    function setMaxSupply(uint256 maxSupply) external;
 }

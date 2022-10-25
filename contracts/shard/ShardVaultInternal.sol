@@ -374,4 +374,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
+
+    /**
+     * @notice sets the maxSupply of shards
+     * @param maxSupply the maxSupply of shards
+     */
+    function _setMaxSupply(uint256 maxSupply) internal {
+        ShardVaultStorage.layout().maxSupply = maxSupply;
+    }
 }

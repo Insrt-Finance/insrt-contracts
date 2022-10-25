@@ -102,4 +102,11 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     function setYieldFee(uint256 feeBP) external onlyProtocolOwner {
         _setYieldFee(feeBP);
     }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
+        _setMaxSupply(maxSupply);
+    }
 }
