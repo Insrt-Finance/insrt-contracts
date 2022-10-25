@@ -7,7 +7,7 @@ import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
-import { Errors } from './Errors.sol';
+import { IShardVaultInternal } from './IShardVaultInternal.sol';
 import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
@@ -15,7 +15,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
  */
-abstract contract ShardVaultInternal is OwnableInternal {
+abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     using AddressUtils for address payable;
 
     address internal immutable SHARD_COLLECTION;
@@ -31,7 +31,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
 
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
-            revert Errors.ShardVault__OnlyProtocolOwner();
+            revert ShardVault__OnlyProtocolOwner();
         }
     }
 
@@ -55,10 +55,10 @@ abstract contract ShardVaultInternal is OwnableInternal {
         uint256 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
-            revert Errors.ShardVault__InvalidDepositAmount();
+            revert ShardVault__InvalidDepositAmount();
         }
         if (l.invested || totalSupply == maxSupply) {
-            revert Errors.ShardVault__DepositForbidden();
+            revert ShardVault__DepositForbidden();
         }
 
         uint256 shards = amount / shardValue;
@@ -94,13 +94,13 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         if (l.invested || l.totalSupply == l.maxSupply) {
-            revert Errors.ShardVault__WithdrawalForbidden();
+            revert ShardVault__WithdrawalForbidden();
         }
 
         uint256 tokens = tokenIds.length;
 
         if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
-            revert Errors.ShardVault__InsufficientShards();
+            revert ShardVault__InsufficientShards();
         }
 
         for (uint256 i; i < tokens; ) {
@@ -108,12 +108,12 @@ abstract contract ShardVaultInternal is OwnableInternal {
                 IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
                 msg.sender
             ) {
-                revert Errors.ShardVault__OnlyShardOwner();
+                revert ShardVault__OnlyShardOwner();
             }
 
             (address vault, ) = _parseTokenId(tokenIds[i]);
             if (vault != address(this)) {
-                revert Errors.ShardVault__VaultTokenIdMismatch();
+                revert ShardVault__VaultTokenIdMismatch();
             }
 
             IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);

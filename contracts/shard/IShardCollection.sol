@@ -6,6 +6,16 @@ import { ISolidStateERC721 } from '@solidstate/contracts/token/ERC721/ISolidStat
 
 interface IShardCollection is ISolidStateERC721 {
     /**
+     * @notice thrown when function called by non-shard vault
+     */
+    error ShardCollection__OnlyVault();
+
+    /**
+     * @notice thrown when function called by non-protocol owner
+     */
+    error ShardCollection__OnlyProtocolOwner();
+
+    /**
      * @notice mints a token
      * @param to address to mint to
      * @param tokenId tokenId of the token to mint
