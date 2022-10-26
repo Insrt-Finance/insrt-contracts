@@ -23,6 +23,7 @@ export function describeBehaviorOfShardVaultPermissioned(
     let nonOwner: SignerWithAddress;
     let instance: IShardVault;
     let cryptoPunkMarket: ICryptoPunkMarket;
+    let purchaseData: string;
 
     const punkId = BigNumber.from('2534');
     const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
@@ -32,6 +33,10 @@ export function describeBehaviorOfShardVaultPermissioned(
         'ICryptoPunkMarket',
         CRYPTO_PUNKS_MARKET,
       );
+
+      purchaseData = cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
+        punkId,
+      ]);
     });
 
     beforeEach(async () => {
@@ -47,7 +52,9 @@ export function describeBehaviorOfShardVaultPermissioned(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        await instance.connect(owner).purchasePunk(punkId);
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
 
         expect(
           await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
@@ -65,7 +72,9 @@ export function describeBehaviorOfShardVaultPermissioned(
         ](punkId);
 
         await expect(() =>
-          instance.connect(owner).purchasePunk(punkId),
+          instance
+            .connect(owner)
+            ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
         ).to.changeEtherBalances(
           [instance, cryptoPunkMarket],
           [price.mul(ethers.constants.NegativeOne), price],
@@ -78,7 +87,9 @@ export function describeBehaviorOfShardVaultPermissioned(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        await instance.connect(owner).purchasePunk(punkId);
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
 
         expect(await instance.invested()).to.be.true;
       });
@@ -89,7 +100,9 @@ export function describeBehaviorOfShardVaultPermissioned(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        await instance.connect(owner).purchasePunk(punkId);
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
 
         const [id] = await instance['ownedTokenIds()']();
         expect(id).to.eq(punkId);
@@ -98,7 +111,9 @@ export function describeBehaviorOfShardVaultPermissioned(
       describe('reverts if', () => {
         it('called by non-owner', async () => {
           await expect(
-            instance.connect(nonOwner)['purchasePunk(uint256)'](punkId),
+            instance
+              .connect(nonOwner)
+              ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
           ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
         });
         it('collection is not punks', async () => {
