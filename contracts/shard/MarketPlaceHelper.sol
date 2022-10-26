@@ -31,7 +31,10 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
     ) external payable {
         if (purchaseToken == address(0) && msg.value != price) {
             revert MarketPlaceHelper__InsufficientETH();
-        } else if (IERC20(purchaseToken).balanceOf(address(this)) < price) {
+        } else if (
+            purchaseToken != address(0) &&
+            IERC20(purchaseToken).balanceOf(address(this)) < price
+        ) {
             revert MarketPlaceHelper__InsufficientPurchaseToken();
         }
 
