@@ -21,13 +21,21 @@ interface IShardVaultManager {
     /**
      * @notice deploys a ShardVaultProxy
      * @param collection the address of the NFT collection contract
-     * @param shardSize the size in ETH of each shard
-     * @param maxShards maximum shards to be escrowed by vault
+     * @param jpegdVault the jpeg'd NFT vault corresponding to the collection
+     * @param shardValue the ETH value of each shard
+     * @param maxSupply maximum shards to be minted by vault
+     * @param salesFeeBP sales fee basis points
+     * @param fundraiseFeeBP fundraise fee basis points
+     * @param yieldFeeBP yield fee basis points
      * @return deployment address of ShardVaultProxy deployed
      */
     function deployShardVault(
         address collection,
-        uint256 shardSize,
-        uint256 maxShards
+        address jpegdVault,
+        uint256 shardValue,
+        uint256 maxSupply,
+        uint256 salesFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP
     ) external returns (address deployment);
 }
