@@ -17,6 +17,9 @@ import {
   IShardCollection__factory,
   IShardCollection,
   ShardVaultPermissioned__factory,
+  IMarketPlaceHelper,
+  MarketPlaceHelper__factory,
+  IMarketPlaceHelper__factory,
 } from '../../typechain-types';
 
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
@@ -29,6 +32,7 @@ describe('ShardVaultProxy', () => {
   let core: ICore;
   let instance: IShardVault;
   let shardCollectionInstance: IShardCollection;
+  let marketplaceHelper: IMarketPlaceHelper;
 
   let deployer: any;
   const id = 1;
@@ -49,6 +53,15 @@ describe('ShardVaultProxy', () => {
   before(async () => {
     // TODO: must skip signers because they're not parameterized in SolidState spec
     [, , , deployer] = await ethers.getSigners();
+
+    const marketplaceHelperDeployment = await new MarketPlaceHelper__factory(
+      deployer,
+    ).deploy(CRYPTO_PUNKS_MARKET);
+
+    marketplaceHelper = IMarketPlaceHelper__factory.connect(
+      marketplaceHelperDeployment.address,
+      deployer,
+    );
 
     const ERC165Selectors = new Set();
     const IERC165 = ERC165__factory.createInterface();
@@ -99,6 +112,7 @@ describe('ShardVaultProxy', () => {
         citadel,
         lpFarm,
         curvePUSDPool,
+        marketplaceHelper.address,
         salesFeeBP,
         fundraiseFeeBP,
         yieldFeeBP,
@@ -110,6 +124,7 @@ describe('ShardVaultProxy', () => {
         citadel,
         lpFarm,
         curvePUSDPool,
+        marketplaceHelper.address,
         salesFeeBP,
         fundraiseFeeBP,
         yieldFeeBP,
@@ -121,6 +136,7 @@ describe('ShardVaultProxy', () => {
         citadel,
         lpFarm,
         curvePUSDPool,
+        marketplaceHelper.address,
         salesFeeBP,
         fundraiseFeeBP,
         yieldFeeBP,
