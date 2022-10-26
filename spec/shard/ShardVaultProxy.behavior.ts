@@ -22,12 +22,13 @@ export interface ShardVaultProxyBehaviorArgs
 
 export function describeBehaviorOfShardVaultProxy(
   deploy: () => Promise<IShardVault>,
+  secondDeploy: () => Promise<IShardVault>,
   args: ShardVaultProxyBehaviorArgs,
   skips?: string[],
 ) {
   describe('::ShardVaultProxy', () => {
-    describeBehaviorOfShardVaultIO(deploy, args, skips);
+    describeBehaviorOfShardVaultIO(deploy, secondDeploy, args, skips);
     describeBehaviorOfShardVaultView(deploy, args, skips);
-    describeBehaviorOfShardVaultPermissioned(deploy, args, skips);
+    describeBehaviorOfShardVaultPermissioned(deploy, secondDeploy, args, skips);
   });
 }

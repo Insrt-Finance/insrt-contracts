@@ -31,6 +31,7 @@ describe('ShardVaultProxy', () => {
   let snapshotId: number;
   let core: ICore;
   let instance: IShardVault;
+  let secondInstance: IShardVault;
   let shardCollectionInstance: IShardCollection;
   let marketplaceHelper: IMarketPlaceHelper;
 
@@ -41,6 +42,7 @@ describe('ShardVaultProxy', () => {
 
   //mainnet
   const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+  const BAYC = '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D';
   const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
   const citadel = '0xF6Cbf5e56a8575797069c7A7FBED218aDF17e3b2';
   const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
@@ -188,6 +190,24 @@ describe('ShardVaultProxy', () => {
 
     instance = IShardVault__factory.connect(deployment, deployer);
 
+    const deploySecondShardVaultTx = await core
+      .connect(deployer)
+      ['deployShardVault(address,uint256,uint256)'](
+        BAYC,
+        shardValue,
+        maxShards,
+      );
+
+    const rcpt = await deploySecondShardVaultTx.wait();
+    const secondDeployment = rcpt.events.find(
+      (e) => e.event === 'ShardVaultDeployed',
+    ).args;
+
+    secondInstance = IShardVault__factory.connect(
+      secondDeployment.deployment,
+      deployer,
+    );
+
     shardCollectionInstance = IShardCollection__factory.connect(
       shardCollectionDiamond.address,
       deployer,
@@ -196,6 +216,10 @@ describe('ShardVaultProxy', () => {
     await shardCollectionInstance
       .connect(deployer)
       ['addToWhitelist(address)'](deployment);
+
+    await shardCollectionInstance
+      .connect(deployer)
+      ['addToWhitelist(address)'](secondDeployment.deployment);
 
     beforeEach(async () => {
       snapshotId = await ethers.provider.send('evm_snapshot', []);
@@ -206,7 +230,11 @@ describe('ShardVaultProxy', () => {
     });
   });
 
-  describeBehaviorOfShardVaultProxy(async () => instance, {
-    getProtocolOwner: async () => deployer,
-  });
+  describeBehaviorOfShardVaultProxy(
+    async () => instance,
+    async () => secondInstance,
+    {
+      getProtocolOwner: async () => deployer,
+    },
+  );
 });
