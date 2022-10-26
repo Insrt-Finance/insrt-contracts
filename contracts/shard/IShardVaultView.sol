@@ -52,4 +52,16 @@ interface IShardVaultView {
         external
         pure
         returns (address vault, uint256 internalId);
+
+    /**
+     * @notice return invested flag state
+     * @return bool invested flag
+     */
+    function invested() external view returns (bool);
+
+    /**
+     * @notice return array with owned token IDs
+     * @return ids array of owned token IDs
+     */
+    function ownedTokenIds() external view returns (uint256[] memory ids);
 }

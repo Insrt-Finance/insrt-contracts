@@ -23,7 +23,6 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  */
 abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     using AddressUtils for address payable;
-    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
     address internal immutable SHARD_COLLECTION;
@@ -197,6 +196,33 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _count() internal view returns (uint256) {
         return ShardVaultStorage.layout().count;
+    }
+
+    /**
+     * @notice return invested flag state
+     * @return bool invested flag
+     */
+    function _invested() internal view returns (bool) {
+        return ShardVaultStorage.layout().invested;
+    }
+
+    /**
+     * @notice return array with owned token IDs
+     * @return uint256[]  array of owned token IDs
+     */
+    function _ownedTokenIds() internal view returns (uint256[] memory) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        uint256 ownedIdsLength = l.ownedTokenIds.length();
+        uint256[] memory ids = new uint256[](ownedIdsLength);
+
+        unchecked {
+            for (uint256 i; i < ownedIdsLength; ) {
+                ids[i] = l.ownedTokenIds.at(i);
+                ++i;
+            }
+        }
+
+        return ids;
     }
 
     /**
