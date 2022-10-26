@@ -14,6 +14,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
+        address marketHelper,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
@@ -25,6 +26,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
             citadel,
             lpFarm,
             curvePUSDPool,
+            marketHelper,
             salesFeeBP,
             fundraiseFeeBP,
             yieldFeeBP
@@ -34,8 +36,12 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     /**
      * @inheritdoc IShardVaultPermissioned
      */
-    function purchasePunk(uint256 punkId) external payable onlyProtocolOwner {
-        _purchasePunk(ShardVaultStorage.layout(), punkId);
+    function purchasePunk(bytes calldata data, uint256 punkId)
+        external
+        payable
+        onlyProtocolOwner
+    {
+        _purchasePunk(ShardVaultStorage.layout(), data, punkId);
     }
 
     /**
@@ -68,6 +74,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
      * @inheritdoc IShardVaultPermissioned
      */
     function investPunk(
+        bytes calldata data,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
@@ -75,6 +82,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     ) external onlyProtocolOwner {
         _investPunk(
             ShardVaultStorage.layout(),
+            data,
             punkId,
             borrowAmount,
             minCurveLP,

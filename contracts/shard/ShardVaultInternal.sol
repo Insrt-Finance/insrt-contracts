@@ -11,6 +11,7 @@ import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInt
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
+import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
@@ -31,6 +32,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CITADEL;
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
+    address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -40,6 +42,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
+        address marketplaceHelper,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
@@ -50,6 +53,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CITADEL = citadel;
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
+        MARKETPLACE_HELPER = marketplaceHelper;
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -258,9 +262,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param l ShardVaultStorage layout
      * @param punkId id of punk
      */
-    function _purchasePunk(ShardVaultStorage.Layout storage l, uint256 punkId)
-        internal
-    {
+    function _purchasePunk(
+        ShardVaultStorage.Layout storage l,
+        bytes calldata data,
+        uint256 punkId
+    ) internal {
         if (l.collection != PUNKS) {
             revert ShardVault__CollectionNotPunks();
         }
@@ -269,7 +275,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             .punksOfferedForSale(punkId)
             .minValue;
 
-        ICryptoPunkMarket(PUNKS).buyPunk{ value: price }(punkId);
+        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseERC721Asset{
+            value: price
+        }(data, PUNKS, PUNKS, address(0), punkId, price);
 
         l.invested = true;
         l.ownedTokenIds.add(punkId);
@@ -343,6 +351,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _investPunk(
         ShardVaultStorage.Layout storage l,
+        bytes calldata data,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
@@ -351,7 +360,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         if (l.ownedTokenIds.length() == 0) {
             _collectFee(l, l.fundraiseFeeBP);
         }
-        _purchasePunk(l, punkId);
+        _purchasePunk(l, data, punkId);
         _stake(
             l,
             _collateralizePunk(l, punkId, borrowAmount, insure),

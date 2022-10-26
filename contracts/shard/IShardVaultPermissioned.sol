@@ -8,9 +8,10 @@ pragma solidity ^0.8.0;
 interface IShardVaultPermissioned {
     /**
      * @notice purchases a punk from CyrptoPunksMarket
+     * @param data calldata for punk purchase
      * @param punkId id of punk
      */
-    function purchasePunk(uint256 punkId) external payable;
+    function purchasePunk(bytes calldata data, uint256 punkId) external payable;
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
@@ -36,12 +37,14 @@ interface IShardVaultPermissioned {
     /**
      * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve
      *         & JPEG'd
+     * @param data calldata for punk purchase
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param insure whether to insure position
      */
     function investPunk(
+        bytes calldata data,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,

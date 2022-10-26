@@ -7,23 +7,25 @@ import { ShardVaultInternal } from './ShardVaultInternal.sol';
 
 contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     constructor(
-        address shardsCollection,
+        address shardCollection,
         address pUSD,
         address punkMarket,
         address citadel,
         address lpFarm,
         address curvePUSDPool,
+        address marketHelper,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
     )
         ShardVaultInternal(
-            shardsCollection,
+            shardCollection,
             pUSD,
             punkMarket,
             citadel,
             lpFarm,
             curvePUSDPool,
+            marketHelper,
             salesFeeBP,
             fundraiseFeeBP,
             yieldFeeBP
