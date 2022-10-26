@@ -14,14 +14,16 @@ export interface ShardVaultPermissionedBehaviorArgs {
 
 export function describeBehaviorOfShardVaultPermissioned(
   deploy: () => Promise<IShardVault>,
+  secondDeploy: () => Promise<IShardVault>,
   args: ShardVaultPermissionedBehaviorArgs,
   skips?: string[],
 ) {
-  describe.only('::ShardVaultPermissioned', () => {
+  describe('::ShardVaultPermissioned', () => {
     let depositor: SignerWithAddress;
     let owner: SignerWithAddress;
     let nonOwner: SignerWithAddress;
     let instance: IShardVault;
+    let secondInstance: IShardVault;
     let cryptoPunkMarket: ICryptoPunkMarket;
     let purchaseData: string;
 
@@ -41,6 +43,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
     beforeEach(async () => {
       instance = await deploy();
+      secondInstance = await secondDeploy();
       [depositor, nonOwner] = await ethers.getSigners();
       owner = await args.getProtocolOwner();
     });
@@ -117,7 +120,11 @@ export function describeBehaviorOfShardVaultPermissioned(
           ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
         });
         it('collection is not punks', async () => {
-          console.log('TODO');
+          await expect(
+            secondInstance
+              .connect(owner)
+              ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
+          ).to.be.revertedWith('ShardVault__CollectionNotPunks()');
         });
       });
     });

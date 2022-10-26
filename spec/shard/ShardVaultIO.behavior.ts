@@ -1,5 +1,6 @@
 import hre, { ethers } from 'hardhat';
 import {
+  ICryptoPunkMarket,
   IShardCollection,
   IShardVault,
   ShardCollection,
@@ -9,25 +10,47 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { formatTokenId } from './ShardVaultView.behavior';
 
-export interface ShardVaultIOBehaviorArgs {}
+export interface ShardVaultIOBehaviorArgs {
+  getProtocolOwner: () => Promise<SignerWithAddress>;
+}
 
 export function describeBehaviorOfShardVaultIO(
   deploy: () => Promise<IShardVault>,
+  secondDeploy: () => Promise<IShardVault>,
   args: ShardVaultIOBehaviorArgs,
   skips?: string[],
 ) {
+  let owner: SignerWithAddress;
   let depositor: SignerWithAddress;
   let secondDepositor: SignerWithAddress;
   let instance: IShardVault;
+  let secondInstance: IShardVault;
   let shardCollection: ShardCollection;
+  let cryptoPunkMarket: ICryptoPunkMarket;
+  let purchaseData: string;
+
+  const punkId = BigNumber.from('2534');
+  const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
 
   before(async () => {
     [depositor, secondDepositor] = await ethers.getSigners();
+    owner = await args.getProtocolOwner();
+
+    cryptoPunkMarket = await ethers.getContractAt(
+      'ICryptoPunkMarket',
+      CRYPTO_PUNKS_MARKET,
+    );
+
+    purchaseData = cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
+      punkId,
+    ]);
   });
 
   beforeEach(async () => {
     instance = await deploy();
+    secondInstance = await secondDeploy();
     shardCollection = ShardCollection__factory.connect(
       await instance['shardCollection()'](),
       depositor,
@@ -103,9 +126,21 @@ export function describeBehaviorOfShardVaultIO(
         ).to.be.revertedWith('ShardVault__DepositForbidden()');
       });
 
-      it('shard vault has invested', async () => {
-        //TODO
-        console.log('TODO');
+      it('vault is invested', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('90') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+        await expect(
+          instance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('5') }),
+        ).to.be.revertedWith('ShardVault__DepositForbidden()');
       });
     });
   });
@@ -186,7 +221,17 @@ export function describeBehaviorOfShardVaultIO(
         ).to.be.revertedWith('ShardVault__OnlyShardOwner()');
       });
       it('owned shards correspond to different vault', async () => {
-        console.log('TODO');
+        await secondInstance
+          .connect(depositor)
+          .deposit({ value: depositAmount });
+        const withdrawTokenId = formatTokenId(
+          ethers.constants.One,
+          secondInstance.address,
+        );
+
+        await expect(
+          instance.connect(depositor)['withdraw(uint256[])']([withdrawTokenId]),
+        ).to.be.revertedWith('ShardVault__VaultTokenIdMismatch()');
       });
       it('vault is full', async () => {
         await instance
@@ -209,7 +254,23 @@ export function describeBehaviorOfShardVaultIO(
         ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
       });
       it('vault is invested', async () => {
-        console.log('TODO');
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('90') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+        const withdrawTokenId = formatTokenId(
+          ethers.constants.One,
+          instance.address,
+        );
+
+        await expect(
+          instance.connect(depositor)['withdraw(uint256[])']([withdrawTokenId]),
+        ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
       });
     });
   });
