@@ -11,7 +11,10 @@ import { expect } from 'chai';
 
 export interface ShardVaultViewBehaviorArgs {}
 
-function formatTokenId(internalId: BigNumber, address: string): BigNumber {
+export function formatTokenId(
+  internalId: BigNumber,
+  address: string,
+): BigNumber {
   let tokenId: BigNumber;
   tokenId = BigNumber.from(address).shl(96).add(internalId);
   return tokenId;
