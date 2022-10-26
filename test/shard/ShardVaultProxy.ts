@@ -16,6 +16,7 @@ import {
   ERC165__factory,
   IShardCollection__factory,
   IShardCollection,
+  ShardVaultPermissioned__factory,
 } from '../../typechain-types';
 
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
@@ -113,6 +114,17 @@ describe('ShardVaultProxy', () => {
         fundraiseFeeBP,
         yieldFeeBP,
       ),
+      await new ShardVaultPermissioned__factory(deployer).deploy(
+        shardCollectionDiamond.address,
+        PUSD,
+        CRYPTO_PUNKS_MARKET,
+        citadel,
+        lpFarm,
+        curvePUSDPool,
+        salesFeeBP,
+        fundraiseFeeBP,
+        yieldFeeBP,
+      ),
     ].map(function (f) {
       return {
         target: f.address,
@@ -178,5 +190,7 @@ describe('ShardVaultProxy', () => {
     });
   });
 
-  describeBehaviorOfShardVaultProxy(async () => instance, {});
+  describeBehaviorOfShardVaultProxy(async () => instance, {
+    getProtocolOwner: async () => deployer,
+  });
 });

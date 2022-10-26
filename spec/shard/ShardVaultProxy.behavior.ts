@@ -10,10 +10,15 @@ import {
 } from './ShardVaultView.behavior';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import {
+  describeBehaviorOfShardVaultPermissioned,
+  ShardVaultPermissionedBehaviorArgs,
+} from './ShardVaultPermissioned.behavior';
 
 export interface ShardVaultProxyBehaviorArgs
   extends ShardVaultIOBehaviorArgs,
-    ShardVaultViewBehaviorArgs {}
+    ShardVaultViewBehaviorArgs,
+    ShardVaultPermissionedBehaviorArgs {}
 
 export function describeBehaviorOfShardVaultProxy(
   deploy: () => Promise<IShardVault>,
@@ -23,5 +28,6 @@ export function describeBehaviorOfShardVaultProxy(
   describe('::ShardVaultProxy', () => {
     describeBehaviorOfShardVaultIO(deploy, args, skips);
     describeBehaviorOfShardVaultView(deploy, args, skips);
+    describeBehaviorOfShardVaultPermissioned(deploy, args, skips);
   });
 }
