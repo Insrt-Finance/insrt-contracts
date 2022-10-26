@@ -14,10 +14,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketHelper,
-        uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        address marketHelper
     )
         ShardVaultInternal(
             shardCollection,
@@ -26,10 +23,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
             citadel,
             lpFarm,
             curvePUSDPool,
-            marketHelper,
-            salesFeeBP,
-            fundraiseFeeBP,
-            yieldFeeBP
+            marketHelper
         )
     {}
 

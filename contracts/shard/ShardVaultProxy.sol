@@ -17,9 +17,13 @@ contract ShardVaultProxy is Proxy {
     constructor(
         address shardVaultDiamond,
         address collection,
+        address jpegdVault,
         uint256 shardValue,
         uint256 maxSupply,
-        uint256 id
+        uint256 id,
+        uint256 salesFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP
     ) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
 
@@ -29,8 +33,12 @@ contract ShardVaultProxy is Proxy {
 
         l.id = id;
         l.collection = collection;
+        l.jpegdVault = jpegdVault;
         l.shardValue = shardValue;
         l.maxSupply = maxSupply;
+        l.salesFeeBP = salesFeeBP;
+        l.fundraiseFeeBP = fundraiseFeeBP;
+        l.yieldFeeBP = yieldFeeBP;
     }
 
     /**

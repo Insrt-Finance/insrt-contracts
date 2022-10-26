@@ -13,10 +13,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketHelper,
-        uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        address marketHelper
     )
         ShardVaultInternal(
             shardCollection,
@@ -25,10 +22,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
             citadel,
             lpFarm,
             curvePUSDPool,
-            marketHelper,
-            salesFeeBP,
-            fundraiseFeeBP,
-            yieldFeeBP
+            marketHelper
         )
     {}
 

@@ -42,10 +42,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketplaceHelper,
-        uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        address marketplaceHelper
     ) {
         SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
@@ -54,12 +51,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         MARKETPLACE_HELPER = marketplaceHelper;
-
-        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
-        l.salesFeeBP = salesFeeBP;
-        l.fundraiseFeeBP = fundraiseFeeBP;
-        l.yieldFeeBP = yieldFeeBP;
     }
 
     modifier onlyProtocolOwner() {
