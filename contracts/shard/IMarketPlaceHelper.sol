@@ -13,18 +13,25 @@ interface IMarketPlaceHelper {
      */
     error MarketPlaceHelper__FailedListCall();
 
+    /**
+     * @notice thrown when insufficient ETH is transferred
+     */
     error MarketPlaceHelper__InsufficientETH();
 
+    /**
+     * @notice thrown when insufficient purchaseToken is transferred
+     */
     error MarketPlaceHelper__InsufficientPurchaseToken();
 
-    error MarketPlaceHelper__PunkNotListed();
-
-    error MarketPlaceHelper__InsufficientPunkPrice();
+    /**
+     * @notice thrown when bid acceptance call fails
+     */
+    error MarketPlaceHelper__FailedBidAcceptanceCall();
 
     /**
-     * @notice NFT purchasing call to arbitrary market
+     * @notice ERC721 purchasing call made to arbitrary marketplace
      * @param data calldata required for purchasing call
-     * @param target address of target market
+     * @param target address of target marketplace
      * @param collection address of NFT collection
      * @param purchaseToken address of token used to transact - if address(0) ETH is used
      * @param tokenId id of token in NFT collection
@@ -38,4 +45,11 @@ interface IMarketPlaceHelper {
         uint256 tokenId,
         uint256 price
     ) external payable;
+
+    /**
+     * @notice ERC721 listing call made to arbitrary marketplace
+     * @param data calldata required for listing call
+     * @param target address of target marketplace
+     */
+    function listERC721Asset(bytes calldata data, address target) external;
 }

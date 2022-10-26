@@ -57,39 +57,22 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         }
     }
 
-    function listERC721Asset(
-        bytes calldata data,
-        address target,
-        address collection,
-        uint256 tokenId,
-        uint256 ask
-    ) external {
+    /**
+     * @inheritdoc IMarketPlaceHelper
+     */
+    function listERC721Asset(bytes calldata data, address target) external {
         (bool success, ) = target.call(data);
 
         if (!success) {
             revert MarketPlaceHelper__FailedListCall();
         }
-
-        if (collection == CRYPTO_PUNK_MARKET) {
-            ICryptoPunkMarket.Offer memory offer = ICryptoPunkMarket(
-                CRYPTO_PUNK_MARKET
-            ).punksOfferedForSale(tokenId);
-            if (!offer.isForSale) {
-                revert MarketPlaceHelper__PunkNotListed();
-            }
-            if (offer.minValue < ask) {
-                revert MarketPlaceHelper__InsufficientPunkPrice();
-            }
-        } else {
-            _checkMarketListing(target, collection, tokenId, ask);
-        }
     }
 
+    //WIP
     function acceptERC721Bid(
         bytes calldata data,
         address target,
         address collection,
-        address token,
         uint256 tokenId,
         uint256 minBidValue
     ) external payable {
@@ -110,15 +93,8 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
             (bool success, ) = target.call(data);
 
             if (!success) {
-                revert MarketPlaceHelper__FailedPurchaseCall();
+                revert MarketPlaceHelper__FailedBidAcceptanceCall();
             }
         }
     }
-
-    function _checkMarketListing(
-        address target,
-        address collection,
-        uint256 tokenId,
-        uint256 ask
-    ) private {}
 }
