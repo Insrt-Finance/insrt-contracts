@@ -27,6 +27,8 @@ interface IShardVaultManager {
      * @param salesFeeBP sales fee basis points
      * @param fundraiseFeeBP fundraise fee basis points
      * @param yieldFeeBP yield fee basis points
+     * @param bufferBP LTV buffer basis points
+     * @param deviationBP LTV deviation basis points
      * @return deployment address of ShardVaultProxy deployed
      */
     function deployShardVault(
@@ -36,6 +38,8 @@ interface IShardVaultManager {
         uint256 maxSupply,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        uint256 yieldFeeBP,
+        uint256 bufferBP,
+        uint256 deviationBP
     ) external returns (address deployment);
 }

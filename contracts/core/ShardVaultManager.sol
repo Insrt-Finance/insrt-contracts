@@ -25,7 +25,9 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         uint256 maxSupply,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        uint256 yieldFeeBP,
+        uint256 bufferBP,
+        uint256 deviationBP
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new ShardVaultProxy(
@@ -37,7 +39,9 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 ++ShardVaultManagerStorage.layout().count,
                 salesFeeBP,
                 fundraiseFeeBP,
-                yieldFeeBP
+                yieldFeeBP,
+                bufferBP,
+                deviationBP
             )
         );
 
