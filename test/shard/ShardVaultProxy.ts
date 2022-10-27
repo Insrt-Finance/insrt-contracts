@@ -47,9 +47,13 @@ describe('ShardVaultProxy', () => {
   const citadel = '0xF6Cbf5e56a8575797069c7A7FBED218aDF17e3b2';
   const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
   const curvePUSDPool = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
+  const punkVault = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
+  const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const salesFeeBP = BigNumber.from('200');
   const fundraiseFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
+  const bufferBP = BigNumber.from('500');
+  const deviationBP = BigNumber.from('200');
   const BASIS = BigNumber.from('10000');
 
   before(async () => {
@@ -115,9 +119,6 @@ describe('ShardVaultProxy', () => {
         lpFarm,
         curvePUSDPool,
         marketplaceHelper.address,
-        salesFeeBP,
-        fundraiseFeeBP,
-        yieldFeeBP,
       ),
       await new ShardVaultView__factory(deployer).deploy(
         shardCollectionDiamond.address,
@@ -127,9 +128,6 @@ describe('ShardVaultProxy', () => {
         lpFarm,
         curvePUSDPool,
         marketplaceHelper.address,
-        salesFeeBP,
-        fundraiseFeeBP,
-        yieldFeeBP,
       ),
       await new ShardVaultPermissioned__factory(deployer).deploy(
         shardCollectionDiamond.address,
@@ -139,9 +137,6 @@ describe('ShardVaultProxy', () => {
         lpFarm,
         curvePUSDPool,
         marketplaceHelper.address,
-        salesFeeBP,
-        fundraiseFeeBP,
-        yieldFeeBP,
       ),
     ].map(function (f) {
       return {
@@ -177,10 +172,18 @@ describe('ShardVaultProxy', () => {
 
     const deployShardVaultTx = await core
       .connect(deployer)
-      ['deployShardVault(address,uint256,uint256)'](
+      [
+        'deployShardVault(address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+      ](
         CRYPTO_PUNKS_MARKET,
+        punkVault,
         shardValue,
         maxShards,
+        salesFeeBP,
+        fundraiseFeeBP,
+        yieldFeeBP,
+        bufferBP,
+        deviationBP,
       );
 
     const { events } = await deployShardVaultTx.wait();
@@ -192,10 +195,18 @@ describe('ShardVaultProxy', () => {
 
     const deploySecondShardVaultTx = await core
       .connect(deployer)
-      ['deployShardVault(address,uint256,uint256)'](
+      [
+        'deployShardVault(address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+      ](
         BAYC,
+        baycVault,
         shardValue,
         maxShards,
+        salesFeeBP,
+        fundraiseFeeBP,
+        yieldFeeBP,
+        bufferBP,
+        deviationBP,
       );
 
     const rcpt = await deploySecondShardVaultTx.wait();
@@ -221,13 +232,18 @@ describe('ShardVaultProxy', () => {
       .connect(deployer)
       ['addToWhitelist(address)'](secondDeployment.deployment);
 
-    beforeEach(async () => {
-      snapshotId = await ethers.provider.send('evm_snapshot', []);
+    await hre.network.provider.request({
+      method: 'hardhat_impersonateAccount',
+      params: ['0x364d6D0333432C3Ac016Ca832fb8594A8cE43Ca6'],
     });
+  });
 
-    afterEach(async () => {
-      await ethers.provider.send('evm_revert', [snapshotId]);
-    });
+  beforeEach(async () => {
+    snapshotId = await ethers.provider.send('evm_snapshot', []);
+  });
+
+  afterEach(async () => {
+    await ethers.provider.send('evm_revert', [snapshotId]);
   });
 
   describeBehaviorOfShardVaultProxy(
