@@ -146,7 +146,7 @@ export function describeBehaviorOfShardVaultPermissioned(
       });
     });
 
-    describe.only('#collateralizePunk(uint256,uint256,bool)', () => {
+    describe('#collateralizePunk(uint256,uint256,bool)', () => {
       it('borrows requested amount of pUSD', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
