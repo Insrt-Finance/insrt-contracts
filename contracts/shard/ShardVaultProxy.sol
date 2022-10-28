@@ -18,6 +18,7 @@ contract ShardVaultProxy is Proxy {
         address shardVaultDiamond,
         address collection,
         address jpegdVault,
+        address jpegdVaultHelper,
         uint256 shardValue,
         uint256 maxSupply,
         uint256 id,
@@ -36,6 +37,7 @@ contract ShardVaultProxy is Proxy {
         l.id = id;
         l.collection = collection;
         l.jpegdVault = jpegdVault;
+        l.jpegdVaultHelper = jpegdVaultHelper;
         l.shardValue = shardValue;
         l.maxSupply = maxSupply;
         l.salesFeeBP = salesFeeBP;

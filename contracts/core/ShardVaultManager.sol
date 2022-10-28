@@ -21,6 +21,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
     function deployShardVault(
         address collection,
         address jpegdVault,
+        address jpegdVaultHelper,
         uint256 shardValue,
         uint256 maxSupply,
         uint256 salesFeeBP,
@@ -34,6 +35,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 SHARD_VAULT_DIAMOND,
                 collection,
                 jpegdVault,
+                jpegdVaultHelper,
                 shardValue,
                 maxSupply,
                 ++ShardVaultManagerStorage.layout().count,

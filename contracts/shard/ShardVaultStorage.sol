@@ -20,6 +20,7 @@ library ShardVaultStorage {
         uint256 deviationBP;
         address treasury;
         address jpegdVault;
+        address jpegdVaultHelper;
         address jpegdLP;
         address collection;
         bool invested;

@@ -22,6 +22,8 @@ interface IShardVaultManager {
      * @notice deploys a ShardVaultProxy
      * @param collection the address of the NFT collection contract
      * @param jpegdVault the jpeg'd NFT vault corresponding to the collection
+     * @param jpegdVaultHelper the jpeg'd NFT Vault helper contract used for 
+       non-ERC721/1155 compiant collections
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
      * @param salesFeeBP sales fee basis points
@@ -34,6 +36,7 @@ interface IShardVaultManager {
     function deployShardVault(
         address collection,
         address jpegdVault,
+        address jpegdVaultHelper,
         uint256 shardValue,
         uint256 maxSupply,
         uint256 salesFeeBP,
