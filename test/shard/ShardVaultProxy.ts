@@ -48,6 +48,7 @@ describe('ShardVaultProxy', () => {
   const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
   const curvePUSDPool = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
   const punkVault = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
+  const punkVaultHelper = '0x810fdbc7E5Cfe998127a1f2Aa26f34E64e0364f4';
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const salesFeeBP = BigNumber.from('200');
   const fundraiseFeeBP = BigNumber.from('100');
@@ -173,10 +174,11 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+        'deployShardVault(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
       ](
         CRYPTO_PUNKS_MARKET,
         punkVault,
+        punkVaultHelper,
         shardValue,
         maxShards,
         salesFeeBP,
@@ -196,10 +198,11 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+        'deployShardVault(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
       ](
         BAYC,
         baycVault,
+        ethers.constants.AddressZero,
         shardValue,
         maxShards,
         salesFeeBP,
