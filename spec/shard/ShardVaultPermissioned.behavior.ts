@@ -5,6 +5,8 @@ import { expect } from 'chai';
 import {
   ICryptoPunkMarket,
   ICryptoPunkMarket__factory,
+  IERC20,
+  INFTVault,
   IShardVault,
 } from '../../typechain-types';
 
@@ -26,9 +28,15 @@ export function describeBehaviorOfShardVaultPermissioned(
     let secondInstance: IShardVault;
     let cryptoPunkMarket: ICryptoPunkMarket;
     let purchaseData: string;
+    let pUSD: IERC20;
+    let jpegdVault: INFTVault;
 
     const punkId = BigNumber.from('2534');
     const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+    const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
+    const JPEGD_VAULT = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
+    const targetLTVBP = BigNumber.from('2800');
+    const BASIS_POINTS = BigNumber.from('10000');
 
     before(async () => {
       cryptoPunkMarket = await ethers.getContractAt(
@@ -39,6 +47,15 @@ export function describeBehaviorOfShardVaultPermissioned(
       purchaseData = cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
         punkId,
       ]);
+
+      pUSD = <IERC20>(
+        await ethers.getContractAt(
+          '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+          PUSD,
+        )
+      );
+
+      jpegdVault = await ethers.getContractAt('INFTVault', JPEGD_VAULT);
     });
 
     beforeEach(async () => {
@@ -125,6 +142,153 @@ export function describeBehaviorOfShardVaultPermissioned(
               .connect(owner)
               ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
           ).to.be.revertedWith('ShardVault__CollectionNotPunks()');
+        });
+      });
+    });
+
+    describe.only('#collateralizePunk(uint256,uint256,bool)', () => {
+      it('borrows requested amount of pUSD', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await instance
+          .connect(owner)
+          .collateralizePunk(punkId, requestedBorrow, false);
+        expect(actualBorrow).to.eq(
+          await pUSD['balanceOf(address)'](instance.address),
+        );
+      });
+
+      it('borrows multiple times until target LTV is reached', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        let requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(BigNumber.from('2000'))
+          .div(BASIS_POINTS);
+
+        let actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await expect(() =>
+          instance
+            .connect(owner)
+            .collateralizePunk(punkId, requestedBorrow, false),
+        ).to.changeTokenBalance(pUSD, instance, actualBorrow);
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const duration = 10;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(BigNumber.from('2000'))
+          .div(BASIS_POINTS);
+
+        const oldBalance = await pUSD['balanceOf(address)'](instance.address);
+
+        await instance
+          .connect(owner)
+          .collateralizePunk(punkId, requestedBorrow, false);
+
+        const newBalance = await pUSD['balanceOf(address)'](instance.address);
+
+        const debtInterest = await jpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        actualBorrow = requestedBorrow
+          .mul(targetLTVBP.sub(BigNumber.from('2000')))
+          .div(BigNumber.from('2000'));
+
+        expect(newBalance.sub(oldBalance))
+          .to.be.lte(actualBorrow.sub(debtInterest).add(ethers.constants.One))
+          .gte(actualBorrow.sub(debtInterest).sub(ethers.constants.One));
+      });
+
+      describe('reverts if', () => {
+        it('sum of requested borrow and total debt is larger than targetLTV', async () => {
+          await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+          await instance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+
+          await instance
+            .connect(owner)
+            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+          let requestedBorrow = (
+            await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          )
+            .mul(BigNumber.from('2000'))
+            .div(BASIS_POINTS);
+
+          await instance
+            .connect(owner)
+            .collateralizePunk(
+              punkId,
+              await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId),
+              false,
+            );
+
+          const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+            'latest',
+          );
+          const duration = 10;
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            borrowTimeStamp + duration,
+          ]);
+
+          await expect(
+            instance
+              .connect(owner)
+              .collateralizePunk(punkId, requestedBorrow, false),
+          ).to.be.revertedWith('ShardVault__TargetLTVReached()');
+        });
+
+        it('caller is not owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              .collateralizePunk(punkId, ethers.constants.One, false),
+          ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
         });
       });
     });
