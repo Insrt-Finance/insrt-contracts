@@ -54,7 +54,7 @@ interface IShardVaultInternal {
     error ShardVault__VaultTokenIdMismatch();
 
     /**
-     * @notice thrown when attempting to borrow more than the target LTV amount
+     * @notice thrown when attempting to borrow after target LTV amount is reached
      */
-    error ShardVault__TargetLTVExceeded();
+    error ShardVault__TargetLTVReached();
 }

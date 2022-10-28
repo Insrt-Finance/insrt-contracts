@@ -12,6 +12,7 @@ import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
 import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
+import { INFTEscrow } from '../jpegd/INFTEscrow.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
@@ -288,18 +289,40 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pUSD) {
-        uint256 creditLimit = INFTVault(l.jpegdVault).getCreditLimit(punkId);
+        address jpegdVault = l.jpegdVault;
+        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
+        uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
+        uint256 targetLTV = creditLimit -
+            (value * (l.bufferBP + l.deviationBP)) /
+            BASIS_POINTS;
 
-        if (
-            borrowAmount >
-            creditLimit -
-                ((creditLimit * (BASIS_POINTS - l.bufferBP - l.deviationBP)) /
-                    BASIS_POINTS)
-        ) {
-            revert ShardVault__TargetLTVExceeded();
+        if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
+            uint256 principal = INFTVault(jpegdVault)
+                .positions(punkId)
+                .debtPrincipal;
+            uint256 debtInterest = INFTVault(jpegdVault).getDebtInterest(
+                punkId
+            );
+
+            if (borrowAmount + principal + debtInterest > targetLTV) {
+                if (targetLTV < principal + debtInterest) {
+                    revert ShardVault__TargetLTVReached();
+                }
+                borrowAmount = targetLTV - principal - debtInterest;
+            }
+        } else {
+            if (borrowAmount > targetLTV) {
+                borrowAmount = targetLTV;
+            }
+
+            (, address flashEscrow) = INFTEscrow(l.jpegdVaultHelper).precompute(
+                address(this),
+                punkId
+            );
+            ICryptoPunkMarket(PUNKS).transferPunk(flashEscrow, punkId);
         }
 
-        INFTVault(l.jpegdVault).borrow(punkId, borrowAmount, insure);
+        INFTVault(jpegdVault).borrow(punkId, borrowAmount, insure);
 
         pUSD = IERC20(PUSD).balanceOf(address(this));
     }
