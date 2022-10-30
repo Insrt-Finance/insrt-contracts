@@ -14,6 +14,7 @@ import {
   ShardCollectionDiamond,
   ShardCollectionDiamond__factory,
   ERC165__factory,
+  SafeOwnable__factory,
   IShardCollection__factory,
   IShardCollection,
 } from '../../typechain-types';
@@ -42,8 +43,12 @@ describe('ShardVaultProxy', () => {
 
     const ERC165Selectors = new Set();
     const IERC165 = ERC165__factory.createInterface();
-
     IERC165.fragments.map((f) => ERC165Selectors.add(IERC165.getSighash(f)));
+    const SafeOwnableSelectors = new Set();
+    const ISafeOwnable = SafeOwnable__factory.createInterface();
+    ISafeOwnable.fragments.map((f) =>
+      SafeOwnableSelectors.add(ISafeOwnable.getSighash(f)),
+    );
 
     const coreDiamond = await new Core__factory(deployer).deploy();
     const shardVaultDiamond = await new ShardVaultDiamond__factory(
@@ -61,6 +66,7 @@ describe('ShardVaultProxy', () => {
         action: 0,
         selectors: Object.keys(f.interface.functions)
           .filter((fn) => !ERC165Selectors.has(f.interface.getSighash(fn)))
+          .filter((fn) => !SafeOwnableSelectors.has(f.interface.getSighash(fn)))
           .map((fn) => f.interface.getSighash(fn)),
       };
     });
