@@ -31,8 +31,14 @@ interface IShardVaultPermissioned {
      *         and finally stakes citadel tokens in JPEG'd autocompounder
      * @param amount pUSD amount
      * @param minCurveLP minimum LP to be accepted as return from curve staking
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
      */
-    function stake(uint256 amount, uint256 minCurveLP) external;
+    function stake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
+    ) external;
 
     /**
      * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve
@@ -41,6 +47,8 @@ interface IShardVaultPermissioned {
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param minCurveLP minimum LP to be accepted as return from curve staking
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
      * @param insure whether to insure position
      */
     function investPunk(
@@ -48,6 +56,7 @@ interface IShardVaultPermissioned {
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
+        uint256 poolInfoIndex,
         bool insure
     ) external;
 

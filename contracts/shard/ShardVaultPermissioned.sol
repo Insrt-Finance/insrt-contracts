@@ -57,11 +57,12 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     /**
      * @inheritdoc IShardVaultPermissioned
      */
-    function stake(uint256 amount, uint256 minCurveLP)
-        external
-        onlyProtocolOwner
-    {
-        _stake(ShardVaultStorage.layout(), amount, minCurveLP);
+    function stake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner {
+        _stake(amount, minCurveLP, poolInfoIndex);
     }
 
     /**
@@ -72,6 +73,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
+        uint256 poolInfoIndex,
         bool insure
     ) external onlyProtocolOwner {
         _investPunk(
@@ -80,6 +82,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
             punkId,
             borrowAmount,
             minCurveLP,
+            poolInfoIndex,
             insure
         );
     }

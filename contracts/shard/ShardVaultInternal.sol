@@ -329,15 +329,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
-     * @param l ShardVaultStorage layout
      * @param amount amount of pUSD to stake
      * @param minCurveLP minimum LP to receive from pUSD staking into curve
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
     function _stake(
-        ShardVaultStorage.Layout storage l,
         uint256 amount,
-        uint256 minCurveLP
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
         IERC20(PUSD).approve(CURVE_PUSD_POOL, amount);
         //pUSD is in position 0 in the curve meta pool
@@ -349,11 +350,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         IERC20(CURVE_PUSD_POOL).approve(CITADEL, curveLP);
         shares = IVault(CITADEL).deposit(address(this), curveLP);
 
-        IERC20(ILPFarming(LP_FARM).poolInfo()[l.lpFarmId].lpToken).approve(
+        IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
             LP_FARM,
             shares
         );
-        ILPFarming(LP_FARM).deposit(l.lpFarmId, shares);
+        ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
     }
 
     /**
@@ -362,6 +363,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param punkId id of punk
      * @param minCurveLP minimum LP to receive from curve LP
      * @param insure whether to insure
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
      */
     function _investPunk(
         ShardVaultStorage.Layout storage l,
@@ -369,6 +372,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
+        uint256 poolInfoIndex,
         bool insure
     ) internal {
         if (l.ownedTokenIds.length() == 0) {
@@ -376,9 +380,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
         _purchasePunk(l, data, punkId);
         _stake(
-            l,
             _collateralizePunk(l, punkId, borrowAmount, insure),
-            minCurveLP
+            minCurveLP,
+            poolInfoIndex
         );
     }
 
