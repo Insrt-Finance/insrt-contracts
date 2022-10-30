@@ -23,7 +23,6 @@ import {
 } from '../../typechain-types';
 
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
-import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 
 describe('ShardVaultProxy', () => {
@@ -36,6 +35,7 @@ describe('ShardVaultProxy', () => {
   let marketplaceHelper: IMarketPlaceHelper;
 
   let deployer: any;
+  let jpegdOwner: any;
   const id = 1;
   const shardValue = ethers.utils.parseEther('1.0');
   const maxShards = BigNumber.from('20');
@@ -50,6 +50,7 @@ describe('ShardVaultProxy', () => {
   const punkVault = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
   const punkVaultHelper = '0x810fdbc7E5Cfe998127a1f2Aa26f34E64e0364f4';
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
+  const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
   const salesFeeBP = BigNumber.from('200');
   const fundraiseFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
@@ -237,8 +238,26 @@ describe('ShardVaultProxy', () => {
 
     await hre.network.provider.request({
       method: 'hardhat_impersonateAccount',
-      params: ['0x364d6D0333432C3Ac016Ca832fb8594A8cE43Ca6'],
+      params: [jpegdOwnerAddress],
     });
+
+    jpegdOwner = await ethers.getSigner(jpegdOwnerAddress);
+
+    await (await ethers.getContractAt('INoContract', citadel))
+      .connect(jpegdOwner)
+      ['setContractWhitelisted(address,bool)'](instance.address, true);
+
+    await (await ethers.getContractAt('INoContract', citadel))
+      .connect(jpegdOwner)
+      ['setContractWhitelisted(address,bool)'](secondInstance.address, true);
+
+    await (await ethers.getContractAt('INoContract', lpFarm))
+      .connect(jpegdOwner)
+      ['setContractWhitelisted(address,bool)'](instance.address, true);
+
+    await (await ethers.getContractAt('INoContract', lpFarm))
+      .connect(jpegdOwner)
+      ['setContractWhitelisted(address,bool)'](secondInstance.address, true);
   });
 
   beforeEach(async () => {
