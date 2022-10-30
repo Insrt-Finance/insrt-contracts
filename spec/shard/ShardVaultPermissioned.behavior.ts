@@ -8,6 +8,7 @@ import {
   IERC20,
   INFTVault,
   IShardVault,
+  ICurveMetaPool,
 } from '../../typechain-types';
 
 export interface ShardVaultPermissionedBehaviorArgs {
@@ -35,6 +36,7 @@ export function describeBehaviorOfShardVaultPermissioned(
     const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
     const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
     const JPEGD_VAULT = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
+    const curvePUSDPoolAddress = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
     const targetLTVBP = BigNumber.from('2800');
     const BASIS_POINTS = BigNumber.from('10000');
 
@@ -170,12 +172,11 @@ export function describeBehaviorOfShardVaultPermissioned(
             .div(settings.organizationFeeRate.denominator),
         );
 
-        await instance
-          .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
-        expect(actualBorrow).to.eq(
-          await pUSD['balanceOf(address)'](instance.address),
-        );
+        await expect(() =>
+          instance
+            .connect(owner)
+            .collateralizePunk(punkId, requestedBorrow, false),
+        ).to.changeTokenBalance(pUSD, instance, actualBorrow);
       });
 
       it('borrows multiple times until target LTV is reached', async () => {
@@ -288,6 +289,63 @@ export function describeBehaviorOfShardVaultPermissioned(
             instance
               .connect(nonOwner)
               .collateralizePunk(punkId, ethers.constants.One, false),
+          ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
+        });
+      });
+    });
+
+    describe('#stake(uint256,uint256,uint256)', () => {
+      it('completes three stages of staking and receives LP_FARM shares', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await instance
+          .connect(owner)
+          .collateralizePunk(punkId, requestedBorrow, false);
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await instance.connect(owner)['stake(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.One,
+        );
+      });
+      describe('reverts if', () => {
+        it('caller is not owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['stake(uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
           ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
         });
       });
