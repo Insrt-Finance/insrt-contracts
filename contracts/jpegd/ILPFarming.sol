@@ -31,10 +31,11 @@ interface ILPFarming {
     }
 
     /**
-     * @notice getter for the PoolInfo array in JPEGd LPFarming contract
+     * @notice getter for poolInfo struct in  PoolInfo array of JPEGd LPFarming contract
+     * @param index index of poolInfo in PoolInfo array
      * @return PoolInfo[] array of PoolInfo structs
      */
-    function poolInfo() external view returns (PoolInfo[] memory);
+    function poolInfo(uint256 index) external view returns (PoolInfo memory);
 
     /**
      * @notice getter for the userInfo mapping in JPEGd LPFarming contract

@@ -45,4 +45,17 @@ interface ICurveMetaPool {
         int128 i,
         uint256 _min_received
     ) external returns (uint256);
+
+    /**
+     * @notice Calculate addition or reduction in token supply from a deposit or withdrawal
+     * @dev This calculation accounts for slippage, but not fees.
+     *      Needed to prevent front-running, not for precise calculations!
+     * @param _amounts Amount of each underlying coin being deposited
+     * @param _is_deposit set True for deposits, False for withdrawals
+     * @return Expected amount of LP tokens received
+     */
+    function calc_token_amount(uint256[2] memory _amounts, bool _is_deposit)
+        external
+        view
+        returns (uint256);
 }
