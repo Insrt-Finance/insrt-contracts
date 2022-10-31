@@ -444,13 +444,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice unstakes from JPEG,d auto-compounder, then from JPEG'd citadel, then from curve LP
-     * @param l storage layout
      * @param amount amount of shares of auto-compounder to burn
      * @param minPUSD minimum pUSD to receive from curve pool
      * @return pUSD pUSD amount returned
      */
     function _unstake(
-        ShardVaultStorage.Layout storage l,
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex
@@ -488,8 +486,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex
     ) internal {
         _unstake(
-            l,
-            ILPFarming(LP_FARM).userInfo(1, address(this)).amount,
+            ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
             minPUSD,
             poolInfoIndex
         );
