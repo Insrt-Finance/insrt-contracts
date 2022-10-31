@@ -485,19 +485,34 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 ask,
         uint256 poolInfoIndex
     ) internal {
+        address jpegdVault = l.jpegdVault;
         _unstake(
             ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
             minPUSD,
             poolInfoIndex
         );
 
-        uint256 debt = _totalDebt(l, tokenId);
+        uint256 debt = _totalDebt(jpegdVault, tokenId);
 
-        IERC20(PUSD).approve(l.jpegdVault, debt + INTEREST_BUFFER);
-        INFTVault(l.jpegdVault).repay(tokenId, debt + INTEREST_BUFFER);
-        INFTVault(l.jpegdVault).closePosition(tokenId);
+        IERC20(PUSD).approve(jpegdVault, debt + INTEREST_BUFFER);
+        INFTVault(jpegdVault).repay(tokenId, debt + INTEREST_BUFFER);
+        INFTVault(jpegdVault).closePosition(tokenId);
 
         ICryptoPunkMarket(PUNKS).offerPunkForSale(tokenId, ask);
+    }
+
+    function _downPayment(
+        ShardVaultStorage.Layout storage l,
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 punkIndex
+    ) internal returns (uint256 paidDebt, uint256 totalDebt) {
+        address jpegdVault = l.jpegdVault;
+        paidDebt = _unstake(amount, minPUSD, poolInfoIndex);
+        INFTVault(jpegdVault).repay(punkIndex, paidDebt);
+
+        totalDebt = _totalDebt(jpegdVault, punkIndex);
     }
 
     function _withdrawPunkProceeds(
@@ -508,14 +523,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         l.ownedTokenIds.remove(punkId);
     }
 
-    function _totalDebt(ShardVaultStorage.Layout storage l, uint256 tokenId)
+    function _totalDebt(address jpegdVault, uint256 tokenId)
         internal
         view
         returns (uint256 debt)
     {
         debt =
-            INFTVault(l.jpegdVault).getDebtInterest(tokenId) +
-            INFTVault(l.jpegdVault).positions(tokenId).debtPrincipal;
+            INFTVault(jpegdVault).getDebtInterest(tokenId) +
+            INFTVault(jpegdVault).positions(tokenId).debtPrincipal;
     }
 
     /**
