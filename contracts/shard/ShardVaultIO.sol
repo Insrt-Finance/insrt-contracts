@@ -7,22 +7,26 @@ import { ShardVaultInternal } from './ShardVaultInternal.sol';
 
 contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     constructor(
+        address shardCollection,
         address pUSD,
         address punkMarket,
         address citadel,
         address lpFarm,
         address curvePUSDPool,
+        address marketHelper,
         uint256 interestBuffer,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
     )
         ShardVaultInternal(
+            shardCollection,
             pUSD,
             punkMarket,
             citadel,
             lpFarm,
             curvePUSDPool,
+            marketHelper,
             interestBuffer,
             salesFeeBP,
             fundraiseFeeBP,
@@ -40,7 +44,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     /**
      * @inheritdoc IShardVaultIO
      */
-    function withdraw(uint256 shards) external payable {
-        _withdraw(shards);
+    function withdraw(uint256[] memory tokenIds) external payable {
+        _withdraw(tokenIds);
     }
 }

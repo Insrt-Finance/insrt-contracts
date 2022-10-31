@@ -8,12 +8,15 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
-import { Errors } from './Errors.sol';
 import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../jpegd/ILPFarming.sol';
+import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
+import { INFTEscrow } from '../jpegd/INFTEscrow.sol';
 import { INFTVault } from '../jpegd/INFTVault.sol';
 import { IVault } from '../jpegd/IVault.sol';
+import { IShardVaultInternal } from './IShardVaultInternal.sol';
+import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 //CHECK IF ALL VAULTS USE PUSD OR IF SOME HAVE BUSD eg
@@ -22,36 +25,41 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
  */
-abstract contract ShardVaultInternal is OwnableInternal {
+abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     using AddressUtils for address payable;
-    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    address internal immutable SHARD_COLLECTION;
     address internal immutable PUSD;
     address internal immutable PUNKS;
     address internal immutable CITADEL;
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     uint256 internal immutable INTEREST_BUFFER;
+    address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
+        address shardCollection,
         address pUSD,
         address punkMarket,
         address citadel,
         address lpFarm,
+        address marketplaceHelper,
         address curvePUSDPool,
         uint256 interestBuffer,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
     ) {
+        SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
         PUSD = pUSD;
         CITADEL = citadel;
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         INTEREST_BUFFER = interestBuffer;
+        MARKETPLACE_HELPER = marketplaceHelper;
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -60,11 +68,15 @@ abstract contract ShardVaultInternal is OwnableInternal {
         l.yieldFeeBP = yieldFeeBP;
     }
 
-    /**
-     * @notice ensure caller is protocol owner
-     */
-    function _onlyProtocolOwner() internal view {
-        if (msg.sender != _protocolOwner()) revert Errors.NotProtocolOwner();
+    modifier onlyProtocolOwner() {
+        _onlyProtocolOwner(msg.sender);
+        _;
+    }
+
+    function _onlyProtocolOwner(address account) internal view {
+        if (account != _protocolOwner()) {
+            revert ShardVault__OnlyProtocolOwner();
+        }
     }
 
     /**
@@ -82,50 +94,173 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 amount = msg.value;
+        uint256 shardValue = l.shardValue;
+        uint256 totalSupply = l.totalSupply;
+        uint256 maxSupply = l.maxSupply;
 
-        if (amount % l.shardSize != 0 || amount == 0) {
-            revert Errors.InvalidDepositAmount();
+        if (amount % shardValue != 0 || amount == 0) {
+            revert ShardVault__InvalidDepositAmount();
         }
-        if (l.invested || l.capped) {
-            revert Errors.DepositForbidden();
-        }
-        if (address(this).balance > l.maxCapital) {
-            l.capped = true;
-            amount = msg.value + l.maxCapital - address(this).balance;
+        if (l.invested || totalSupply == maxSupply) {
+            revert ShardVault__DepositForbidden();
         }
 
-        uint256 shards = amount / l.shardSize;
-        l.owedShards[msg.sender] += shards;
-        l.totalShards += shards;
-        l.depositors.add(msg.sender);
+        uint256 shards = amount / shardValue;
+        uint256 excessShards;
 
-        if (msg.value - amount > 0) {
-            payable(msg.sender).sendValue(msg.value - amount);
+        if (shards + totalSupply >= maxSupply) {
+            excessShards = shards + totalSupply - maxSupply;
+        }
+
+        shards -= excessShards;
+        l.totalSupply += shards;
+
+        for (uint256 i; i < shards; ) {
+            unchecked {
+                IShardCollection(SHARD_COLLECTION).mint(
+                    msg.sender,
+                    _formatTokenId(++l.count)
+                );
+                ++i;
+            }
+        }
+
+        if (excessShards > 0) {
+            payable(msg.sender).sendValue(excessShards * shardValue);
         }
     }
 
     /**
      * @notice withdraws ETH for an amount of shards
-     * @param shards the amount of shards to "burn" for ETH
+     * @param tokenIds the tokenIds of shards to burn
      */
-    function _withdraw(uint256 shards) internal {
+    function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.capped) {
-            revert Errors.WithdrawalForbidden();
-        }
-        if (l.owedShards[msg.sender] < shards) {
-            revert Errors.InsufficientShards();
+        if (l.invested || l.totalSupply == l.maxSupply) {
+            revert ShardVault__WithdrawalForbidden();
         }
 
-        l.owedShards[msg.sender] -= shards;
-        l.totalShards -= shards;
+        uint256 tokens = tokenIds.length;
 
-        if (l.owedShards[msg.sender] == 0) {
-            l.depositors.remove(msg.sender);
+        if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
+            revert ShardVault__InsufficientShards();
         }
 
-        payable(msg.sender).sendValue(shards * l.shardSize);
+        for (uint256 i; i < tokens; ) {
+            if (
+                IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                msg.sender
+            ) {
+                revert ShardVault__OnlyShardOwner();
+            }
+
+            (address vault, ) = _parseTokenId(tokenIds[i]);
+            if (vault != address(this)) {
+                revert ShardVault__VaultTokenIdMismatch();
+            }
+
+            IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        l.totalSupply -= tokens;
+
+        payable(msg.sender).sendValue(tokens * l.shardValue);
+    }
+
+    /**
+     * @notice returns total minted shards amount
+     */
+    function _totalSupply() internal view returns (uint256) {
+        return ShardVaultStorage.layout().totalSupply;
+    }
+
+    /**
+     * @notice returns maximum possible minted shards
+     */
+    function _maxSupply() internal view returns (uint256) {
+        return ShardVaultStorage.layout().maxSupply;
+    }
+
+    /**
+     * @notice returns ETH value of shard
+     */
+    function _shardValue() internal view returns (uint256) {
+        return ShardVaultStorage.layout().shardValue;
+    }
+
+    /**
+     * @notice return ShardCollection address
+     */
+    function _shardCollection() internal view returns (address) {
+        return SHARD_COLLECTION;
+    }
+
+    /**
+     * @notice return minted token count
+     * @dev does not reduce when tokens are burnt
+     */
+    function _count() internal view returns (uint256) {
+        return ShardVaultStorage.layout().count;
+    }
+
+    /**
+     * @notice return invested flag state
+     * @return bool invested flag
+     */
+    function _invested() internal view returns (bool) {
+        return ShardVaultStorage.layout().invested;
+    }
+
+    /**
+     * @notice return array with owned token IDs
+     * @return uint256[]  array of owned token IDs
+     */
+    function _ownedTokenIds() internal view returns (uint256[] memory) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        uint256 ownedIdsLength = l.ownedTokenIds.length();
+        uint256[] memory ids = new uint256[](ownedIdsLength);
+
+        unchecked {
+            for (uint256 i; i < ownedIdsLength; ) {
+                ids[i] = l.ownedTokenIds.at(i);
+                ++i;
+            }
+        }
+
+        return ids;
+    }
+
+    /**
+     * @notice formats a tokenId given the internalId and address of ShardVault contract
+     * @param internalId the internal ID
+     * @return tokenId the formatted tokenId
+     */
+    function _formatTokenId(uint256 internalId)
+        internal
+        view
+        returns (uint256 tokenId)
+    {
+        tokenId = ((uint256(uint160(address(this))) << 96) | internalId);
+    }
+
+    /**
+     * @notice parses a tokenId to extract seeded vault address and internalId
+     * @param tokenId tokenId to parse
+     * @return vault seeded vault address
+     * @return internalId internal ID
+     */
+    function _parseTokenId(uint256 tokenId)
+        internal
+        pure
+        returns (address vault, uint256 internalId)
+    {
+        vault = address(uint160(tokenId >> 96));
+        internalId = 0xFFFFFFFFFFFFFFFFFFFFFFFF & tokenId;
     }
 
     /**
@@ -133,20 +268,25 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param l ShardVaultStorage layout
      * @param punkId id of punk
      */
-    function _purchasePunk(ShardVaultStorage.Layout storage l, uint256 punkId)
-        internal
-    {
+    function _purchasePunk(
+        ShardVaultStorage.Layout storage l,
+        bytes calldata data,
+        uint256 punkId
+    ) internal {
         if (l.collection != PUNKS) {
-            revert Errors.CollectionNotPunks();
+            revert ShardVault__CollectionNotPunks();
         }
 
         uint256 price = ICryptoPunkMarket(PUNKS)
             .punksOfferedForSale(punkId)
             .minValue;
 
-        ICryptoPunkMarket(PUNKS).buyPunk{ value: price }(punkId);
+        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseERC721Asset{
+            value: price
+        }(data, PUNKS, PUNKS, address(0), punkId, price);
 
         l.invested = true;
+        l.ownedTokenIds.add(punkId);
     }
 
     /**
@@ -160,34 +300,59 @@ abstract contract ShardVaultInternal is OwnableInternal {
     function _collateralizePunk(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
+        uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pUSD) {
-        if (
-            ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) != address(this)
-        ) {
-            revert Errors.NotOwned();
-        } // probably remove this error
+        address jpegdVault = l.jpegdVault;
+        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
+        uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
+        uint256 targetLTV = creditLimit -
+            (value * (l.bufferBP + l.deviationBP)) /
+            BASIS_POINTS;
 
-        INFTVault(l.jpegdVault).borrow(
-            punkId,
-            INFTVault(l.jpegdVault).getNFTValueUSD(punkId),
-            insure
-        );
+        if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
+            uint256 principal = INFTVault(jpegdVault)
+                .positions(punkId)
+                .debtPrincipal;
+            uint256 debtInterest = INFTVault(jpegdVault).getDebtInterest(
+                punkId
+            );
+
+            if (borrowAmount + principal + debtInterest > targetLTV) {
+                if (targetLTV < principal + debtInterest) {
+                    revert ShardVault__TargetLTVReached();
+                }
+                borrowAmount = targetLTV - principal - debtInterest;
+            }
+        } else {
+            if (borrowAmount > targetLTV) {
+                borrowAmount = targetLTV;
+            }
+
+            (, address flashEscrow) = INFTEscrow(l.jpegdVaultHelper).precompute(
+                address(this),
+                punkId
+            );
+            ICryptoPunkMarket(PUNKS).transferPunk(flashEscrow, punkId);
+        }
+
+        INFTVault(jpegdVault).borrow(punkId, borrowAmount, insure);
 
         pUSD = IERC20(PUSD).balanceOf(address(this));
     }
 
     /**
      * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
-     * @param l ShardVaultStorage layout
      * @param amount amount of pUSD to stake
      * @param minCurveLP minimum LP to receive from pUSD staking into curve
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
     function _stake(
-        ShardVaultStorage.Layout storage l,
         uint256 amount,
-        uint256 minCurveLP
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
         IERC20(PUSD).approve(CURVE_PUSD_POOL, amount);
         //pUSD is in position 0 in the curve meta pool
@@ -199,11 +364,11 @@ abstract contract ShardVaultInternal is OwnableInternal {
         IERC20(CURVE_PUSD_POOL).approve(CITADEL, curveLP);
         shares = IVault(CITADEL).deposit(address(this), curveLP);
 
-        IERC20(ILPFarming(LP_FARM).poolInfo()[l.lpFarmId].lpToken).approve(
+        IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
             LP_FARM,
             shares
         );
-        ILPFarming(LP_FARM).deposit(l.lpFarmId, shares);
+        ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
     }
 
     /**
@@ -212,19 +377,27 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param punkId id of punk
      * @param minCurveLP minimum LP to receive from curve LP
      * @param insure whether to insure
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
      */
     function _investPunk(
         ShardVaultStorage.Layout storage l,
+        bytes calldata data,
         uint256 punkId,
+        uint256 borrowAmount,
         uint256 minCurveLP,
+        uint256 poolInfoIndex,
         bool insure
     ) internal {
         if (l.ownedTokenIds.length() == 0) {
             _collectFee(l, l.fundraiseFeeBP);
         }
-        _purchasePunk(l, punkId);
-        l.ownedTokenIds.add(punkId);
-        _stake(l, _collateralizePunk(l, punkId, insure), minCurveLP);
+        _purchasePunk(l, data, punkId);
+        _stake(
+            _collateralizePunk(l, punkId, borrowAmount, insure),
+            minCurveLP,
+            poolInfoIndex
+        );
     }
 
     /**
@@ -247,7 +420,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setSalesFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.BasisExceeded();
+        if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().salesFeeBP = feeBP;
     }
 
@@ -256,7 +429,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setFundraiseFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.BasisExceeded();
+        if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
     }
 
@@ -265,7 +438,7 @@ abstract contract ShardVaultInternal is OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setYieldFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert Errors.BasisExceeded();
+        if (feeBP > 10000) revert ShardVault__BasisExceeded();
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 
@@ -279,14 +452,14 @@ abstract contract ShardVaultInternal is OwnableInternal {
     function _unstake(
         ShardVaultStorage.Layout storage l,
         uint256 amount,
-        uint256 minPUSD
+        uint256 minPUSD,
+        uint256 poolInfoIndex
     ) internal returns (uint256 pUSD) {
-        ILPFarming(LP_FARM).withdraw(1, amount);
+        ILPFarming(LP_FARM).withdraw(poolInfoIndex, amount);
         uint256 citadelLP = IVault(CITADEL).withdraw(
             address(this),
-            IERC20(ILPFarming(LP_FARM).poolInfo()[1].lpToken).balanceOf(
-                address(this)
-            )
+            IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken)
+                .balanceOf(address(this))
         );
 
         //note: can remove initialCurveLP functionality, ask Daniel
@@ -294,8 +467,8 @@ abstract contract ShardVaultInternal is OwnableInternal {
             address(this)
         );
 
-        ILPFarming(LP_FARM).withdraw(l.citadelId, citadelLP);
-        ILPFarming(LP_FARM).claim(l.citadelId);
+        ILPFarming(LP_FARM).withdraw(poolInfoIndex, citadelLP);
+        ILPFarming(LP_FARM).claim(poolInfoIndex);
 
         uint256 curveLP = IERC20(CURVE_PUSD_POOL).balanceOf(address(this)) -
             initialCurveLP;
@@ -311,12 +484,14 @@ abstract contract ShardVaultInternal is OwnableInternal {
         ShardVaultStorage.Layout storage l,
         uint256 tokenId,
         uint256 minPUSD,
-        uint256 ask
+        uint256 ask,
+        uint256 poolInfoIndex
     ) internal {
         _unstake(
             l,
-            ILPFarming(LP_FARM).userInfo(l.citadelId, address(this)).amount,
-            minPUSD
+            ILPFarming(LP_FARM).userInfo(1, address(this)).amount,
+            minPUSD,
+            poolInfoIndex
         );
 
         uint256 debt = _totalDebt(l, tokenId);
@@ -344,5 +519,13 @@ abstract contract ShardVaultInternal is OwnableInternal {
         debt =
             INFTVault(l.jpegdVault).getDebtInterest(tokenId) +
             INFTVault(l.jpegdVault).positions(tokenId).debtPrincipal;
+    }
+
+    /**
+     * @notice sets the maxSupply of shards
+     * @param maxSupply the maxSupply of shards
+     */
+    function _setMaxSupply(uint256 maxSupply) internal {
+        ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 }

@@ -18,17 +18,32 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
     /**
      * @inheritdoc IShardVaultManager
      */
-    function deployShardVault(address collection, uint256 shardSize)
-        external
-        onlyOwner
-        returns (address deployment)
-    {
+    function deployShardVault(
+        address collection,
+        address jpegdVault,
+        address jpegdVaultHelper,
+        uint256 shardValue,
+        uint256 maxSupply,
+        uint256 salesFeeBP,
+        uint256 fundraiseFeeBP,
+        uint256 yieldFeeBP,
+        uint256 bufferBP,
+        uint256 deviationBP
+    ) external onlyOwner returns (address deployment) {
         deployment = address(
             new ShardVaultProxy(
                 SHARD_VAULT_DIAMOND,
                 collection,
-                shardSize,
-                ++ShardVaultManagerStorage.layout().count
+                jpegdVault,
+                jpegdVaultHelper,
+                shardValue,
+                maxSupply,
+                ++ShardVaultManagerStorage.layout().count,
+                salesFeeBP,
+                fundraiseFeeBP,
+                yieldFeeBP,
+                bufferBP,
+                deviationBP
             )
         );
 

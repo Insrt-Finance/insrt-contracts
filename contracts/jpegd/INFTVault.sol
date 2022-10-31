@@ -7,12 +7,36 @@ pragma solidity ^0.8.0;
  * @dev https://github.com/jpegd/core/blob/main/contracts/vaults/NFTVault.sol
  */
 interface INFTVault {
+    /// jpeg'd RATE struct
+    struct Rate {
+        uint128 numerator;
+        uint128 denominator;
+    }
+
+    /// jpeg'd vault settings struct
+    struct VaultSettings {
+        Rate debtInterestApr;
+        Rate creditLimitRate;
+        Rate liquidationLimitRate;
+        Rate cigStakedCreditLimitRate;
+        Rate cigStakedLiquidationLimitRate;
+        /// @custom:oz-renamed-from valueIncreaseLockRate
+        Rate unused12;
+        Rate organizationFeeRate;
+        Rate insurancePurchaseRate;
+        Rate insuranceLiquidationPenaltyRate;
+        uint256 insuranceRepurchaseTimeLimit;
+        uint256 borrowAmountCap;
+    }
+
+    /// jpeg'd vault BorrowType enum
     enum BorrowType {
         NOT_CONFIRMED,
         NON_INSURANCE,
         USE_INSURANCE
     }
 
+    /// jpeg'd vault Position struct
     struct Position {
         BorrowType borrowType;
         uint256 debtPrincipal;
@@ -39,6 +63,23 @@ interface INFTVault {
     /// @return The value in USD of the NFT at index `_nftIndex`, with 18 decimals.
     function getNFTValueUSD(uint256 _nftIndex) external view returns (uint256);
 
+    /// @param _nftIndex The NFT to return the credit limit of
+    /// @return The PUSD credit limit of the NFT at index `_nftIndex`.
+    function getCreditLimit(uint256 _nftIndex) external view returns (uint256);
+
+    /**
+     * @notice getter for jpegdVault settings
+     * @return VaultSettings settings of jpegdVault
+     */
+    function settings() external view returns (VaultSettings memory);
+
+    /**
+     * @notice getter for owned of position opened in jpegdVault
+     * @param tokenId NFT id mapping to position owner
+     * @return address position owner address
+     */
+    function positionOwner(uint256 tokenId) external view returns (address);
+
     /// @param _nftIndex The NFT to check
     /// @return The PUSD debt interest accumulated by the NFT at index `_nftIndex`.
     function getDebtInterest(uint256 _nftIndex) external view returns (uint256);
@@ -60,8 +101,15 @@ interface INFTVault {
     function closePosition(uint256 _nftIndex) external;
 
     /**
-     * @notice explicit getter for positions for a given NFT token id
-     * @return Position for the given NFT token id
+     * @notice getter for position corresponding to tokenId
+     * @param tokenId NFT id mapping to position
+     * @return position corresponding to tokenId
      */
     function positions(uint256 tokenId) external view returns (Position memory);
+
+    /**
+     * @notice getter for total globabl debt in jpeg'd vault
+     * @return uin256 total global debt
+     */
+    function totalDebtAmount() external view returns (uint256);
 }
