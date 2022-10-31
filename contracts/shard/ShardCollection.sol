@@ -4,16 +4,12 @@ pragma solidity ^0.8.0;
 
 import { SolidStateERC721 } from '@solidstate/contracts/token/ERC721/SolidStateERC721.sol';
 import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
-import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
+import { Ownable } from '@solidstate/contracts/access/ownable/Ownable.sol';
 
 import { IShardCollection } from './IShardCollection.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
 
-contract ShardCollection is
-    SolidStateERC721,
-    OwnableInternal,
-    IShardCollection
-{
+contract ShardCollection is SolidStateERC721, Ownable, IShardCollection {
     modifier onlyVault() {
         _onlyVault(msg.sender);
         _;

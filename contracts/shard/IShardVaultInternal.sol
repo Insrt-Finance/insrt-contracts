@@ -2,7 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-interface IShardVaultInternal {
+import { IOwnableInternal } from '@solidstate/contracts/access/ownable/IOwnableInternal.sol';
+
+interface IShardVaultInternal is IOwnableInternal {
     /**
      * @notice thrown when the deposit amount is not a multiple of shardSize
      */
