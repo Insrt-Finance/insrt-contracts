@@ -35,9 +35,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CITADEL;
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
-    uint256 internal immutable INTEREST_BUFFER;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
+    uint256 internal constant INTEREST_BUFFER = 5;
 
     constructor(
         address shardCollection,
@@ -47,7 +47,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address lpFarm,
         address marketplaceHelper,
         address curvePUSDPool,
-        uint256 interestBuffer,
         uint256 salesFeeBP,
         uint256 fundraiseFeeBP,
         uint256 yieldFeeBP
@@ -58,7 +57,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CITADEL = citadel;
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
-        INTEREST_BUFFER = interestBuffer;
         MARKETPLACE_HELPER = marketplaceHelper;
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
@@ -502,10 +500,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             poolInfoIndex
         );
 
-        uint256 debt = _totalDebt(jpegdVault, punkId);
+        uint256 bufferedDebt = _totalDebtWithBuffer(jpegdVault, punkId);
 
-        IERC20(PUSD).approve(jpegdVault, debt + INTEREST_BUFFER);
-        INFTVault(jpegdVault).repay(punkId, debt + INTEREST_BUFFER);
+        IERC20(PUSD).approve(jpegdVault, bufferedDebt);
+        INFTVault(jpegdVault).repay(punkId, bufferedDebt + INTEREST_BUFFER);
         INFTVault(jpegdVault).closePosition(punkId);
 
         ICryptoPunkMarket(PUNKS).offerPunkForSale(punkId, ask);
@@ -557,6 +555,19 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         debt =
             INFTVault(jpegdVault).getDebtInterest(tokenId) +
             INFTVault(jpegdVault).positions(tokenId).debtPrincipal;
+    }
+
+    function _totalDebtWithBuffer(address jpegdVault, uint256 tokenId)
+        internal
+        view
+        returns (uint256 bufferedDebt)
+    {
+        uint256 interest = INFTVault(jpegdVault).getDebtInterest(tokenId);
+        bufferedDebt =
+            INFTVault(jpegdVault).positions(tokenId).debtPrincipal +
+            interest +
+            (interest * INTEREST_BUFFER) /
+            BASIS_POINTS;
     }
 
     /**
