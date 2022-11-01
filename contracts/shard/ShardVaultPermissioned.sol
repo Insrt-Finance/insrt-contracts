@@ -122,4 +122,51 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);
     }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function unstake(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner returns (uint256 pUSD) {
+        pUSD = _unstake(amount, minPUSD, poolInfoIndex);
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function closePunkPosition(
+        uint256 punkId,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 ask
+    ) external onlyProtocolOwner {
+        _closePunkPosition(
+            ShardVaultStorage.layout(),
+            punkId,
+            minPUSD,
+            poolInfoIndex,
+            ask
+        );
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function downPayment(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external onlyProtocolOwner returns (uint256 paidDebt) {
+        paidDebt = _downPayment(
+            ShardVaultStorage.layout(),
+            amount,
+            minPUSD,
+            poolInfoIndex,
+            punkId
+        );
+    }
 }

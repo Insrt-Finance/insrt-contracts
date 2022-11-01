@@ -83,4 +83,46 @@ interface IShardVaultPermissioned {
      * @param maxSupply the maxSupply of shards
      */
     function setMaxSupply(uint256 maxSupply) external;
+
+    /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPUSD minimum pUSD to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pUSD pUSD amount returned
+     */
+    function unstake(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex
+    ) external returns (uint256 pUSD);
+
+    /**
+     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk,
+     *         and lists punk for sale
+     * @param punkId id of punk position pertains to
+     * @param minPUSD minimum pUSD to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param ask minimum accepted sale price of punk
+     */
+    function closePunkPosition(
+        uint256 punkId,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 ask
+    ) external;
+
+    /**
+     * @notice makes a downpayment to a loan position
+     * @param minPUSD minimum pUSD to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function downPayment(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external returns (uint256 paidDebt);
 }
