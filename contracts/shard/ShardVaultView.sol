@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { ShardVaultInternal } from './ShardVaultInternal.sol';
+import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { IShardVaultView } from './IShardVaultView.sol';
 
 /**
@@ -104,5 +105,23 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function ownedTokenIds() external view returns (uint256[] memory ids) {
         ids = _ownedTokenIds();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function totalDebt(uint256 tokenId) external view returns (uint256 debt) {
+        debt = _totalDebt(ShardVaultStorage.layout().jpegdVault, tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function convertPUSDToAutoComp(uint256 pUSD)
+        external
+        view
+        returns (uint256 autoComp)
+    {
+        autoComp = _convertPUSDToAutoComp(pUSD);
     }
 }

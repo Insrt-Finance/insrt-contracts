@@ -64,4 +64,21 @@ interface IShardVaultView {
      * @return ids array of owned token IDs
      */
     function ownedTokenIds() external view returns (uint256[] memory ids);
+
+    /**
+     * @notice returns total debt owed to jpeg'd vault for a given token
+     * @param tokenId id of token position pertains to
+     * @return debt total debt owed
+     */
+    function totalDebt(uint256 tokenId) external view returns (uint256 debt);
+
+    /**
+     * @notice converts an amount of pUSD to an amount of AutoComp tokens
+     * @param pUSD amount of pUSD to convert
+     * @return autoComp amount of AutoComp tokens returned
+     */
+    function convertPUSDToAutoComp(uint256 pUSD)
+        external
+        view
+        returns (uint256 autoComp);
 }
