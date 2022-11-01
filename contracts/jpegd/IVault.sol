@@ -8,6 +8,11 @@ pragma solidity ^0.8.0;
  * @dev Only whitelisted contracts may call these functions
  */
 interface IVault {
+    struct Rate {
+        uint128 numerator;
+        uint128 denominator;
+    }
+
     /// @notice Allows users to deposit `token`. Contracts can't call this function
     /// @param _to The address to send the tokens to
     /// @param _amount The amount to deposit
@@ -24,4 +29,19 @@ interface IVault {
 
     /// @return The underlying tokens per share
     function exchangeRate() external view returns (uint256);
+
+    /// @return assets The total amount of tokens managed by this vault and the underlying strategy
+    function totalAssets() external view returns (uint256 assets);
+
+    /**
+     * @notice custom getter for decimals of jpeg'd Vault underlying token
+     * @return uint8 decimals of jpeg'd Vault underlying token
+     */
+    function decimals() external view returns (uint8);
+
+    /**
+     * @notice custom getter for depositFeeRate of jpeg'd Vault
+     * @return Rate depositFeeRate of jpeg'd Vault
+     */
+    function depositFeeRate() external view returns (Rate memory);
 }

@@ -58,4 +58,15 @@ interface ICurveMetaPool {
         external
         view
         returns (uint256);
+
+    /**
+     * @notice Calculate the amount received when withdrawing a single coin
+     * @param _token_amount Amount of LP tokens to burn in the withdrawal
+     * @param i Index value of the coin to withdraw
+     * @return Amount of coin received
+     */
+    function calc_withdraw_one_coin(uint256 _token_amount, int128 i)
+        external
+        view
+        returns (uint256);
 }
