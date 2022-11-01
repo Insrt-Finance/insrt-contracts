@@ -512,6 +512,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice makes a downpayment for a collateralized NFT in jpeg'd
      * @param l storage layout
+     * @param amount amount of pUSD intended to be repaid
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
      * @param punkId id of punk position pertains to
@@ -524,8 +525,55 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        paidDebt = _unstake(amount, minPUSD, poolInfoIndex);
+        uint256 autoComp = _convertPUSDToAutoComp(amount);
+        paidDebt = _unstake(autoComp, minPUSD, poolInfoIndex);
+        if (amount < paidDebt) {
+            revert ShardVault__DownPaymentInsufficient();
+        }
         INFTVault(l.jpegdVault).repay(punkId, paidDebt);
+    }
+
+    /**
+     * @notice converts an amount of AutoComp tokens to an amount of pUSD
+     * @param autoComp amount of AutoComp tokens to convert
+     * @return pUSD amount of pUSD returned
+     */
+    function _convertAutoCompToPUSD(
+        uint256 autoComp // autocomp
+    ) internal view returns (uint256 pUSD) {
+        pUSD = ICurveMetaPool(CURVE_PUSD_POOL).calc_withdraw_one_coin(
+            IVault(CITADEL).exchangeRate() * autoComp,
+            0
+        );
+    }
+
+    /**
+     * @notice converts an amount of pUSD to an amount of AutoComp tokens
+     * @param pUSD amount of pUSD to convert
+     * @return autoComp amount of AutoComp tokens returned
+     */
+    function _convertPUSDToAutoComp(uint256 pUSD)
+        internal
+        view
+        returns (uint256 autoComp)
+    {
+        //note: does not account for fees, not meant for precise calculations.
+        //      this is alright because it acts as a small 'buffer' to the amount
+        //      necessary for the downpayment to impact the debt as intended
+        uint256 curveLP = ICurveMetaPool(CURVE_PUSD_POOL).calc_token_amount(
+            [pUSD, 0],
+            true
+        );
+
+        IVault.Rate memory rate = IVault(CITADEL).depositFeeRate();
+
+        uint256 curveLPAfterFee = curveLP -
+            (rate.numerator * curveLP) /
+            rate.denominator;
+
+        autoComp =
+            (curveLPAfterFee * IERC20(CITADEL).totalSupply()) /
+            IVault(CITADEL).totalAssets();
     }
 
     /**

@@ -59,4 +59,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to borrow after target LTV amount is reached
      */
     error ShardVault__TargetLTVReached();
+
+    /**
+     * @notice thrown when the actual downpayment amount is too small
+     */
+    error ShardVault__DownPaymentInsufficient();
 }
