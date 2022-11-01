@@ -443,9 +443,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice unstakes from JPEG,d auto-compounder, then from JPEG'd citadel, then from curve LP
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
      * @param amount amount of shares of auto-compounder to burn
      * @param minPUSD minimum pUSD to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
      * @return pUSD pUSD amount returned
      */
     function _unstake(
@@ -480,10 +481,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     function _closePunkPosition(
         ShardVaultStorage.Layout storage l,
-        uint256 tokenId,
+        uint256 punkId,
         uint256 minPUSD,
-        uint256 ask,
-        uint256 poolInfoIndex
+        uint256 poolInfoIndex,
+        uint256 ask
     ) internal {
         address jpegdVault = l.jpegdVault;
         _unstake(
@@ -492,13 +493,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             poolInfoIndex
         );
 
-        uint256 debt = _totalDebt(jpegdVault, tokenId);
+        uint256 debt = _totalDebt(jpegdVault, punkId);
 
         IERC20(PUSD).approve(jpegdVault, debt + INTEREST_BUFFER);
-        INFTVault(jpegdVault).repay(tokenId, debt + INTEREST_BUFFER);
-        INFTVault(jpegdVault).closePosition(tokenId);
+        INFTVault(jpegdVault).repay(punkId, debt + INTEREST_BUFFER);
+        INFTVault(jpegdVault).closePosition(punkId);
 
-        ICryptoPunkMarket(PUNKS).offerPunkForSale(tokenId, ask);
+        ICryptoPunkMarket(PUNKS).offerPunkForSale(punkId, ask);
     }
 
     function _downPayment(
@@ -506,13 +507,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex,
-        uint256 punkIndex
-    ) internal returns (uint256 paidDebt, uint256 totalDebt) {
-        address jpegdVault = l.jpegdVault;
+        uint256 punkId
+    ) internal returns (uint256 paidDebt) {
         paidDebt = _unstake(amount, minPUSD, poolInfoIndex);
-        INFTVault(jpegdVault).repay(punkIndex, paidDebt);
-
-        totalDebt = _totalDebt(jpegdVault, punkIndex);
+        INFTVault(l.jpegdVault).repay(punkId, paidDebt);
     }
 
     function _withdrawPunkProceeds(
