@@ -9,9 +9,7 @@ import { IShardVaultView } from './IShardVaultView.sol';
  * @title ShardVaultView facet containing view functions
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
-    constructor(address shardsCollection)
-        ShardVaultInternal(shardsCollection)
-    {}
+    constructor(address shardCollection) ShardVaultInternal(shardCollection) {}
 
     /**
      * @inheritdoc IShardVaultView

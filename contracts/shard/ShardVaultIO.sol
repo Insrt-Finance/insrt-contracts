@@ -6,9 +6,7 @@ import { IShardVaultIO } from './IShardVaultIO.sol';
 import { ShardVaultInternal } from './ShardVaultInternal.sol';
 
 contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
-    constructor(address shardsCollection)
-        ShardVaultInternal(shardsCollection)
-    {}
+    constructor(address shardCollection) ShardVaultInternal(shardCollection) {}
 
     /**
      * @inheritdoc IShardVaultIO
