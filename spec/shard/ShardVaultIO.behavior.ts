@@ -183,7 +183,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await expect(
           instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
-        ).to.be.revertedWith('ShardVault__OnlyShardOwner()');
+        ).to.be.revertedWith('ShardVault__NotShardOwner()');
       });
       it('owned shards correspond to different vault', async () => {
         console.log('TODO');
