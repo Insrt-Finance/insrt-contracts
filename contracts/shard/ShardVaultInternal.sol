@@ -29,28 +29,37 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     address internal immutable SHARD_COLLECTION;
     address internal immutable PUSD;
+    address internal immutable PETH;
     address internal immutable PUNKS;
-    address internal immutable CITADEL;
-    address internal immutable LP_FARM;
+    address internal immutable PUSD_CITADEL;
+    address internal immutable PUSD_LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
+    address internal immutable CURVE_PETH_POOL;
+    address internal immutable CONVEX_PETH_POOL;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
         address shardCollection,
         address pUSD,
+        address pETH,
         address punkMarket,
-        address citadel,
-        address lpFarm,
+        address pusdCitadel,
+        address pusdLpFarm,
         address curvePUSDPool,
+        address curvePETHPool,
+        address convexPETHPool,
         address marketplaceHelper
     ) {
         SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
         PUSD = pUSD;
-        CITADEL = citadel;
-        LP_FARM = lpFarm;
+        PETH = pETH;
+        PUSD_CITADEL = pusdCitadel;
+        PUSD_LP_FARM = pusdLpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
+        CURVE_PETH_POOL = curvePETHPool;
+        CONVEX_PETH_POOL = convexPETHPool;
         MARKETPLACE_HELPER = marketplaceHelper;
     }
 
@@ -327,8 +336,52 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         pUSD = IERC20(PUSD).balanceOf(address(this));
     }
 
+    function _pethCollateralizePunk(
+        ShardVaultStorage.Layout storage l,
+        uint256 punkId,
+        uint256 borrowAmount,
+        bool insure
+    ) internal returns (uint256 pETH) {
+        address jpegdVault = l.jpegdVault;
+        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
+        uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
+        uint256 targetLTV = creditLimit -
+            (value * (l.bufferBP + l.deviationBP)) /
+            BASIS_POINTS;
+
+        if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
+            uint256 principal = INFTVault(jpegdVault)
+                .positions(punkId)
+                .debtPrincipal;
+            uint256 debtInterest = INFTVault(jpegdVault).getDebtInterest(
+                punkId
+            );
+
+            if (borrowAmount + principal + debtInterest > targetLTV) {
+                if (targetLTV < principal + debtInterest) {
+                    revert ShardVault__TargetLTVReached();
+                }
+                borrowAmount = targetLTV - principal - debtInterest;
+            }
+        } else {
+            if (borrowAmount > targetLTV) {
+                borrowAmount = targetLTV;
+            }
+
+            (, address flashEscrow) = INFTEscrow(l.jpegdVaultHelper).precompute(
+                address(this),
+                punkId
+            );
+            ICryptoPunkMarket(PUNKS).transferPunk(flashEscrow, punkId);
+        }
+
+        INFTVault(jpegdVault).borrow(punkId, borrowAmount, insure);
+
+        pETH = IERC20(PETH).balanceOf(address(this));
+    }
+
     /**
-     * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd citadel
+     * @notice stakes an amount of pUSD into JPEGd autocompounder and then into JPEGd PUSD_CITADEL
      * @param amount amount of pUSD to stake
      * @param minCurveLP minimum LP to receive from pUSD staking into curve
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
@@ -347,14 +400,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             minCurveLP
         );
 
-        IERC20(CURVE_PUSD_POOL).approve(CITADEL, curveLP);
-        shares = IVault(CITADEL).deposit(address(this), curveLP);
+        IERC20(CURVE_PUSD_POOL).approve(PUSD_CITADEL, curveLP);
+        shares = IVault(PUSD_CITADEL).deposit(address(this), curveLP);
 
-        IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
-            LP_FARM,
-            shares
-        );
-        ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
+        IERC20(ILPFarming(PUSD_LP_FARM).poolInfo(poolInfoIndex).lpToken)
+            .approve(PUSD_LP_FARM, shares);
+        ILPFarming(PUSD_LP_FARM).deposit(poolInfoIndex, shares);
     }
 
     /**

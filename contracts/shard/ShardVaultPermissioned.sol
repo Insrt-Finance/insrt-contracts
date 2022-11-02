@@ -45,8 +45,24 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
-    ) external onlyProtocolOwner {
-        _collateralizePunk(
+    ) external onlyProtocolOwner returns (uint256 pUSD) {
+        pUSD = _collateralizePunk(
+            ShardVaultStorage.layout(),
+            punkId,
+            borrowAmount,
+            insure
+        );
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function pethCollateralizePunk(
+        uint256 punkId,
+        uint256 borrowAmount,
+        bool insure
+    ) external onlyProtocolOwner returns (uint256 pETH) {
+        pETH = _pethCollateralizePunk(
             ShardVaultStorage.layout(),
             punkId,
             borrowAmount,
