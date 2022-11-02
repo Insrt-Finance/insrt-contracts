@@ -17,10 +17,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         address citadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketHelper,
-        uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        address marketHelper
     )
         ShardVaultInternal(
             shardCollection,
@@ -29,10 +26,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
             citadel,
             lpFarm,
             curvePUSDPool,
-            marketHelper,
-            salesFeeBP,
-            fundraiseFeeBP,
-            yieldFeeBP
+            marketHelper
         )
     {}
 
