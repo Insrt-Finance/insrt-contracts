@@ -350,5 +350,173 @@ export function describeBehaviorOfShardVaultPermissioned(
         });
       });
     });
+
+    describe.only('#downPayment(uint256,uint256,uint256,uint256)', () => {
+      it('debt paid is approximately amount of debt reduction', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+        await instance
+          .connect(owner)
+          .collateralizePunk(punkId, requestedBorrow, false);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await instance.connect(owner)['stake(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.One,
+        );
+
+        const oldDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+        const oldDebInterest = await jpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const downPaymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        const paidDebt = await instance
+          .connect(owner)
+          .callStatic['downPayment(uint256,uint256,uint256,uint256)'](
+            downPaymentAmount,
+            0,
+            1,
+            punkId,
+          );
+
+        await instance
+          .connect(owner)
+          ['downPayment(uint256,uint256,uint256,uint256)'](
+            downPaymentAmount,
+            0,
+            1,
+            punkId,
+          );
+
+        const newDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        ///debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        //debtInterest calculations have rounding errors as per JPEG'd function
+        //comments. Error boundary is chosen somewhat arbitrarily
+        expect(accruedDebtInterest.sub(debtDifference)).to.closeTo(
+          paidDebt,
+          paidDebt.div(BigNumber.from('100000000000')),
+        );
+      });
+
+      it('reduces debt owed at least by amount requested', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+        await instance
+          .connect(owner)
+          .collateralizePunk(punkId, requestedBorrow, false);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await instance.connect(owner)['stake(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.One,
+        );
+
+        const oldDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+        const oldDebInterest = await jpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const downPaymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        await instance
+          .connect(owner)
+          ['downPayment(uint256,uint256,uint256,uint256)'](
+            downPaymentAmount,
+            0,
+            1,
+            punkId,
+          );
+
+        const newDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        ///debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(
+          downPaymentAmount,
+        );
+      });
+    });
   });
 }
