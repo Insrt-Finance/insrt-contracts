@@ -24,12 +24,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         SHARD_COLLECTION = shardCollection;
     }
 
-    modifier NotProtocolOwner() {
-        _NotProtocolOwner(msg.sender);
+    modifier onlyProtocolOwner() {
+        _onlyProtocolOwner(msg.sender);
         _;
     }
 
-    function _NotProtocolOwner(address account) internal view {
+    function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
             revert ShardVault__NotProtocolOwner();
         }
