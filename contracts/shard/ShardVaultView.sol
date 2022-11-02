@@ -12,20 +12,26 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     constructor(
         address shardCollection,
         address pUSD,
+        address pETH,
         address punkMarket,
-        address citadel,
-        address lpFarm,
+        address pusdCitadel,
+        address pusdLpFarm,
         address curvePUSDPool,
-        address marketHelper
+        address curvePETHPool,
+        address convexPETHPool,
+        address marketplaceHelper
     )
         ShardVaultInternal(
             shardCollection,
             pUSD,
+            pETH,
             punkMarket,
-            citadel,
-            lpFarm,
+            pusdCitadel,
+            pusdLpFarm,
             curvePUSDPool,
-            marketHelper
+            curvePETHPool,
+            convexPETHPool,
+            marketplaceHelper
         )
     {}
 
