@@ -44,7 +44,7 @@ export function describeBehaviorOfShardVaultIO(
         [depositAmount, depositAmount.mul(ethers.constants.NegativeOne)],
       );
     });
-    it('mintstokens from ShardCollection to depositor', async () => {
+    it('mints tokens from ShardCollection to depositor', async () => {
       await instance.connect(depositor)['deposit()']({ value: depositAmount });
 
       expect(await shardCollection.balanceOf(depositor.address)).to.eq(

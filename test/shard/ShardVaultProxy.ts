@@ -11,8 +11,8 @@ import {
   ShardVaultView__factory,
   ShardCollection,
   ShardCollection__factory,
-  ShardCollectionDiamond,
-  ShardCollectionDiamond__factory,
+  ShardCollectionProxy,
+  ShardCollectionProxy__factory,
   ERC165__factory,
   Ownable__factory,
   IShardCollection__factory,
@@ -52,7 +52,7 @@ describe('ShardVaultProxy', () => {
     const shardVaultDiamond = await new ShardVaultDiamond__factory(
       deployer,
     ).deploy();
-    const shardCollectionDiamond = await new ShardCollectionDiamond__factory(
+    const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
     ).deploy('ShardVaultCollection', 'SVC', 'shards/');
 
@@ -87,10 +87,10 @@ describe('ShardVaultProxy', () => {
 
     const shardVaultFacetCuts = [
       await new ShardVaultIO__factory(deployer).deploy(
-        shardCollectionDiamond.address,
+        shardCollectionProxy.address,
       ),
       await new ShardVaultView__factory(deployer).deploy(
-        shardCollectionDiamond.address,
+        shardCollectionProxy.address,
       ),
     ].map(function (f) {
       return {
@@ -116,7 +116,7 @@ describe('ShardVaultProxy', () => {
       '0x',
     );
 
-    await shardCollectionDiamond.diamondCut(
+    await shardCollectionProxy.diamondCut(
       shardCollectionFacetCuts,
       ethers.constants.AddressZero,
       '0x',
@@ -140,7 +140,7 @@ describe('ShardVaultProxy', () => {
     instance = IShardVault__factory.connect(deployment, deployer);
 
     shardCollectionInstance = IShardCollection__factory.connect(
-      shardCollectionDiamond.address,
+      shardCollectionProxy.address,
       deployer,
     );
 
