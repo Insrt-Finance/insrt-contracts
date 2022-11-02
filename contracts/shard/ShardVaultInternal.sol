@@ -87,8 +87,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice withdraws ETH for an amount of shards
-     * @param tokenIds the tokenIds of shards to burn
+     * @notice burn held shards before NFT acquisition and withdraw corresponding ETH
+     * @param tokenIds list of ids of shards to burn
      */
     function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();

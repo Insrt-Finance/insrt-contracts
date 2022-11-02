@@ -22,7 +22,7 @@ interface IShardVaultManager {
      * @notice deploys a ShardVaultProxy
      * @param collection the address of the NFT collection contract
      * @param shardSize the size in ETH of each shard
-     * @param maxShards maximum shards to be escrowed by vault
+     * @param maxShards maximum shards to be minted by vault
      * @return deployment address of ShardVaultProxy deployed
      */
     function deployShardVault(
