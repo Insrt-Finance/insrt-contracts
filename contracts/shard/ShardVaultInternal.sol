@@ -19,8 +19,6 @@ import { IShardVaultInternal } from './IShardVaultInternal.sol';
 import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
-//CHECK IF ALL VAULTS USE PUSD OR IF SOME HAVE BUSD eg
-
 /**
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
@@ -45,11 +43,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address punkMarket,
         address citadel,
         address lpFarm,
-        address marketplaceHelper,
         address curvePUSDPool,
-        uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
-        uint256 yieldFeeBP
+        address marketplaceHelper
     ) {
         SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
@@ -58,12 +53,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         MARKETPLACE_HELPER = marketplaceHelper;
-
-        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
-        l.salesFeeBP = salesFeeBP;
-        l.fundraiseFeeBP = fundraiseFeeBP;
-        l.yieldFeeBP = yieldFeeBP;
     }
 
     modifier onlyProtocolOwner() {
@@ -453,22 +442,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex
     ) internal returns (uint256 pUSD) {
         ILPFarming(LP_FARM).withdraw(poolInfoIndex, amount);
-        uint256 citadelLP = IVault(CITADEL).withdraw(
+
+        uint256 curveLP = IVault(CITADEL).withdraw(
             address(this),
             IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken)
                 .balanceOf(address(this))
         );
-
-        //note: can remove initialCurveLP functionality, ask Daniel
-        uint256 initialCurveLP = IERC20(CURVE_PUSD_POOL).balanceOf(
-            address(this)
-        );
-
-        ILPFarming(LP_FARM).withdraw(poolInfoIndex, citadelLP);
-        ILPFarming(LP_FARM).claim(poolInfoIndex);
-
-        uint256 curveLP = IERC20(CURVE_PUSD_POOL).balanceOf(address(this)) -
-            initialCurveLP;
 
         pUSD = ICurveMetaPool(CURVE_PUSD_POOL).remove_liquidity_one_coin(
             curveLP,
@@ -527,9 +506,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     ) internal returns (uint256 paidDebt) {
         uint256 autoComp = _convertPUSDToAutoComp(amount);
         paidDebt = _unstake(autoComp, minPUSD, poolInfoIndex);
-        if (amount < paidDebt) {
+
+        if (amount > paidDebt) {
             revert ShardVault__DownPaymentInsufficient();
         }
+
+        IERC20(PUSD).approve(l.jpegdVault, paidDebt);
         INFTVault(l.jpegdVault).repay(punkId, paidDebt);
     }
 
@@ -548,9 +530,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice converts an amount of pUSD to an amount of AutoComp tokens
-     * @param pUSD amount of pUSD to convert
-     * @return autoComp amount of AutoComp tokens returned
+     * @notice calculates amount of AutoComp tokens needed for an amount of pUSD to be unstaked
+     * @param pUSD target amount of pUSD
+     * @return autoComp amount of AutoComp required for target
      */
     function _convertPUSDToAutoComp(uint256 pUSD)
         internal
@@ -567,13 +549,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         IVault.Rate memory rate = IVault(CITADEL).depositFeeRate();
 
-        uint256 curveLPAfterFee = curveLP -
-            (rate.numerator * curveLP) /
+        uint256 curveLPAccountingFee = curveLP +
+            (curveLP * rate.numerator) /
             rate.denominator;
 
         autoComp =
-            (curveLPAfterFee * IERC20(CITADEL).totalSupply()) /
-            IVault(CITADEL).totalAssets();
+            (curveLPAccountingFee * 10**IVault(CITADEL).decimals()) /
+            IVault(CITADEL).exchangeRate();
     }
 
     /**
