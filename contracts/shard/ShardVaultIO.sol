@@ -15,7 +15,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
         address pusdLpFarm,
         address curvePUSDPool,
         address curvePETHPool,
-        address convexPETHPool,
+        address booster,
         address marketplaceHelper
     )
         ShardVaultInternal(
@@ -27,7 +27,7 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
             pusdLpFarm,
             curvePUSDPool,
             curvePETHPool,
-            convexPETHPool,
+            booster,
             marketplaceHelper
         )
     {}

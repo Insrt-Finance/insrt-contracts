@@ -18,7 +18,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         address pusdLpFarm,
         address curvePUSDPool,
         address curvePETHPool,
-        address convexPETHPool,
+        address booster,
         address marketplaceHelper
     )
         ShardVaultInternal(
@@ -30,7 +30,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
             pusdLpFarm,
             curvePUSDPool,
             curvePETHPool,
-            convexPETHPool,
+            booster,
             marketplaceHelper
         )
     {}

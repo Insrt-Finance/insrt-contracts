@@ -16,7 +16,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         address pusdLpFarm,
         address curvePUSDPool,
         address curvePETHPool,
-        address convexPETHPool,
+        address booster,
         address marketplaceHelper
     )
         ShardVaultInternal(
@@ -28,7 +28,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
             pusdLpFarm,
             curvePUSDPool,
             curvePETHPool,
-            convexPETHPool,
+            booster,
             marketplaceHelper
         )
     {}
