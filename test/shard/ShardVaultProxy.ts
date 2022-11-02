@@ -11,8 +11,8 @@ import {
   ShardVaultView__factory,
   ShardCollection,
   ShardCollection__factory,
-  ShardCollectionDiamond,
-  ShardCollectionDiamond__factory,
+  ShardCollectionProxy,
+  ShardCollectionProxy__factory,
   ERC165__factory,
   Ownable__factory,
   IShardCollection__factory,
@@ -83,7 +83,7 @@ describe('ShardVaultProxy', () => {
     const shardVaultDiamond = await new ShardVaultDiamond__factory(
       deployer,
     ).deploy();
-    const shardCollectionDiamond = await new ShardCollectionDiamond__factory(
+    const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
     ).deploy('ShardVaultCollection', 'SVC', 'shards/');
 
@@ -118,7 +118,7 @@ describe('ShardVaultProxy', () => {
 
     const shardVaultFacetCuts = [
       await new ShardVaultIO__factory(deployer).deploy(
-        shardCollectionDiamond.address,
+        shardCollectionProxy.address,
         PUSD,
         CRYPTO_PUNKS_MARKET,
         citadel,
@@ -127,7 +127,7 @@ describe('ShardVaultProxy', () => {
         marketplaceHelper.address,
       ),
       await new ShardVaultView__factory(deployer).deploy(
-        shardCollectionDiamond.address,
+        shardCollectionProxy.address,
         PUSD,
         CRYPTO_PUNKS_MARKET,
         citadel,
@@ -136,7 +136,7 @@ describe('ShardVaultProxy', () => {
         marketplaceHelper.address,
       ),
       await new ShardVaultPermissioned__factory(deployer).deploy(
-        shardCollectionDiamond.address,
+        shardCollectionProxy.address,
         PUSD,
         CRYPTO_PUNKS_MARKET,
         citadel,
@@ -168,7 +168,7 @@ describe('ShardVaultProxy', () => {
       '0x',
     );
 
-    await shardCollectionDiamond.diamondCut(
+    await shardCollectionProxy.diamondCut(
       shardCollectionFacetCuts,
       ethers.constants.AddressZero,
       '0x',
@@ -228,7 +228,7 @@ describe('ShardVaultProxy', () => {
     );
 
     shardCollectionInstance = IShardCollection__factory.connect(
-      shardCollectionDiamond.address,
+      shardCollectionProxy.address,
       deployer,
     );
 

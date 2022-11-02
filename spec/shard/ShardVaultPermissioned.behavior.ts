@@ -136,7 +136,7 @@ export function describeBehaviorOfShardVaultPermissioned(
             instance
               .connect(nonOwner)
               ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
-          ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
         it('collection is not punks', async () => {
           await expect(
@@ -284,12 +284,12 @@ export function describeBehaviorOfShardVaultPermissioned(
           ).to.be.revertedWith('ShardVault__TargetLTVReached()');
         });
 
-        it('caller is not owner', async () => {
+        it('called by non-owner', async () => {
           await expect(
             instance
               .connect(nonOwner)
               .collateralizePunk(punkId, ethers.constants.One, false),
-          ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
       });
     });
@@ -337,7 +337,7 @@ export function describeBehaviorOfShardVaultPermissioned(
         );
       });
       describe('reverts if', () => {
-        it('caller is not owner', async () => {
+        it('called by non-owner', async () => {
           await expect(
             instance
               .connect(nonOwner)
@@ -346,7 +346,7 @@ export function describeBehaviorOfShardVaultPermissioned(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__OnlyProtocolOwner()');
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
       });
     });

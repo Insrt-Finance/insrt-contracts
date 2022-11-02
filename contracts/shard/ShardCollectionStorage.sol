@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 library ShardCollectionStorage {
     struct Layout {
-        mapping(address => bool) vaults;
+        mapping(address => bool) whitelist;
     }
 
     bytes32 internal constant STORAGE_SLOT =

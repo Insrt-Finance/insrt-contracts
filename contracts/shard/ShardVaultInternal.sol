@@ -61,7 +61,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
-            revert ShardVault__OnlyProtocolOwner();
+            revert ShardVault__NotProtocolOwner();
         }
     }
 
@@ -105,7 +105,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             unchecked {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    _formatTokenId(++l.count)
+                    _formatTokenId(uint96(++l.count))
                 );
                 ++i;
             }
@@ -117,8 +117,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice withdraws ETH for an amount of shards
-     * @param tokenIds the tokenIds of shards to burn
+     * @notice burn held shards before NFT acquisition and withdraw corresponding ETH
+     * @param tokenIds list of ids of shards to burn
      */
     function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
@@ -138,7 +138,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
                 IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
                 msg.sender
             ) {
-                revert ShardVault__OnlyShardOwner();
+                revert ShardVault__NotShardOwner();
             }
 
             (address vault, ) = _parseTokenId(tokenIds[i]);
@@ -226,7 +226,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param internalId the internal ID
      * @return tokenId the formatted tokenId
      */
-    function _formatTokenId(uint256 internalId)
+    function _formatTokenId(uint96 internalId)
         internal
         view
         returns (uint256 tokenId)
@@ -243,10 +243,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _parseTokenId(uint256 tokenId)
         internal
         pure
-        returns (address vault, uint256 internalId)
+        returns (address vault, uint96 internalId)
     {
         vault = address(uint160(tokenId >> 96));
-        internalId = 0xFFFFFFFFFFFFFFFFFFFFFFFF & tokenId;
+        internalId = uint96(tokenId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 
     /**

@@ -4,17 +4,9 @@ pragma solidity ^0.8.0;
 
 import { ISolidStateERC721 } from '@solidstate/contracts/token/ERC721/ISolidStateERC721.sol';
 
-interface IShardCollection is ISolidStateERC721 {
-    /**
-     * @notice thrown when function called by non-shard vault
-     */
-    error ShardCollection__OnlyVault();
+import { IShardCollectionInternal } from './IShardCollectionInternal.sol';
 
-    /**
-     * @notice thrown when function called by non-protocol owner
-     */
-    error ShardCollection__OnlyProtocolOwner();
-
+interface IShardCollection is ISolidStateERC721, IShardCollectionInternal {
     /**
      * @notice mints a token
      * @param to address to mint to
@@ -29,14 +21,21 @@ interface IShardCollection is ISolidStateERC721 {
     function burn(uint256 tokenId) external;
 
     /**
-     * @notice whitelists an address for minting/burning tokens
-     * @param vault address of vault
+     * @notice whitelists an address
+     * @param vault address to add
      */
     function addToWhitelist(address vault) external;
 
     /**
-     * @notice removes a vault from whitelist
-     * @param vault address of vault
+     * @notice removes an address from whitelist
+     * @param vault address to remove
      */
     function removeFromWhitelist(address vault) external;
+
+    /**
+     * @notice returns whitelisted state of an address
+     * @param vault vault address
+     * @return bool whitelisted state
+     */
+    function isWhitelisted(address vault) external view returns (bool);
 }
