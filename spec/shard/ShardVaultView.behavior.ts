@@ -54,7 +54,7 @@ export function describeBehaviorOfShardVaultView(
     it('TODO');
   });
 
-  describe('#formatTokenId(uint256)', () => {
+  describe('#formatTokenId(uint96)', () => {
     it('generates a unique token id using the vault address as a seed', async () => {
       const tokenIds = [];
       const testIds = [];
@@ -67,10 +67,10 @@ export function describeBehaviorOfShardVaultView(
       }
     });
     it('generates incrementally increasing tokenIds', async () => {
-      const initialId = await instance['formatTokenId(uint256)'](
+      const initialId = await instance['formatTokenId(uint96)'](
         ethers.constants.One,
       );
-      const finalId = await instance['formatTokenId(uint256)'](
+      const finalId = await instance['formatTokenId(uint96)'](
         BigNumber.from('101'),
       );
 
@@ -79,7 +79,7 @@ export function describeBehaviorOfShardVaultView(
   });
   describe('#parseTokenId(uint256)', () => {
     it('returns the seeded vault address', async () => {
-      const tokenId = await instance['formatTokenId(uint256)'](
+      const tokenId = await instance['formatTokenId(uint96)'](
         ethers.constants.One,
       );
       const [address] = await instance['parseTokenId(uint256)'](tokenId);
@@ -91,23 +91,10 @@ export function describeBehaviorOfShardVaultView(
       const maxUint96 = ethers.constants.Two.pow(BigNumber.from('96')).sub(
         ethers.constants.One,
       );
-      const tokenId = await instance['formatTokenId(uint256)'](maxUint96);
+      const tokenId = await instance['formatTokenId(uint96)'](maxUint96);
       const [, internalId] = await instance['parseTokenId(uint256)'](tokenId);
 
       expect(internalId).to.eq(maxUint96);
-    });
-
-    it('should fail when input is larger than maxUint96', async () => {
-      const maxUint96 = ethers.constants.Two.pow(BigNumber.from('96')).sub(
-        ethers.constants.One,
-      );
-      const tokenId = await instance['formatTokenId(uint256)'](
-        maxUint96.add(ethers.constants.One),
-      );
-      const [, internalId] = await instance['parseTokenId(uint256)'](tokenId);
-
-      expect(internalId).to.not.eq(maxUint96.add(ethers.constants.One));
-      expect(internalId).to.eq(ethers.constants.Zero);
     });
   });
 }

@@ -75,7 +75,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             unchecked {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    _formatTokenId(++l.count)
+                    _formatTokenId(uint96(++l.count))
                 );
                 ++i;
             }
@@ -169,7 +169,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param internalId the internal ID
      * @return tokenId the formatted tokenId
      */
-    function _formatTokenId(uint256 internalId)
+    function _formatTokenId(uint96 internalId)
         internal
         view
         returns (uint256 tokenId)
@@ -186,9 +186,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _parseTokenId(uint256 tokenId)
         internal
         pure
-        returns (address vault, uint256 internalId)
+        returns (address vault, uint96 internalId)
     {
         vault = address(uint160(tokenId >> 96));
-        internalId = 0xFFFFFFFFFFFFFFFFFFFFFFFF & tokenId;
+        internalId = uint96(tokenId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 }

@@ -37,7 +37,7 @@ interface IShardVaultView {
      * @param internalId the internal ID
      * @return tokenId the formatted tokenId
      */
-    function formatTokenId(uint256 internalId)
+    function formatTokenId(uint96 internalId)
         external
         view
         returns (uint256 tokenId);
@@ -51,5 +51,5 @@ interface IShardVaultView {
     function parseTokenId(uint256 tokenId)
         external
         pure
-        returns (address vault, uint256 internalId);
+        returns (address vault, uint96 internalId);
 }
