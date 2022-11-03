@@ -305,6 +305,10 @@ describe('ShardVaultProxy', () => {
       .connect(jpegdOwner)
       ['setContractWhitelisted(address,bool)'](secondInstance.address, true);
 
+    await (await ethers.getContractAt('INoContract', pethCitadel))
+      .connect(jpegdOwner)
+      ['setContractWhitelisted(address,bool)'](pethInstance.address, true);
+
     await (await ethers.getContractAt('INoContract', lpFarm))
       .connect(jpegdOwner)
       ['setContractWhitelisted(address,bool)'](instance.address, true);
@@ -312,6 +316,10 @@ describe('ShardVaultProxy', () => {
     await (await ethers.getContractAt('INoContract', lpFarm))
       .connect(jpegdOwner)
       ['setContractWhitelisted(address,bool)'](secondInstance.address, true);
+
+    await (await ethers.getContractAt('INoContract', lpFarm))
+      .connect(jpegdOwner)
+      ['setContractWhitelisted(address,bool)'](pethInstance.address, true);
   });
 
   beforeEach(async () => {

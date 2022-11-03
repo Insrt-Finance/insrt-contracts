@@ -24,4 +24,16 @@ interface IVault {
 
     /// @return The underlying tokens per share
     function exchangeRate() external view returns (uint256);
+
+    /// jpeg'd RATE struct
+    struct Rate {
+        uint128 numerator;
+        uint128 denominator;
+    }
+
+    /**
+     * @notice custom getter for depositFeeRate in jpeg'd citadel
+     * @return Rate deposit fee rate
+     */
+    function depositFeeRate() external view returns (Rate memory);
 }
