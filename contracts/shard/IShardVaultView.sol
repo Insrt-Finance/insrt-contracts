@@ -37,7 +37,7 @@ interface IShardVaultView {
      * @param internalId the internal ID
      * @return tokenId the formatted tokenId
      */
-    function formatTokenId(uint256 internalId)
+    function formatTokenId(uint96 internalId)
         external
         view
         returns (uint256 tokenId);
@@ -51,7 +51,7 @@ interface IShardVaultView {
     function parseTokenId(uint256 tokenId)
         external
         pure
-        returns (address vault, uint256 internalId);
+        returns (address vault, uint96 internalId);
 
     /**
      * @notice return invested flag state
@@ -81,4 +81,28 @@ interface IShardVaultView {
         external
         view
         returns (uint256 autoComp);
+
+    /**
+     * @notice returns accrued fees
+     * @return fees accrued fees
+     */
+    function accruedFees() external view returns (uint256 fees);
+
+    /**
+     * @notice returns acquisition fee BP
+     * @return feeBP basis points of acquisition fee
+     */
+    function acquisitionFeeBP() external view returns (uint256 feeBP);
+
+    /**
+     * @notice returns sale fee BP
+     * @return feeBP basis points of sale fee
+     */
+    function saleFeeBP() external view returns (uint256 feeBP);
+
+    /**
+     * @notice returns yield fee BP
+     * @return feeBP basis points of yield fee
+     */
+    function yieldFeeBP() external view returns (uint256 feeBP);
 }

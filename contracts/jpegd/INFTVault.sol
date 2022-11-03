@@ -112,4 +112,8 @@ interface INFTVault {
      * @return uin256 total global debt
      */
     function totalDebtAmount() external view returns (uint256);
+
+    /// @param _nftIndex The NFT to return the value of
+    /// @return The value in ETH of the NFT at index `_nftIndex`, with 18 decimals.
+    function getNFTValueETH(uint256 _nftIndex) external view returns (uint256);
 }

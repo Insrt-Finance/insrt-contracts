@@ -13,20 +13,28 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     constructor(
         address shardCollection,
         address pUSD,
+        address pETH,
         address punkMarket,
-        address citadel,
+        address pusdCitadel,
+        address pethCitadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketHelper
+        address curvePETHPool,
+        address booster,
+        address marketplaceHelper
     )
         ShardVaultInternal(
             shardCollection,
             pUSD,
+            pETH,
             punkMarket,
-            citadel,
+            pusdCitadel,
+            pethCitadel,
             lpFarm,
             curvePUSDPool,
-            marketHelper
+            curvePETHPool,
+            booster,
+            marketplaceHelper
         )
     {}
 
@@ -68,7 +76,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function formatTokenId(uint256 internalId)
+    function formatTokenId(uint96 internalId)
         external
         view
         returns (uint256 tokenId)
@@ -82,7 +90,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function parseTokenId(uint256 tokenId)
         external
         pure
-        returns (address vault, uint256 internalId)
+        returns (address vault, uint96 internalId)
     {
         (vault, internalId) = _parseTokenId(tokenId);
     }
@@ -111,11 +119,39 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function accruedFees() external view returns (uint256 fees) {
+        fees = _accruedFees();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function convertPUSDToAutoComp(uint256 pUSD)
         external
         view
         returns (uint256 autoComp)
     {
         autoComp = _convertPUSDToAutoComp(pUSD);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function acquisitionFeeBP() external view returns (uint256 feeBP) {
+        feeBP = _acquisitionFeeBP();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function saleFeeBP() external view returns (uint256 feeBP) {
+        feeBP = _saleFeeBP();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function yieldFeeBP() external view returns (uint256 feeBP) {
+        feeBP = _yieldFeeBP();
     }
 }

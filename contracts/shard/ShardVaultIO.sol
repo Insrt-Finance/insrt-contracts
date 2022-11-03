@@ -9,20 +9,28 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     constructor(
         address shardCollection,
         address pUSD,
+        address pETH,
         address punkMarket,
-        address citadel,
+        address pusdCitadel,
+        address pethCitadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketHelper
+        address curvePETHPool,
+        address booster,
+        address marketplaceHelper
     )
         ShardVaultInternal(
             shardCollection,
             pUSD,
+            pETH,
             punkMarket,
-            citadel,
+            pusdCitadel,
+            pethCitadel,
             lpFarm,
             curvePUSDPool,
-            marketHelper
+            curvePETHPool,
+            booster,
+            marketplaceHelper
         )
     {}
 

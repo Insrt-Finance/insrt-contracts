@@ -10,20 +10,28 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     constructor(
         address shardCollection,
         address pUSD,
+        address pETH,
         address punkMarket,
-        address citadel,
+        address pusdCitadel,
+        address pethCitadel,
         address lpFarm,
         address curvePUSDPool,
-        address marketHelper
+        address curvePETHPool,
+        address booster,
+        address marketplaceHelper
     )
         ShardVaultInternal(
             shardCollection,
             pUSD,
+            pETH,
             punkMarket,
-            citadel,
+            pusdCitadel,
+            pethCitadel,
             lpFarm,
             curvePUSDPool,
-            marketHelper
+            curvePETHPool,
+            booster,
+            marketplaceHelper
         )
     {}
 
@@ -45,8 +53,24 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
-    ) external onlyProtocolOwner {
-        _collateralizePunk(
+    ) external onlyProtocolOwner returns (uint256 pUSD) {
+        pUSD = _collateralizePunk(
+            ShardVaultStorage.layout(),
+            punkId,
+            borrowAmount,
+            insure
+        );
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function pethCollateralizePunk(
+        uint256 punkId,
+        uint256 borrowAmount,
+        bool insure
+    ) external onlyProtocolOwner returns (uint256 pETH) {
+        pETH = _pethCollateralizePunk(
             ShardVaultStorage.layout(),
             punkId,
             borrowAmount,
@@ -61,8 +85,19 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
-    ) external onlyProtocolOwner {
-        _stake(amount, minCurveLP, poolInfoIndex);
+    ) external onlyProtocolOwner returns (uint256 shares) {
+        return _stake(amount, minCurveLP, poolInfoIndex);
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function pethStake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner returns (uint256 shares) {
+        return _pethStake(amount, minCurveLP, poolInfoIndex);
     }
 
     /**
@@ -90,15 +125,15 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     /**
      * @inheritdoc IShardVaultPermissioned
      */
-    function setFundraiseFee(uint256 feeBP) external onlyProtocolOwner {
-        _setFundraiseFee(feeBP);
+    function setAcquisitionFee(uint256 feeBP) external onlyProtocolOwner {
+        _setAcquisitionFee(feeBP);
     }
 
     /**
      * @inheritdoc IShardVaultPermissioned
      */
-    function setSalesFee(uint256 feeBP) external onlyProtocolOwner {
-        _setSalesFee(feeBP);
+    function setSaleFee(uint256 feeBP) external onlyProtocolOwner {
+        _setSaleFee(feeBP);
     }
 
     /**

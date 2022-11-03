@@ -24,8 +24,8 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint256 maxSupply,
-        uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
+        uint256 saleFeeBP,
+        uint256 acquisitionFeeBP,
         uint256 yieldFeeBP,
         uint256 bufferBP,
         uint256 deviationBP
@@ -39,8 +39,8 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 shardValue,
                 maxSupply,
                 ++ShardVaultManagerStorage.layout().count,
-                salesFeeBP,
-                fundraiseFeeBP,
+                saleFeeBP,
+                acquisitionFeeBP,
                 yieldFeeBP,
                 bufferBP,
                 deviationBP

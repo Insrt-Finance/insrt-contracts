@@ -3,37 +3,53 @@
 pragma solidity ^0.8.0;
 
 import { SolidStateERC721 } from '@solidstate/contracts/token/ERC721/SolidStateERC721.sol';
-import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
 import { Ownable } from '@solidstate/contracts/access/ownable/Ownable.sol';
 
 import { IShardCollection } from './IShardCollection.sol';
+import { ShardCollectionInternal } from './ShardCollectionInternal.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
 
-contract ShardCollection is SolidStateERC721, Ownable, IShardCollection {
-    modifier onlyVault() {
-        _onlyVault(msg.sender);
-        _;
-    }
-
+/**
+ * @title ShardCollection for ShardVault tokens
+ */
+contract ShardCollection is
+    ShardCollectionInternal,
+    IShardCollection,
+    SolidStateERC721,
+    Ownable
+{
+    /**
+     * @inheritdoc IShardCollection
+     */
     function mint(address to, uint256 tokenId) external onlyVault {
         _mint(to, tokenId);
     }
 
+    /**
+     * @inheritdoc IShardCollection
+     */
     function burn(uint256 tokenId) external onlyVault {
         _burn(tokenId);
     }
 
+    /**
+     * @inheritdoc IShardCollection
+     */
     function addToWhitelist(address vault) external onlyOwner {
-        ShardCollectionStorage.layout().vaults[vault] = true;
+        _addToWhitelist(vault);
     }
 
+    /**
+     * @inheritdoc IShardCollection
+     */
     function removeFromWhitelist(address vault) external onlyOwner {
-        ShardCollectionStorage.layout().vaults[vault] = false;
+        _removeFromWhitelist(vault);
     }
 
-    function _onlyVault(address account) internal view {
-        if (!ShardCollectionStorage.layout().vaults[account]) {
-            revert ShardCollection__OnlyVault();
-        }
+    /**
+     * @inheritdoc IShardCollection
+     */
+    function isWhitelisted(address vault) external view returns (bool) {
+        return _isWhitelisted(vault);
     }
 }

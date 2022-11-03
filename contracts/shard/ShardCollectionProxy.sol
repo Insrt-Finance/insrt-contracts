@@ -9,7 +9,7 @@ import { SolidStateDiamond } from '@solidstate/contracts/proxy/diamond/SolidStat
  * @title Diamond proxy used as centrally controlled ShardCollection implementation
  * @dev deployed standalone and passed to ShardVault facets' constructor
  */
-contract ShardCollectionDiamond is SolidStateDiamond {
+contract ShardCollectionProxy is SolidStateDiamond {
     constructor(
         string memory name,
         string memory symbol,

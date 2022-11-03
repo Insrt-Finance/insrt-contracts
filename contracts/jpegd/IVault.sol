@@ -40,8 +40,8 @@ interface IVault {
     function decimals() external view returns (uint8);
 
     /**
-     * @notice custom getter for depositFeeRate of jpeg'd Vault
-     * @return Rate depositFeeRate of jpeg'd Vault
+     * @notice custom getter for depositFeeRate in jpeg'd citadel
+     * @return Rate deposit fee rate
      */
     function depositFeeRate() external view returns (Rate memory);
 }

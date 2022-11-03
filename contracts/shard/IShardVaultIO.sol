@@ -12,8 +12,8 @@ interface IShardVaultIO {
     function deposit() external payable;
 
     /**
-     * @notice withdraw ETH for shards
-     * @dev burns shards with ids in tokenIds array
+     * @notice burn held shards before NFT acquisition and withdraw corresponding ETH
+     * @param tokenIds list of ids of shards to burn
      */
     function withdraw(uint256[] memory tokenIds) external payable;
 }
