@@ -284,6 +284,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }(data, PUNKS, PUNKS, address(0), punkId, price);
 
         l.invested = true;
+        if (l.ownedTokenIds.length() == 0) {
+            _collectFee(l, l.acquisitionFeeBP);
+        }
         l.ownedTokenIds.add(punkId);
     }
 
@@ -462,9 +465,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         bool insure
     ) internal {
-        if (l.ownedTokenIds.length() == 0) {
-            _collectFee(l, l.fundraiseFeeBP);
-        }
         _purchasePunk(l, data, punkId);
         _stake(
             _collateralizePunk(l, punkId, borrowAmount, insure),
@@ -498,12 +498,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice sets the fundraise fee BP
+     * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
-    function _setFundraiseFee(uint256 feeBP) internal {
+    function _setAcquisitionFee(uint256 feeBP) internal {
         if (feeBP > 10000) revert ShardVault__BasisExceeded();
-        ShardVaultStorage.layout().fundraiseFeeBP = feeBP;
+        ShardVaultStorage.layout().acquisitionFeeBP = feeBP;
     }
 
     /**

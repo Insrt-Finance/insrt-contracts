@@ -125,8 +125,8 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     /**
      * @inheritdoc IShardVaultPermissioned
      */
-    function setFundraiseFee(uint256 feeBP) external onlyProtocolOwner {
-        _setFundraiseFee(feeBP);
+    function setAcquisitionFee(uint256 feeBP) external onlyProtocolOwner {
+        _setAcquisitionFee(feeBP);
     }
 
     /**

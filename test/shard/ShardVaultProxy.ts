@@ -60,7 +60,7 @@ describe('ShardVaultProxy', () => {
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
   const salesFeeBP = BigNumber.from('200');
-  const fundraiseFeeBP = BigNumber.from('100');
+  const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
   const bufferBP = BigNumber.from('500');
   const deviationBP = BigNumber.from('200');
@@ -206,7 +206,7 @@ describe('ShardVaultProxy', () => {
         shardValue,
         maxShards,
         salesFeeBP,
-        fundraiseFeeBP,
+        acquisitionFeeBP,
         yieldFeeBP,
         bufferBP,
         deviationBP,
@@ -230,7 +230,7 @@ describe('ShardVaultProxy', () => {
         shardValue,
         maxShards,
         salesFeeBP,
-        fundraiseFeeBP,
+        acquisitionFeeBP,
         yieldFeeBP,
         bufferBP,
         deviationBP,
@@ -257,7 +257,7 @@ describe('ShardVaultProxy', () => {
         shardValue,
         maxShards,
         salesFeeBP,
-        fundraiseFeeBP,
+        acquisitionFeeBP,
         yieldFeeBP,
         bufferBP,
         deviationBP,

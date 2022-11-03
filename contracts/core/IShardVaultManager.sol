@@ -27,7 +27,7 @@ interface IShardVaultManager {
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
      * @param salesFeeBP sales fee basis points
-     * @param fundraiseFeeBP fundraise fee basis points
+     * @param acquisitionFeeBP acquisition fee basis points
      * @param yieldFeeBP yield fee basis points
      * @param bufferBP LTV buffer basis points
      * @param deviationBP LTV deviation basis points
@@ -40,7 +40,7 @@ interface IShardVaultManager {
         uint256 shardValue,
         uint256 maxSupply,
         uint256 salesFeeBP,
-        uint256 fundraiseFeeBP,
+        uint256 acquisitionFeeBP,
         uint256 yieldFeeBP,
         uint256 bufferBP,
         uint256 deviationBP
