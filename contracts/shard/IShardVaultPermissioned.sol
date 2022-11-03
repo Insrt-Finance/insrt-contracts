@@ -48,12 +48,27 @@ interface IShardVaultPermissioned {
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
      *                      the pool to deposit into
+     * @return shares deposited into JPEGd autocompounder
      */
     function stake(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
-    ) external;
+    ) external returns (uint256 shares);
+
+    /**
+     * @notice stakes an amount of pETH into JPEGd autocompounder and then into JPEGd PETH_CITADEL
+     * @param amount amount of pETH to stake
+     * @param minCurveLP minimum LP to receive from pETH staking into curve
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
+     * @return shares deposited into JPEGd autocompounder
+     */
+    function pethStake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
+    ) external returns (uint256 shares);
 
     /**
      * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve

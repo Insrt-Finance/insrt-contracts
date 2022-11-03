@@ -406,9 +406,42 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         IERC20(CURVE_PUSD_POOL).approve(PUSD_CITADEL, curveLP);
         shares = IVault(PUSD_CITADEL).deposit(address(this), curveLP);
 
-        IERC20(ILPFarming(PUSD_LP_FARM).poolInfo(poolInfoIndex).lpToken)
-            .approve(PUSD_LP_FARM, shares);
-        ILPFarming(PUSD_LP_FARM).deposit(poolInfoIndex, shares);
+        IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
+            LP_FARM,
+            shares
+        );
+        ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
+    }
+
+    /**
+     * @notice stakes an amount of pETH into JPEGd autocompounder and then into JPEGd PETH_CITADEL
+     * @param amount amount of pETH to stake
+     * @param minCurveLP minimum LP to receive from pETH staking into curve
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     *                      the pool to deposit into
+     * @return shares deposited into JPEGd autocompounder
+     */
+    function _pethStake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
+    ) internal returns (uint256 shares) {
+        IERC20(PETH).approve(CURVE_PETH_POOL, amount);
+        //pETH is in position 1 in the curve meta pool
+        uint256 curveLP = ICurveMetaPool(CURVE_PETH_POOL).add_liquidity(
+            [0, amount],
+            minCurveLP
+        );
+
+        IERC20(CURVE_PETH_POOL).approve(PETH_CITADEL, curveLP);
+        shares = IVault(PETH_CITADEL).deposit(address(this), curveLP);
+
+        IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
+            LP_FARM,
+            shares
+        );
+
+        ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
     }
 
     /**

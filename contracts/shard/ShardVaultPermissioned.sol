@@ -85,8 +85,19 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
-    ) external onlyProtocolOwner {
-        _stake(amount, minCurveLP, poolInfoIndex);
+    ) external onlyProtocolOwner returns (uint256 shares) {
+        return _stake(amount, minCurveLP, poolInfoIndex);
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function pethStake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner returns (uint256 shares) {
+        return _pethStake(amount, minCurveLP, poolInfoIndex);
     }
 
     /**
