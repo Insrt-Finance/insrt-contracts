@@ -134,8 +134,18 @@ export function describeBehaviorOfShardVaultIO(
         });
 
         it('shard vault has invested', async () => {
-          //TODO
-          console.log('TODO');
+          await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
+          await instance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+
+          await instance
+            .connect(owner)
+            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+          await expect(
+            instance.connect(depositor)['deposit()']({ value: depositAmount }),
+          ).to.be.revertedWith('ShardVault__DepositForbidden()');
         });
       });
     });
@@ -220,7 +230,21 @@ export function describeBehaviorOfShardVaultIO(
           ).to.be.revertedWith('ShardVault__NotShardOwner()');
         });
         it('owned shards correspond to different vault', async () => {
-          console.log('TODO');
+          await secondInstance
+            .connect(depositor)
+            ['deposit()']({ value: depositAmount });
+
+          const withdrawTokens = 5;
+          const tokens = [];
+          for (let i = 0; i < withdrawTokens; i++) {
+            tokens.push(
+              await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+            );
+          }
+
+          await expect(
+            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+          ).to.be.revertedWith('ShardVault__VaultTokenIdMismatch()');
         });
         it('vault is full', async () => {
           await instance
@@ -243,7 +267,26 @@ export function describeBehaviorOfShardVaultIO(
           ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
         });
         it('vault is invested', async () => {
-          console.log('TODO');
+          await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
+          await instance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+
+          await instance
+            .connect(owner)
+            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+          const withdrawTokens = 5;
+          const tokens = [];
+          for (let i = 0; i < withdrawTokens; i++) {
+            tokens.push(
+              await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+            );
+          }
+
+          await expect(
+            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+          ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
         });
       });
     });
