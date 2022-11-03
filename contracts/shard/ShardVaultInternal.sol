@@ -32,7 +32,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable PETH;
     address internal immutable PUNKS;
     address internal immutable PUSD_CITADEL;
-    address internal immutable PUSD_LP_FARM;
+    address internal immutable PETH_CITADEL;
+    address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
     address internal immutable BOOSTER;
@@ -45,7 +46,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address pETH,
         address punkMarket,
         address pusdCitadel,
-        address pusdLpFarm,
+        address pethCitadel,
+        address lpFarm,
         address curvePUSDPool,
         address curvePETHPool,
         address booster,
@@ -56,7 +58,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         PUSD = pUSD;
         PETH = pETH;
         PUSD_CITADEL = pusdCitadel;
-        PUSD_LP_FARM = pusdLpFarm;
+        PETH_CITADEL = pethCitadel;
+        LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         CURVE_PETH_POOL = curvePETHPool;
         BOOSTER = booster;

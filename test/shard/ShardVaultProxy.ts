@@ -48,7 +48,8 @@ describe('ShardVaultProxy', () => {
   const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
   const PETH = '0x836A808d4828586A69364065A1e064609F5078c7';
   const pusdCitadel = '0xF6Cbf5e56a8575797069c7A7FBED218aDF17e3b2';
-  const pusdLpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
+  const pethCitadel = '0x56D1b6Ac326e152C9fAad749F1F4f9737a049d46';
+  const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
   const curvePUSDPool = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
   const curvePETHPool = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
   const convexBooster = '0xF403C135812408BFbE8713b5A23a04b3D48AAE31';
@@ -129,7 +130,8 @@ describe('ShardVaultProxy', () => {
         PETH,
         CRYPTO_PUNKS_MARKET,
         pusdCitadel,
-        pusdLpFarm,
+        pethCitadel,
+        lpFarm,
         curvePUSDPool,
         curvePETHPool,
         convexBooster,
@@ -141,7 +143,8 @@ describe('ShardVaultProxy', () => {
         PETH,
         CRYPTO_PUNKS_MARKET,
         pusdCitadel,
-        pusdLpFarm,
+        pethCitadel,
+        lpFarm,
         curvePUSDPool,
         curvePETHPool,
         convexBooster,
@@ -153,7 +156,8 @@ describe('ShardVaultProxy', () => {
         PETH,
         CRYPTO_PUNKS_MARKET,
         pusdCitadel,
-        pusdLpFarm,
+        pethCitadel,
+        lpFarm,
         curvePUSDPool,
         curvePETHPool,
         convexBooster,
@@ -301,11 +305,11 @@ describe('ShardVaultProxy', () => {
       .connect(jpegdOwner)
       ['setContractWhitelisted(address,bool)'](secondInstance.address, true);
 
-    await (await ethers.getContractAt('INoContract', pusdLpFarm))
+    await (await ethers.getContractAt('INoContract', lpFarm))
       .connect(jpegdOwner)
       ['setContractWhitelisted(address,bool)'](instance.address, true);
 
-    await (await ethers.getContractAt('INoContract', pusdLpFarm))
+    await (await ethers.getContractAt('INoContract', lpFarm))
       .connect(jpegdOwner)
       ['setContractWhitelisted(address,bool)'](secondInstance.address, true);
   });
