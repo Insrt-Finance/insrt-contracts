@@ -285,7 +285,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         l.invested = true;
         if (l.ownedTokenIds.length() == 0) {
-            _collectFee(l, l.acquisitionFeeBP);
+            //first fee withdraw, so no account for previous
+            //fee accruals need to be considered
+            l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
         }
         l.ownedTokenIds.add(punkId);
     }
@@ -471,21 +473,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             minCurveLP,
             poolInfoIndex
         );
-    }
-
-    /**
-     * @notice increment accrued fees
-     * @param l storage layout
-     * @param feeBP fee basis points
-     */
-    function _collectFee(ShardVaultStorage.Layout storage l, uint256 feeBP)
-        internal
-        view
-    {
-        uint256 accruedFees = l.accruedFees;
-        accruedFees +=
-            ((address(this).balance - accruedFees) * feeBP) /
-            BASIS_POINTS;
     }
 
     /**
