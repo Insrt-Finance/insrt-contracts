@@ -107,6 +107,43 @@ export function describeBehaviorOfShardVaultPermissioned(
         ).to.eq(instance.address);
       });
 
+      it('collects acquisition fee if first purchase', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('200') });
+
+        const price = (
+          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+        ).minValue;
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+
+        expect(await instance.callStatic.accruedFees()).to.eq(
+          price
+            .mul(await instance.callStatic.acquisitionFeeBP())
+            .div(BASIS_POINTS),
+        );
+
+        const secondPunkId = 3588;
+        const secondPurchaseData =
+          cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
+            secondPunkId,
+          ]);
+
+        await instance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](secondPurchaseData, secondPunkId);
+
+        expect(await instance.callStatic.accruedFees()).to.eq(
+          price
+            .mul(await instance.callStatic.acquisitionFeeBP())
+            .div(BASIS_POINTS),
+        );
+      });
+
       it('uses vault ETH for punk purchase', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
