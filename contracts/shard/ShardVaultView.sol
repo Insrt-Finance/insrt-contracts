@@ -118,7 +118,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function acquisitionFee() external view returns (uint256 feeBP) {
+    function acquisitionFeeBP() external view returns (uint256 feeBP) {
         feeBP = _acquisitionFeeBP();
     }
 

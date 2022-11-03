@@ -75,7 +75,7 @@ interface IShardVaultView {
      * @notice returns acquisition fee BP
      * @return feeBP basis points of acquisition fee
      */
-    function acquisitionFee() external view returns (uint256 feeBP);
+    function acquisitionFeeBP() external view returns (uint256 feeBP);
 
     /**
      * @notice returns sale fee BP
