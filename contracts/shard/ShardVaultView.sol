@@ -107,4 +107,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function ownedTokenIds() external view returns (uint256[] memory ids) {
         ids = _ownedTokenIds();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function accruedFees() external view returns (uint256 fees) {
+        fees = _accruedFees();
+    }
 }

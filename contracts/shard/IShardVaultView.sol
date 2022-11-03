@@ -64,4 +64,10 @@ interface IShardVaultView {
      * @return ids array of owned token IDs
      */
     function ownedTokenIds() external view returns (uint256[] memory ids);
+
+    /**
+     * @notice returns accrued fees
+     * @return fees accrued fees
+     */
+    function accruedFees() external view returns (uint256 fees);
 }

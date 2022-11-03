@@ -509,4 +509,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _setMaxSupply(uint256 maxSupply) internal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
+
+    /**
+     * @notice returns accrued fees
+     * @return fees accrued fees
+     */
+    function _accruedFees() internal view returns (uint256 fees) {
+        fees = ShardVaultStorage.layout().accruedFees;
+    }
 }
