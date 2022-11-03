@@ -22,7 +22,7 @@ contract ShardVaultProxy is Proxy {
         uint256 shardValue,
         uint256 maxSupply,
         uint256 id,
-        uint256 salesFeeBP,
+        uint256 saleFeeBP,
         uint256 acquisitionFeeBP,
         uint256 yieldFeeBP,
         uint256 bufferBP,
@@ -40,7 +40,7 @@ contract ShardVaultProxy is Proxy {
         l.jpegdVaultHelper = jpegdVaultHelper;
         l.shardValue = shardValue;
         l.maxSupply = maxSupply;
-        l.salesFeeBP = salesFeeBP;
+        l.saleFeeBP = saleFeeBP;
         l.acquisitionFeeBP = acquisitionFeeBP;
         l.yieldFeeBP = yieldFeeBP;
         l.bufferBP = bufferBP;

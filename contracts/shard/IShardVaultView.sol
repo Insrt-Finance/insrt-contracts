@@ -70,4 +70,22 @@ interface IShardVaultView {
      * @return fees accrued fees
      */
     function accruedFees() external view returns (uint256 fees);
+
+    /**
+     * @notice returns acquisition fee BP
+     * @return feeBP basis points of acquisition fee
+     */
+    function acquisitionFee() external view returns (uint256 feeBP);
+
+    /**
+     * @notice returns sale fee BP
+     * @return feeBP basis points of sale fee
+     */
+    function saleFeeBP() external view returns (uint256 feeBP);
+
+    /**
+     * @notice returns yield fee BP
+     * @return feeBP basis points of yield fee
+     */
+    function yieldFeeBP() external view returns (uint256 feeBP);
 }

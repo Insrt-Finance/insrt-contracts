@@ -97,10 +97,10 @@ interface IShardVaultPermissioned {
     function setAcquisitionFee(uint256 feeBP) external;
 
     /**
-     * @notice sets the sales fee BP
+     * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
-    function setSalesFee(uint256 feeBP) external;
+    function setSaleFee(uint256 feeBP) external;
 
     /**
      * @notice sets the Yield fee BP

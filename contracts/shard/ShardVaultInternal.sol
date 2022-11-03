@@ -476,12 +476,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice sets the sales fee BP
+     * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
-    function _setSalesFee(uint256 feeBP) internal {
+    function _setSaleFee(uint256 feeBP) internal {
         if (feeBP > 10000) revert ShardVault__BasisExceeded();
-        ShardVaultStorage.layout().salesFeeBP = feeBP;
+        ShardVaultStorage.layout().saleFeeBP = feeBP;
     }
 
     /**
@@ -516,5 +516,33 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _accruedFees() internal view returns (uint256 fees) {
         fees = ShardVaultStorage.layout().accruedFees;
+    }
+
+    /**
+     * @notice returns acquisition fee BP
+     * @return acquisitionFeeBP basis points of acquisition fee
+     */
+    function _acquisitionFeeBP()
+        internal
+        view
+        returns (uint256 acquisitionFeeBP)
+    {
+        acquisitionFeeBP = ShardVaultStorage.layout().acquisitionFeeBP;
+    }
+
+    /**
+     * @notice returns sale fee BP
+     * @return saleFeeBP basis points of sale fee
+     */
+    function _saleFeeBP() internal view returns (uint256 saleFeeBP) {
+        saleFeeBP = ShardVaultStorage.layout().saleFeeBP;
+    }
+
+    /**
+     * @notice returns yield fee BP
+     * @return yieldFeeBP basis points of yield fee
+     */
+    function _yieldFeeBP() internal view returns (uint256 yieldFeeBP) {
+        yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
     }
 }

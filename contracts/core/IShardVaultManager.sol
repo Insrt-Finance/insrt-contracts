@@ -26,7 +26,7 @@ interface IShardVaultManager {
        non-ERC721/1155 compiant collections
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
-     * @param salesFeeBP sales fee basis points
+     * @param saleFeeBP sales fee basis points
      * @param acquisitionFeeBP acquisition fee basis points
      * @param yieldFeeBP yield fee basis points
      * @param bufferBP LTV buffer basis points
@@ -39,7 +39,7 @@ interface IShardVaultManager {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint256 maxSupply,
-        uint256 salesFeeBP,
+        uint256 saleFeeBP,
         uint256 acquisitionFeeBP,
         uint256 yieldFeeBP,
         uint256 bufferBP,

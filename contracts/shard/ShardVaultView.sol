@@ -114,4 +114,25 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function accruedFees() external view returns (uint256 fees) {
         fees = _accruedFees();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function acquisitionFee() external view returns (uint256 feeBP) {
+        feeBP = _acquisitionFeeBP();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function saleFeeBP() external view returns (uint256 feeBP) {
+        feeBP = _saleFeeBP();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function yieldFeeBP() external view returns (uint256 feeBP) {
+        feeBP = _yieldFeeBP();
+    }
 }
