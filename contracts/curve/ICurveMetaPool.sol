@@ -69,4 +69,11 @@ interface ICurveMetaPool {
         external
         view
         returns (uint256);
+
+    /**
+     * @notice The current virtual price of the pool LP token
+     * @dev Useful for calculating profits
+     * @return LP token virtual price normalized to 1e18
+     */
+    function get_virtual_price() external view returns (uint256);
 }
