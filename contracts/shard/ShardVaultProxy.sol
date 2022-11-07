@@ -14,6 +14,18 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 contract ShardVaultProxy is Proxy {
     address private immutable SHARD_VAULT_DIAMOND;
 
+    struct FeeParams {
+        uint256 saleFeeBP;
+        uint256 acquisitionFeeBP;
+        uint256 yieldFeeBP;
+    }
+
+    struct BufferParams {
+        uint256 ltvBufferBP;
+        uint256 ltvDeviationBP;
+        uint256 conversionBuffer;
+    }
+
     constructor(
         address shardVaultDiamond,
         address collection,
@@ -22,11 +34,8 @@ contract ShardVaultProxy is Proxy {
         uint256 shardValue,
         uint256 maxSupply,
         uint256 id,
-        uint256 saleFeeBP,
-        uint256 acquisitionFeeBP,
-        uint256 yieldFeeBP,
-        uint256 bufferBP,
-        uint256 deviationBP
+        FeeParams memory feeParams,
+        BufferParams memory bufferParams
     ) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
 
@@ -40,11 +49,12 @@ contract ShardVaultProxy is Proxy {
         l.jpegdVaultHelper = jpegdVaultHelper;
         l.shardValue = shardValue;
         l.maxSupply = maxSupply;
-        l.saleFeeBP = saleFeeBP;
-        l.acquisitionFeeBP = acquisitionFeeBP;
-        l.yieldFeeBP = yieldFeeBP;
-        l.bufferBP = bufferBP;
-        l.deviationBP = deviationBP;
+        l.saleFeeBP = feeParams.saleFeeBP;
+        l.acquisitionFeeBP = feeParams.acquisitionFeeBP;
+        l.yieldFeeBP = feeParams.yieldFeeBP;
+        l.ltvBufferBP = bufferParams.ltvBufferBP;
+        l.ltvDeviationBP = bufferParams.ltvDeviationBP;
+        l.conversionBuffer = bufferParams.conversionBuffer;
     }
 
     /**

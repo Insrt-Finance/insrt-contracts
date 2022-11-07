@@ -311,7 +311,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
         uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
         uint256 targetLTV = creditLimit -
-            (value * (l.bufferBP + l.deviationBP)) /
+            (value * (l.ltvBufferBP + l.ltvDeviationBP)) /
             BASIS_POINTS;
 
         if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
@@ -355,7 +355,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
         uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
         uint256 targetLTV = creditLimit -
-            (value * (l.bufferBP + l.deviationBP)) /
+            (value * (l.ltvBufferBP + l.ltvDeviationBP)) /
             BASIS_POINTS;
 
         if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
@@ -583,7 +583,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 bufferedDebt = _totalDebtWithBuffer(jpegdVault, punkId);
 
         IERC20(PUSD).approve(jpegdVault, bufferedDebt);
-        INFTVault(jpegdVault).repay(punkId, bufferedDebt + INTEREST_BUFFER);
+        INFTVault(jpegdVault).repay(punkId, bufferedDebt);
         INFTVault(jpegdVault).closePosition(punkId);
 
         ICryptoPunkMarket(PUNKS).offerPunkForSale(punkId, ask);

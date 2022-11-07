@@ -15,8 +15,9 @@ library ShardVaultStorage {
         uint256 acquisitionFeeBP;
         uint256 yieldFeeBP;
         uint256 accruedFees;
-        uint256 bufferBP;
-        uint256 deviationBP;
+        uint256 ltvBufferBP;
+        uint256 ltvDeviationBP;
+        uint256 conversionBuffer;
         address treasury;
         address jpegdVault;
         address jpegdVaultHelper;
