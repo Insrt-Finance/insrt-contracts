@@ -73,11 +73,23 @@ interface IShardVaultView {
     function totalDebt(uint256 tokenId) external view returns (uint256 debt);
 
     /**
-     * @notice converts an amount of pUSD to an amount of AutoComp tokens
-     * @param pUSD amount of pUSD to convert
-     * @return autoComp amount of AutoComp tokens returned
+     * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
+     *         to result in a given amount of pUSD
+     * @param pUSD desired pUSD amount
+     * @return autoComp required AutoComp LP shares
      */
-    function convertPUSDToAutoComp(uint256 pUSD)
+    function queryAutoCompForPUSD(uint256 pUSD)
+        external
+        view
+        returns (uint256 autoComp);
+
+    /**
+     * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
+     *         to result in a given amount of pETH
+     * @param pETH desired pETH amount
+     * @return autoComp required AutoComp LP shares
+     */
+    function queryAutoCompForPETH(uint256 pETH)
         external
         view
         returns (uint256 autoComp);

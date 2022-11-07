@@ -605,7 +605,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        uint256 autoComp = _convertPUSDToAutoComp(amount);
+        uint256 autoComp = _queryAutoCompForPUSD(amount);
         paidDebt = _unstake(autoComp, minPUSD, poolInfoIndex);
 
         if (amount > paidDebt) {
@@ -631,11 +631,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice calculates amount of AutoComp tokens needed for an amount of pUSD to be unstaked
-     * @param pUSD target amount of pUSD
-     * @return autoComp amount of AutoComp required for target
+     * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
+     *         to result in a given amount of pUSD
+     * @param pUSD desired pUSD amount
+     * @return autoComp required AutoComp LP shares
      */
-    function _convertPUSDToAutoComp(uint256 pUSD)
+    function _queryAutoCompForPUSD(uint256 pUSD)
         internal
         view
         returns (uint256 autoComp)
@@ -645,18 +646,44 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         //      necessary for the downpayment to impact the debt as intended
         uint256 curveLP = ICurveMetaPool(CURVE_PUSD_POOL).calc_token_amount(
             [pUSD, 0],
-            true
+            false
         );
 
-        IVault.Rate memory rate = IVault(PUSD_CITADEL).depositFeeRate();
-
-        uint256 curveLPAccountingFee = curveLP +
-            (curveLP * rate.numerator) /
-            rate.denominator;
+        //note: accounts for fees; ball-parks
+        uint256 curveLPAccountingFee = (curveLP * 10002) / BASIS_POINTS;
 
         autoComp =
             (curveLPAccountingFee * 10**IVault(PUSD_CITADEL).decimals()) /
             IVault(PUSD_CITADEL).exchangeRate();
+    }
+
+    /**
+    /**
+     * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
+     *         to result in a given amount of pETH
+     * @param pETH desired pETH amount
+     * @return autoComp required AutoComp LP shares
+     */
+    function _queryAutoCompForPETH(uint256 pETH)
+        internal
+        view
+        returns (uint256 autoComp)
+    {
+        //note: does not account for fees, not meant for precise calculations.
+        //      this is alright because it acts as a small 'buffer' to the amount
+        //      necessary for the downpayment to impact the debt as intended
+        uint256 curveLP = ICurveMetaPool(CURVE_PETH_POOL).calc_token_amount(
+            [0, pETH],
+            false
+        );
+
+        //note: accounts for fees; ball-parks     //conversion_buffer
+        uint256 curveLPAccountingFee = (curveLP * 1000269) /
+            (100 * BASIS_POINTS);
+
+        autoComp =
+            (curveLPAccountingFee * 10**IVault(PETH_CITADEL).decimals()) /
+            IVault(PETH_CITADEL).exchangeRate();
     }
 
     /**

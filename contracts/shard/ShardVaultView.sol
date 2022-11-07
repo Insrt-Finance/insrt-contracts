@@ -126,12 +126,20 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function convertPUSDToAutoComp(uint256 pUSD)
+    function queryAutoCompForPUSD(uint256 pUSD)
         external
         view
         returns (uint256 autoComp)
     {
-        autoComp = _convertPUSDToAutoComp(pUSD);
+        autoComp = _queryAutoCompForPUSD(pUSD);
+    }
+
+    function queryAutoCompForPETH(uint256 pETH)
+        external
+        view
+        returns (uint256 autoComp)
+    {
+        autoComp = _queryAutoCompForPETH(pETH);
     }
 
     /**
