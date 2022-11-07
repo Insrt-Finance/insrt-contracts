@@ -131,7 +131,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         view
         returns (uint256 autoComp)
     {
-        autoComp = _queryAutoCompForPUSD(pUSD);
+        autoComp = _queryAutoCompForPUSD(ShardVaultStorage.layout(), pUSD);
     }
 
     function queryAutoCompForPETH(uint256 pETH)
@@ -139,7 +139,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         view
         returns (uint256 autoComp)
     {
-        autoComp = _queryAutoCompForPETH(pETH);
+        autoComp = _queryAutoCompForPETH(ShardVaultStorage.layout(), pETH);
     }
 
     /**

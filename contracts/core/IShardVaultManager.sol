@@ -30,7 +30,7 @@ interface IShardVaultManager {
      * @param maxSupply maximum shards to be minted by vault
      * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
      * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
-     * @dev for pETH conversion buffer, basis points have insufficient accuracy thus the buffer is increased by two decimal points
+     * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
      */
     function deployShardVault(
         address collection,

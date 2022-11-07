@@ -605,7 +605,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        uint256 autoComp = _queryAutoCompForPUSD(amount);
+        uint256 autoComp = _queryAutoCompForPUSD(l, amount);
         paidDebt = _unstake(autoComp, minPUSD, poolInfoIndex);
 
         if (amount > paidDebt) {
@@ -633,14 +633,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
      *         to result in a given amount of pUSD
+     * @param l storage layout
      * @param pUSD desired pUSD amount
      * @return autoComp required AutoComp LP shares
      */
-    function _queryAutoCompForPUSD(uint256 pUSD)
-        internal
-        view
-        returns (uint256 autoComp)
-    {
+    function _queryAutoCompForPUSD(
+        ShardVaultStorage.Layout storage l,
+        uint256 pUSD
+    ) internal view returns (uint256 autoComp) {
         //note: does not account for fees, not meant for precise calculations.
         //      this is alright because it acts as a small 'buffer' to the amount
         //      necessary for the downpayment to impact the debt as intended
@@ -650,7 +650,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         //note: accounts for fees; ball-parks
-        uint256 curveLPAccountingFee = (curveLP * 10002) / BASIS_POINTS;
+        uint256 curveLPAccountingFee = (curveLP * l.conversionBuffer) /
+            (BASIS_POINTS * 100);
 
         autoComp =
             (curveLPAccountingFee * 10**IVault(PUSD_CITADEL).decimals()) /
@@ -661,14 +662,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
      *         to result in a given amount of pETH
+     * @param l storage layout
      * @param pETH desired pETH amount
      * @return autoComp required AutoComp LP shares
      */
-    function _queryAutoCompForPETH(uint256 pETH)
-        internal
-        view
-        returns (uint256 autoComp)
-    {
+    function _queryAutoCompForPETH(
+        ShardVaultStorage.Layout storage l,
+        uint256 pETH
+    ) internal view returns (uint256 autoComp) {
         //note: does not account for fees, not meant for precise calculations.
         //      this is alright because it acts as a small 'buffer' to the amount
         //      necessary for the downpayment to impact the debt as intended
@@ -678,7 +679,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         //note: accounts for fees; ball-parks     //conversion_buffer
-        uint256 curveLPAccountingFee = (curveLP * 1000269) /
+        uint256 curveLPAccountingFee = (curveLP * l.conversionBuffer) /
             (100 * BASIS_POINTS);
 
         autoComp =
