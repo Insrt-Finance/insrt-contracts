@@ -531,6 +531,33 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPETH minimum pETH to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pETH pETH amount returned
+     */
+    function _pethUnstake(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) internal returns (uint256 pETH) {
+        ILPFarming(LP_FARM).withdraw(poolInfoIndex, amount);
+
+        uint256 curveLP = IVault(PETH_CITADEL).withdraw(
+            address(this),
+            IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken)
+                .balanceOf(address(this))
+        );
+
+        pETH = ICurveMetaPool(CURVE_PETH_POOL).remove_liquidity_one_coin(
+            curveLP,
+            1, //id of pETH in curve pool
+            minPETH
+        );
+    }
+
+    /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk,
      *         and lists punk for sale
      * @param l storage layout

@@ -128,6 +128,19 @@ interface IShardVaultPermissioned {
     ) external returns (uint256 pUSD);
 
     /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPETH minimum pETH to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pETH pETH amount returned
+     */
+    function pethUnstake(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) external returns (uint256 pETH);
+
+    /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk,
      *         and lists punk for sale
      * @param punkId id of punk position pertains to

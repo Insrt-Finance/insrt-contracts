@@ -164,6 +164,17 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     /**
      * @inheritdoc IShardVaultPermissioned
      */
+    function pethUnstake(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner returns (uint256 pETH) {
+        pETH = _pethUnstake(amount, minPETH, poolInfoIndex);
+    }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
     function closePunkPosition(
         uint256 punkId,
         uint256 minPUSD,
