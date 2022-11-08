@@ -60,13 +60,13 @@ interface IShardVaultView {
     function invested() external view returns (bool);
 
     /**
-     * @notice return array with owned token IDs
+     * @notice return array of NFT ids owned by the vault
      * @return ids array of owned token IDs
      */
     function ownedTokenIds() external view returns (uint256[] memory ids);
 
     /**
-     * @notice returns accrued fees
+     * @notice returns sum of total fees (sale, yield, acquisition) accrued by the vault
      * @return fees accrued fees
      */
     function accruedFees() external view returns (uint256 fees);
