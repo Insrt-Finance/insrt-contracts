@@ -9,8 +9,8 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
-import { IInvestmentPoolFactory } from '../balancer/IInvestmentPoolFactory.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
+import { IInvestmentPoolFactory } from '../interfaces/balancer/IInvestmentPoolFactory.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
 import { IndexStorage } from './IndexStorage.sol';
 
 /**

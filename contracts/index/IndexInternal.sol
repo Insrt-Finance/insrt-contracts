@@ -15,9 +15,9 @@ import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
 
 import { IIndexInternal } from './IIndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
-import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
-import { IAsset, IVault } from '../balancer/IVault.sol';
+import { IBalancerHelpers } from '../interfaces/balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
+import { IAsset, IVault } from '../interfaces/balancer/IVault.sol';
 
 /**
  * @title Infra Index internal functions

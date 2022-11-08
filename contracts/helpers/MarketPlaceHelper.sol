@@ -7,7 +7,7 @@ import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
 import { IERC721 } from '@solidstate/contracts/token/ERC721/IERC721.sol';
 
 import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
-import { ICryptoPunkMarket } from '../cryptopunk/ICryptoPunkMarket.sol';
+import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 
 contract MarketPlaceHelper is IMarketPlaceHelper {
     using AddressUtils for address payable;
@@ -71,7 +71,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         }
     }
 
-    //WIP
+    //TODO
     function acceptERC721Bid(
         bytes calldata data,
         address target,

@@ -9,9 +9,9 @@ import { IIndexIO } from './IIndexIO.sol';
 import { IndexInternal } from './IndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { ISwapper } from './ISwapper.sol';
-import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
-import { IVault } from '../balancer/IVault.sol';
+import { IBalancerHelpers } from '../interfaces/balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
+import { IVault } from '../interfaces/balancer/IVault.sol';
 
 /**
  * @title Infra Index Input-Output functions
