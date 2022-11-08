@@ -65,7 +65,7 @@ describe('ShardVaultProxy', () => {
   const yieldFeeBP = BigNumber.from('1000');
   const ltvBufferBP = BigNumber.from('500');
   const ltvDeviationBP = BigNumber.from('200');
-  const pUSDConversionBuffer = BigNumber.from('10003');
+  const pUSDConversionBuffer = BigNumber.from('1000178');
   const pETHConversionBuffer = BigNumber.from('1000269');
   const BASIS = BigNumber.from('10000');
 
