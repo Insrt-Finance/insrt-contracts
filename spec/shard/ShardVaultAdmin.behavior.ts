@@ -63,14 +63,14 @@ export function describeBehaviorOfShardVaultAdmin(
 
       pUSD = <IERC20>(
         await ethers.getContractAt(
-          '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+          '@solidstate/contracts/interfaces/IERC20.sol:IERC20',
           PUSD,
         )
       );
 
       pETH = <IERC20>(
         await ethers.getContractAt(
-          '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+          '@solidstate/contracts/interfaces/IERC20.sol:IERC20',
           PETH,
         )
       );

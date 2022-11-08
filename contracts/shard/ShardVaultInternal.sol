@@ -219,18 +219,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @return uint256[]  array of owned token IDs
      */
     function _ownedTokenIds() internal view returns (uint256[] memory) {
-        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        uint256 ownedIdsLength = l.ownedTokenIds.length();
-        uint256[] memory ids = new uint256[](ownedIdsLength);
-
-        for (uint256 i; i < ownedIdsLength; ) {
-            unchecked {
-                ids[i] = l.ownedTokenIds.at(i);
-                ++i;
-            }
-        }
-
-        return ids;
+        return ShardVaultStorage.layout().ownedTokenIds.toArray();
     }
 
     /**
