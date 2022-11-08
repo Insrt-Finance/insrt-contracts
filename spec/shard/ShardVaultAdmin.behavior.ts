@@ -209,7 +209,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#collateralizePunk(uint256,uint256,bool)', () => {
+    describe('#collateralizePunkPUSD(uint256,uint256,bool)', () => {
       it('borrows requested amount of pUSD', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -236,7 +236,11 @@ export function describeBehaviorOfShardVaultAdmin(
         await expect(() =>
           instance
             .connect(owner)
-            .collateralizePunk(punkId, requestedBorrow, false),
+            ['collateralizePunkPUSD(uint256,uint256,bool)'](
+              punkId,
+              requestedBorrow,
+              false,
+            ),
         ).to.changeTokenBalance(pUSD, instance, actualBorrow);
       });
 
@@ -266,7 +270,11 @@ export function describeBehaviorOfShardVaultAdmin(
         await expect(() =>
           instance
             .connect(owner)
-            .collateralizePunk(punkId, requestedBorrow, false),
+            ['collateralizePunkPUSD(uint256,uint256,bool)'](
+              punkId,
+              requestedBorrow,
+              false,
+            ),
         ).to.changeTokenBalance(pUSD, instance, actualBorrow);
 
         const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
@@ -288,7 +296,11 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const newBalance = await pUSD['balanceOf(address)'](instance.address);
 
@@ -324,7 +336,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
           await instance
             .connect(owner)
-            .collateralizePunk(
+            ['collateralizePunkPUSD(uint256,uint256,bool)'](
               punkId,
               await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId),
               false,
@@ -341,7 +353,11 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(owner)
-              .collateralizePunk(punkId, requestedBorrow, false),
+              ['collateralizePunkPUSD(uint256,uint256,bool)'](
+                punkId,
+                requestedBorrow,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__TargetLTVReached()');
         });
 
@@ -349,13 +365,17 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              .collateralizePunk(punkId, ethers.constants.One, false),
+              ['collateralizePunkPUSD(uint256,uint256,bool)'](
+                punkId,
+                ethers.constants.One,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
       });
     });
 
-    describe('#pethCollateralizePunk(uint256,uint256,bool)', () => {
+    describe('#collateralizePunkPETH(uint256,uint256,bool)', () => {
       it('borrows requested amount of pETH', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -382,7 +402,7 @@ export function describeBehaviorOfShardVaultAdmin(
         await expect(() =>
           pethInstance
             .connect(owner)
-            ['pethCollateralizePunk(uint256,uint256,bool)'](
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
               requestedBorrow,
               false,
@@ -416,7 +436,7 @@ export function describeBehaviorOfShardVaultAdmin(
         await expect(() =>
           pethInstance
             .connect(owner)
-            ['pethCollateralizePunk(uint256,uint256,bool)'](
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
               requestedBorrow,
               false,
@@ -444,7 +464,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['pethCollateralizePunk(uint256,uint256,bool)'](
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
             punkId,
             requestedBorrow,
             false,
@@ -486,7 +506,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
           await pethInstance
             .connect(owner)
-            .pethCollateralizePunk(
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
               await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](
                 punkId,
@@ -505,7 +525,11 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             pethInstance
               .connect(owner)
-              .pethCollateralizePunk(punkId, requestedBorrow, false),
+              ['collateralizePunkPETH(uint256,uint256,bool)'](
+                punkId,
+                requestedBorrow,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__TargetLTVReached()');
         });
 
@@ -513,13 +537,17 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             pethInstance
               .connect(nonOwner)
-              .collateralizePunk(punkId, ethers.constants.One, false),
+              ['collateralizePunkPETH(uint256,uint256,bool)'](
+                punkId,
+                ethers.constants.One,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
       });
     });
 
-    describe('#stake(uint256,uint256,uint256)', () => {
+    describe('#stakePUSD(uint256,uint256,uint256)', () => {
       it('completes three stages of staking', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -545,7 +573,11 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePUSDPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
@@ -565,7 +597,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const shares = await instance
           .connect(owner)
-          .callStatic['stake(uint256,uint256,uint256)'](
+          .callStatic['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -573,7 +605,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          ['stake(uint256,uint256,uint256)'](
+          ['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -593,7 +625,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['stake(uint256,uint256,uint256)'](
+              ['stakePUSD(uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
@@ -603,7 +635,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#pethStake(uint256,uint256,uint256)', () => {
+    describe('#stakePETH(uint256,uint256,uint256)', () => {
       it('completes three stages of staking', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -629,7 +661,11 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          .pethCollateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePETHPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
@@ -649,7 +685,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const shares = await pethInstance
           .connect(owner)
-          .callStatic['pethStake(uint256,uint256,uint256)'](
+          .callStatic['stakePETH(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.Two,
@@ -657,7 +693,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['pethStake(uint256,uint256,uint256)'](
+          ['stakePETH(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.Two,
@@ -677,7 +713,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             pethInstance
               .connect(nonOwner)
-              ['pethStake(uint256,uint256,uint256)'](
+              ['stakePETH(uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,

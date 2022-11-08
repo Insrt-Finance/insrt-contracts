@@ -21,7 +21,7 @@ interface IShardVaultAdmin {
      * @return pUSD borrowed pUSD
      * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
-    function collateralizePunk(
+    function collateralizePunkPUSD(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
@@ -35,7 +35,7 @@ interface IShardVaultAdmin {
      * @return pETH borrowed pETH
      * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
-    function pethCollateralizePunk(
+    function collateralizePunkPETH(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
@@ -50,7 +50,7 @@ interface IShardVaultAdmin {
      *                      the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
-    function stake(
+    function stakePUSD(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
@@ -64,7 +64,7 @@ interface IShardVaultAdmin {
      *                      the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
-    function pethStake(
+    function stakePETH(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex

@@ -49,12 +49,12 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function collateralizePunk(
+    function collateralizePunkPUSD(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
     ) external onlyProtocolOwner returns (uint256 pUSD) {
-        pUSD = _collateralizePunk(
+        pUSD = _collateralizePunkPUSD(
             ShardVaultStorage.layout(),
             punkId,
             borrowAmount,
@@ -65,12 +65,12 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function pethCollateralizePunk(
+    function collateralizePunkPETH(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
     ) external onlyProtocolOwner returns (uint256 pETH) {
-        pETH = _pethCollateralizePunk(
+        pETH = _collateralizePunkPETH(
             ShardVaultStorage.layout(),
             punkId,
             borrowAmount,
@@ -81,23 +81,23 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function stake(
+    function stakePUSD(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 shares) {
-        return _stake(amount, minCurveLP, poolInfoIndex);
+        return _stakePUSD(amount, minCurveLP, poolInfoIndex);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function pethStake(
+    function stakePETH(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 shares) {
-        return _pethStake(amount, minCurveLP, poolInfoIndex);
+        return _stakePETH(amount, minCurveLP, poolInfoIndex);
     }
 
     /**

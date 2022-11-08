@@ -300,7 +300,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param insure whether to insure
      * @return pUSD the amount of pUSD received for the collateralized punk
      */
-    function _collateralizePunk(
+    function _collateralizePunkPUSD(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
         uint256 borrowAmount,
@@ -344,7 +344,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         pUSD = IERC20(PUSD).balanceOf(address(this));
     }
 
-    function _pethCollateralizePunk(
+    function _collateralizePunkPETH(
         ShardVaultStorage.Layout storage l,
         uint256 punkId,
         uint256 borrowAmount,
@@ -396,7 +396,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      *                      the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
-    function _stake(
+    function _stakePUSD(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
@@ -426,7 +426,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      *                      the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
-    function _pethStake(
+    function _stakePETH(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
@@ -468,8 +468,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         bool insure
     ) internal {
         _purchasePunk(l, data, punkId);
-        _stake(
-            _collateralizePunk(l, punkId, borrowAmount, insure),
+        _stakePUSD(
+            _collateralizePunkPUSD(l, punkId, borrowAmount, insure),
             minCurveLP,
             poolInfoIndex
         );
