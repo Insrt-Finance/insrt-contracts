@@ -43,7 +43,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         payable
         onlyProtocolOwner
     {
-        _purchasePunk(ShardVaultStorage.layout(), data, punkId);
+        _purchasePunk(data, punkId);
     }
 
     /**
@@ -54,12 +54,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 borrowAmount,
         bool insure
     ) external onlyProtocolOwner returns (uint256 pUSD) {
-        pUSD = _collateralizePunkPUSD(
-            ShardVaultStorage.layout(),
-            punkId,
-            borrowAmount,
-            insure
-        );
+        pUSD = _collateralizePunkPUSD(punkId, borrowAmount, insure);
     }
 
     /**
@@ -70,12 +65,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 borrowAmount,
         bool insure
     ) external onlyProtocolOwner returns (uint256 pETH) {
-        pETH = _collateralizePunkPETH(
-            ShardVaultStorage.layout(),
-            punkId,
-            borrowAmount,
-            insure
-        );
+        pETH = _collateralizePunkPETH(punkId, borrowAmount, insure);
     }
 
     /**
@@ -112,7 +102,6 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         bool insure
     ) external onlyProtocolOwner {
         _investPunk(
-            ShardVaultStorage.layout(),
             data,
             punkId,
             borrowAmount,

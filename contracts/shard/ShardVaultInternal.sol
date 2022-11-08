@@ -263,14 +263,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice purchases a punk from CryptoPunkMarket
-     * @param l ShardVaultStorage layout
      * @param punkId id of punk
      */
-    function _purchasePunk(
-        ShardVaultStorage.Layout storage l,
-        bytes calldata data,
-        uint256 punkId
-    ) internal {
+    function _purchasePunk(bytes calldata data, uint256 punkId) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
         if (l.collection != PUNKS) {
             revert ShardVault__CollectionNotPunks();
         }
@@ -295,17 +292,17 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice borrows pUSD in exchange for collaterlizing a punk
      * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
-     * @param l ShardVaultStorage layout
      * @param punkId id of punk
      * @param insure whether to insure
      * @return pUSD the amount of pUSD received for the collateralized punk
      */
     function _collateralizePunkPUSD(
-        ShardVaultStorage.Layout storage l,
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pUSD) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
         address jpegdVault = l.jpegdVault;
         uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
         uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
@@ -345,11 +342,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     function _collateralizePunkPETH(
-        ShardVaultStorage.Layout storage l,
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pETH) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
         address jpegdVault = l.jpegdVault;
         uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
         uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
@@ -451,7 +449,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
-     * @param l ShardVaultStorage layout
      * @param punkId id of punk
      * @param minCurveLP minimum LP to receive from curve LP
      * @param insure whether to insure
@@ -459,7 +456,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      *                      the pool to deposit into
      */
     function _investPunk(
-        ShardVaultStorage.Layout storage l,
         bytes calldata data,
         uint256 punkId,
         uint256 borrowAmount,
@@ -467,9 +463,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         bool insure
     ) internal {
-        _purchasePunk(l, data, punkId);
+        _purchasePunk(data, punkId);
         _stakePUSD(
-            _collateralizePunkPUSD(l, punkId, borrowAmount, insure),
+            _collateralizePunkPUSD(punkId, borrowAmount, insure),
             minCurveLP,
             poolInfoIndex
         );
