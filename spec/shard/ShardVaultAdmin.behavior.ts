@@ -11,7 +11,6 @@ import {
   ICurveMetaPool,
 } from '../../typechain-types';
 import { ILPFarming, IVault } from '../../typechain-types/contracts/jpegd';
-import { curve } from '../../typechain-types/contracts';
 
 export interface ShardVaultAdminBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;

@@ -480,7 +480,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setSaleFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert ShardVault__BasisExceeded();
+        _enforceBasis(feeBP);
         ShardVaultStorage.layout().saleFeeBP = feeBP;
     }
 
@@ -489,7 +489,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setAcquisitionFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert ShardVault__BasisExceeded();
+        _enforceBasis(feeBP);
         ShardVaultStorage.layout().acquisitionFeeBP = feeBP;
     }
 
@@ -498,7 +498,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param feeBP basis points value of fee
      */
     function _setYieldFee(uint256 feeBP) internal {
-        if (feeBP > 10000) revert ShardVault__BasisExceeded();
+        _enforceBasis(feeBP);
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
 
@@ -544,5 +544,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _yieldFeeBP() internal view returns (uint256 yieldFeeBP) {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
+    }
+
+    /**
+     * @notice enforces that a value cannot exceed BASIS_POINTS
+     * @param value the value to check
+     */
+    function _enforceBasis(uint256 value) internal pure {
+        if (value > 10000) revert ShardVault__BasisExceeded();
     }
 }
