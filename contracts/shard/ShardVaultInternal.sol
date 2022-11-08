@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
-import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
+import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
+import { IERC173 } from '@solidstate/contracts/interfaces/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';

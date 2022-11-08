@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
-import { IERC721 } from '@solidstate/contracts/token/ERC721/IERC721.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
+import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
 
 import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
