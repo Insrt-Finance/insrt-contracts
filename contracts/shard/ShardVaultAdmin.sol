@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import { IShardVaultPermissioned } from './IShardVaultPermissioned.sol';
+import { IShardVaultAdmin } from './IShardVaultAdmin.sol';
 import { ShardVaultInternal } from './ShardVaultInternal.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
-contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
+contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     constructor(
         address shardCollection,
         address pUSD,
@@ -36,7 +36,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     {}
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function purchasePunk(bytes calldata data, uint256 punkId)
         external
@@ -47,7 +47,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function collateralizePunk(
         uint256 punkId,
@@ -63,7 +63,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function pethCollateralizePunk(
         uint256 punkId,
@@ -79,7 +79,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function stake(
         uint256 amount,
@@ -90,7 +90,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function pethStake(
         uint256 amount,
@@ -101,7 +101,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function investPunk(
         bytes calldata data,
@@ -123,28 +123,28 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function setAcquisitionFee(uint256 feeBP) external onlyProtocolOwner {
         _setAcquisitionFee(feeBP);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function setSaleFee(uint256 feeBP) external onlyProtocolOwner {
         _setSaleFee(feeBP);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function setYieldFee(uint256 feeBP) external onlyProtocolOwner {
         _setYieldFee(feeBP);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);

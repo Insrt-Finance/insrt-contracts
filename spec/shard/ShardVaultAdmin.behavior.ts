@@ -13,18 +13,18 @@ import {
 import { ILPFarming, IVault } from '../../typechain-types/contracts/jpegd';
 import { curve } from '../../typechain-types/contracts';
 
-export interface ShardVaultPermissionedBehaviorArgs {
+export interface ShardVaultAdminBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
 }
 
-export function describeBehaviorOfShardVaultPermissioned(
+export function describeBehaviorOfShardVaultAdmin(
   deploy: () => Promise<IShardVault>,
   secondDeploy: () => Promise<IShardVault>,
   pethDeploy: () => Promise<IShardVault>,
-  args: ShardVaultPermissionedBehaviorArgs,
+  args: ShardVaultAdminBehaviorArgs,
   skips?: string[],
 ) {
-  describe('::ShardVaultPermissioned', () => {
+  describe('::ShardVaultAdmin', () => {
     let depositor: SignerWithAddress;
     let owner: SignerWithAddress;
     let nonOwner: SignerWithAddress;

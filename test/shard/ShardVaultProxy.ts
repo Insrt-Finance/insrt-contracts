@@ -17,7 +17,7 @@ import {
   Ownable__factory,
   IShardCollection__factory,
   IShardCollection,
-  ShardVaultPermissioned__factory,
+  ShardVaultAdmin__factory,
   IMarketPlaceHelper,
   MarketPlaceHelper__factory,
   IMarketPlaceHelper__factory,
@@ -150,7 +150,7 @@ describe('ShardVaultProxy', () => {
         convexBooster,
         marketplaceHelper.address,
       ),
-      await new ShardVaultPermissioned__factory(deployer).deploy(
+      await new ShardVaultAdmin__factory(deployer).deploy(
         shardCollectionProxy.address,
         PUSD,
         PETH,

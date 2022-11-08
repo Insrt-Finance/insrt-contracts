@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 /**
- * @title ShardVaultPermissioned interace
+ * @title ShardVaultAdmin interace
  */
-interface IShardVaultPermissioned {
+interface IShardVaultAdmin {
     /**
      * @notice purchases a punk from CyrptoPunksMarket
      * @param data calldata for punk purchase
