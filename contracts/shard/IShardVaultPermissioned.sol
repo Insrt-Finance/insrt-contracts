@@ -168,4 +168,19 @@ interface IShardVaultPermissioned {
         uint256 poolInfoIndex,
         uint256 punkId
     ) external returns (uint256 paidDebt);
+
+    /**
+     * @notice makes a downpayment for a collateralized NFT in jpeg'd
+     * @param amount amount of pETH intended to be repaid
+     * @param minPETH minimum pETH to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function pethDownPayment(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external returns (uint256 paidDebt);
 }

@@ -207,4 +207,22 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
             punkId
         );
     }
+
+    /**
+     * @inheritdoc IShardVaultPermissioned
+     */
+    function pethDownPayment(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external onlyProtocolOwner returns (uint256 paidDebt) {
+        paidDebt = _pethDownPayment(
+            ShardVaultStorage.layout(),
+            amount,
+            minPETH,
+            poolInfoIndex,
+            punkId
+        );
+    }
 }

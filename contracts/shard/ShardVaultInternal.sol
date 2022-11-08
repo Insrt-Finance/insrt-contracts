@@ -617,6 +617,33 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice makes a downpayment for a collateralized NFT in jpeg'd
+     * @param l storage layout
+     * @param amount amount of pETH intended to be repaid
+     * @param minPETH minimum pETH to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function _pethDownPayment(
+        ShardVaultStorage.Layout storage l,
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) internal returns (uint256 paidDebt) {
+        uint256 autoComp = _queryAutoCompForPETH(l, amount);
+        paidDebt = _pethUnstake(autoComp, minPETH, poolInfoIndex);
+
+        if (amount > paidDebt) {
+            revert ShardVault__DownPaymentInsufficient();
+        }
+
+        IERC20(PETH).approve(l.jpegdVault, paidDebt);
+        INFTVault(l.jpegdVault).repay(punkId, paidDebt);
+    }
+
+    /**
      * @notice converts an amount of AutoComp tokens to an amount of pUSD
      * @param autoComp amount of AutoComp tokens to convert
      * @return pUSD amount of pUSD returned
