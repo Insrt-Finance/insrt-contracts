@@ -223,8 +223,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 ownedIdsLength = l.ownedTokenIds.length();
         uint256[] memory ids = new uint256[](ownedIdsLength);
 
-        unchecked {
-            for (uint256 i; i < ownedIdsLength; ) {
+        for (uint256 i; i < ownedIdsLength; ) {
+            unchecked {
                 ids[i] = l.ownedTokenIds.at(i);
                 ++i;
             }
