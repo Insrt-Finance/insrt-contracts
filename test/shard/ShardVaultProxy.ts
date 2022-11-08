@@ -198,7 +198,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
@@ -222,7 +222,7 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
       ](
         BAYC,
         baycVault,
@@ -249,7 +249,7 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,

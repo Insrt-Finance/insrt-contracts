@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
  */
 library ShardVaultManagerStorage {
     struct Layout {
-        uint256 count;
+        uint16 count;
     }
 
     bytes32 internal constant STORAGE_SLOT =

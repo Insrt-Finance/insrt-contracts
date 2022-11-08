@@ -6,17 +6,17 @@ import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
 
 library ShardVaultStorage {
     struct Layout {
-        uint256 id;
-        uint256 count;
         uint256 shardValue;
-        uint256 maxSupply;
-        uint256 totalSupply;
-        uint256 saleFeeBP;
-        uint256 acquisitionFeeBP;
-        uint256 yieldFeeBP;
         uint256 accruedFees;
-        uint256 bufferBP;
-        uint256 deviationBP;
+        uint16 id;
+        uint16 count;
+        uint16 maxSupply;
+        uint16 totalSupply;
+        uint16 saleFeeBP;
+        uint16 acquisitionFeeBP;
+        uint16 yieldFeeBP;
+        uint16 bufferBP;
+        uint16 deviationBP;
         address treasury;
         address jpegdVault;
         address jpegdVaultHelper;

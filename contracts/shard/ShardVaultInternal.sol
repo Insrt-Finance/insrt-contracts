@@ -111,7 +111,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         shards -= excessShards;
-        l.totalSupply += shards;
+        l.totalSupply += uint16(shards);
 
         for (uint256 i; i < shards; ) {
             unchecked {
@@ -165,7 +165,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             }
         }
 
-        l.totalSupply -= tokens;
+        l.totalSupply -= uint16(tokens);
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }
@@ -475,7 +475,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
-    function _setSaleFee(uint256 feeBP) internal {
+    function _setSaleFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().saleFeeBP = feeBP;
     }
@@ -484,7 +484,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
-    function _setAcquisitionFee(uint256 feeBP) internal {
+    function _setAcquisitionFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().acquisitionFeeBP = feeBP;
     }
@@ -493,7 +493,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice sets the Yield fee BP
      * @param feeBP basis points value of fee
      */
-    function _setYieldFee(uint256 feeBP) internal {
+    function _setYieldFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
     }
@@ -502,7 +502,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice sets the maxSupply of shards
      * @param maxSupply the maxSupply of shards
      */
-    function _setMaxSupply(uint256 maxSupply) internal {
+    function _setMaxSupply(uint16 maxSupply) internal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
@@ -546,7 +546,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice enforces that a value cannot exceed BASIS_POINTS
      * @param value the value to check
      */
-    function _enforceBasis(uint256 value) internal pure {
+    function _enforceBasis(uint16 value) internal pure {
         if (value > 10000) revert ShardVault__BasisExceeded();
     }
 }

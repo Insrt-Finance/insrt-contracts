@@ -114,28 +114,28 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setAcquisitionFee(uint256 feeBP) external onlyProtocolOwner {
+    function setAcquisitionFee(uint16 feeBP) external onlyProtocolOwner {
         _setAcquisitionFee(feeBP);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setSaleFee(uint256 feeBP) external onlyProtocolOwner {
+    function setSaleFee(uint16 feeBP) external onlyProtocolOwner {
         _setSaleFee(feeBP);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setYieldFee(uint256 feeBP) external onlyProtocolOwner {
+    function setYieldFee(uint16 feeBP) external onlyProtocolOwner {
         _setYieldFee(feeBP);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
+    function setMaxSupply(uint16 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);
     }
 }

@@ -94,23 +94,23 @@ interface IShardVaultAdmin {
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
-    function setAcquisitionFee(uint256 feeBP) external;
+    function setAcquisitionFee(uint16 feeBP) external;
 
     /**
      * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
-    function setSaleFee(uint256 feeBP) external;
+    function setSaleFee(uint16 feeBP) external;
 
     /**
      * @notice sets the Yield fee BP
      * @param feeBP basis points value of fee
      */
-    function setYieldFee(uint256 feeBP) external;
+    function setYieldFee(uint16 feeBP) external;
 
     /**
      * @notice sets the maxSupply of shards
      * @param maxSupply the maxSupply of shards
      */
-    function setMaxSupply(uint256 maxSupply) external;
+    function setMaxSupply(uint16 maxSupply) external;
 }

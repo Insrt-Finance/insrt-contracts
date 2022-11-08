@@ -38,11 +38,11 @@ interface IShardVaultManager {
         address jpegdVault,
         address jpegdVaultHelper,
         uint256 shardValue,
-        uint256 maxSupply,
-        uint256 saleFeeBP,
-        uint256 acquisitionFeeBP,
-        uint256 yieldFeeBP,
-        uint256 bufferBP,
-        uint256 deviationBP
+        uint16 maxSupply,
+        uint16 saleFeeBP,
+        uint16 acquisitionFeeBP,
+        uint16 yieldFeeBP,
+        uint16 bufferBP,
+        uint16 deviationBP
     ) external returns (address deployment);
 }
