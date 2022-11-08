@@ -253,8 +253,17 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice purchases a punk from CryptoPunkMarket
      * @param punkId id of punk
+     * @param datas calldata array for encoded calls to purchase punk
+     * @param targets address array for datas to be executed on
+          * @param values msg.value of each arbitrary call made to `targets` with `datas`
+
      */
-    function _purchasePunk(bytes calldata data, uint256 punkId) internal {
+    function _purchasePunk(
+        bytes[] calldata datas,
+        address[] memory targets,
+        uint256[] calldata values,
+        uint256 punkId
+    ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         if (l.collection != PUNKS) {
@@ -267,7 +276,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseERC721Asset{
             value: price
-        }(data, PUNKS, PUNKS, address(0), punkId, price);
+        }(datas, targets, values, PUNKS, address(0), punkId, price);
 
         l.invested = true;
         if (l.ownedTokenIds.length() == 0) {
@@ -438,21 +447,28 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
+     * @param datas calldata array for encoded calls to purchase punk
+     * @param targets address array for datas to be executed on
+          * @param values msg.value of each arbitrary call made to `targets` with `datas`
+
      * @param punkId id of punk
      * @param minCurveLP minimum LP to receive from curve LP
-     * @param insure whether to insure
+     * @param borrowAmount amount to borrow
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
      *                      the pool to deposit into
+     * @param insure whether to insure
      */
     function _investPunk(
-        bytes calldata data,
+        bytes[] calldata datas,
+        address[] calldata targets,
+        uint256[] calldata values,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
         bool insure
     ) internal {
-        _purchasePunk(data, punkId);
+        _purchasePunk(datas, targets, values, punkId);
         _stakePUSD(
             _collateralizePunkPUSD(punkId, borrowAmount, insure),
             minCurveLP,

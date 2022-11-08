@@ -22,8 +22,9 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
      * @inheritdoc IMarketPlaceHelper
      */
     function purchaseERC721Asset(
-        bytes calldata data,
-        address target,
+        bytes[] calldata datas,
+        address[] calldata targets,
+        uint256[] calldata values,
         address collection,
         address purchaseToken,
         uint256 tokenId,
@@ -38,25 +39,21 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
             revert MarketPlaceHelper__InsufficientPurchaseToken();
         }
 
-        (bool success, ) = target.call{ value: msg.value }(data);
-
-        if (!success) {
-            revert MarketPlaceHelper__FailedPurchaseCall();
+        if (datas.length != targets.length || datas.length != values.length) {
+            revert MarketPlaceHelper__UnequalCallArraysLength();
         }
 
-        if (collection == CRYPTO_PUNK_MARKET) {
-            //check of ownership done in `transferPunk`
-            ICryptoPunkMarket(CRYPTO_PUNK_MARKET).transferPunk(
-                msg.sender,
-                tokenId
-            );
-        } else {
-            //check of ownership done in `transferFrom`
-            IERC721(collection).transferFrom(
-                address(this),
-                msg.sender,
-                tokenId
-            );
+        for (uint256 i; i < datas.length; ) {
+            unchecked {
+                (bool success, ) = targets[i].call{ value: values[i] }(
+                    datas[i]
+                );
+
+                if (!success) {
+                    revert MarketPlaceHelper__FailedPurchaseCall();
+                }
+                ++i;
+            }
         }
     }
 

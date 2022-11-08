@@ -8,10 +8,18 @@ pragma solidity ^0.8.0;
 interface IShardVaultAdmin {
     /**
      * @notice purchases a punk from CyrptoPunksMarket
-     * @param data calldata for punk purchase
+     * @param datas calldata array for encoded calls to purchase punk
+     * @param targets address array for datas to be executed on
+          * @param values msg.value of each arbitrary call made to `targets` with `datas`
+
      * @param punkId id of punk
      */
-    function purchasePunk(bytes calldata data, uint256 punkId) external payable;
+    function purchasePunk(
+        bytes[] calldata datas,
+        address[] calldata targets,
+        uint256[] calldata values,
+        uint256 punkId
+    ) external payable;
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
@@ -73,7 +81,10 @@ interface IShardVaultAdmin {
     /**
      * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve
      *         & JPEG'd
-     * @param data calldata for punk purchase
+     * @param datas calldata array for encoded calls to purchase punk
+     * @param targets address array for datas to be executed on
+          * @param values msg.value of each arbitrary call made to `targets` with `datas`
+
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param minCurveLP minimum LP to be accepted as return from curve staking
@@ -82,7 +93,9 @@ interface IShardVaultAdmin {
      * @param insure whether to insure position
      */
     function investPunk(
-        bytes calldata data,
+        bytes[] calldata datas,
+        address[] calldata targets,
+        uint256[] calldata values,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,

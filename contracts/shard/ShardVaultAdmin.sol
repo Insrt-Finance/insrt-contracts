@@ -38,12 +38,13 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function purchasePunk(bytes calldata data, uint256 punkId)
-        external
-        payable
-        onlyProtocolOwner
-    {
-        _purchasePunk(data, punkId);
+    function purchasePunk(
+        bytes[] calldata datas,
+        address[] calldata targets,
+        uint256[] calldata values,
+        uint256 punkId
+    ) external payable onlyProtocolOwner {
+        _purchasePunk(datas, targets, values, punkId);
     }
 
     /**
@@ -94,7 +95,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function investPunk(
-        bytes calldata data,
+        bytes[] calldata datas,
+        address[] calldata targets,
+        uint256[] calldata values,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
@@ -102,7 +105,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         bool insure
     ) external onlyProtocolOwner {
         _investPunk(
-            data,
+            datas,
+            targets,
+            values,
             punkId,
             borrowAmount,
             minCurveLP,
