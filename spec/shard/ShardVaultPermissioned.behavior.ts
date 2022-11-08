@@ -854,5 +854,184 @@ export function describeBehaviorOfShardVaultPermissioned(
         );
       });
     });
+
+    describe('#pethDownPayment(uint256,uint256,uint256,uint256)', () => {
+      it('debt paid is approximately amount of debt reduction', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        await pethInstance
+          .connect(owner)
+          .pethCollateralizePunk(punkId, requestedBorrow, false);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await pethInstance.connect(owner)['pethStake(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.Two,
+        );
+
+        const oldDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+        const oldDebInterest = await pethJpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const downPaymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        const paidDebt = await pethInstance
+          .connect(owner)
+          .callStatic['pethDownPayment(uint256,uint256,uint256,uint256)'](
+            downPaymentAmount,
+            0,
+            2,
+            punkId,
+          );
+
+        let tx = await pethInstance
+          .connect(owner)
+          ['pethDownPayment(uint256,uint256,uint256,uint256)'](
+            downPaymentAmount,
+            0,
+            2,
+            punkId,
+          );
+
+        await tx.wait();
+
+        const newDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        ///debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        expect(accruedDebtInterest.sub(debtDifference)).to.closeTo(
+          paidDebt,
+          paidDebt.div(BigNumber.from('100000000000')),
+        );
+      });
+      it('reduces debt owed by at least amount requested', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        await pethInstance
+          .connect(owner)
+          .pethCollateralizePunk(punkId, requestedBorrow, false);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await pethInstance.connect(owner)['pethStake(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.Two,
+        );
+
+        const oldDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+        const oldDebInterest = await pethJpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const downPaymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        await pethInstance
+          .connect(owner)
+          ['pethDownPayment(uint256,uint256,uint256,uint256)'](
+            downPaymentAmount,
+            0,
+            2,
+            punkId,
+          );
+
+        const newDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        ///debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(
+          downPaymentAmount,
+        );
+      });
+    });
   });
 }
