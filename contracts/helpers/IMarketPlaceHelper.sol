@@ -3,6 +3,12 @@
 pragma solidity ^0.8.0;
 
 interface IMarketPlaceHelper {
+    struct EncodedCall {
+        bytes data; //encoded call data
+        uint256 value; //call msg.value
+        address target; //call target address
+    }
+
     /**
      * @notice thrown when purchase call to target market is unsuccessfull
      */
@@ -35,21 +41,14 @@ interface IMarketPlaceHelper {
 
     /**
      * @notice ERC721 purchasing call made to arbitrary marketplace
-     * @param datas array of calldatas required for purchasing call
-     * @param targets arrays of addresses of target contract addresses for purchasing calls
-     * @param values msg.value of each arbitrary call made to `targets` with `datas`
-     * @param collection address of NFT collection
+     * @param calls array of EncodedCall structs containing information to execute the desired
+     * number of low level calls
      * @param purchaseToken address of token used to transact - if address(0) ETH is used
-     * @param tokenId id of token in NFT collection
      * @param price purchase price
      */
     function purchaseERC721Asset(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
-        address collection,
+        EncodedCall[] calldata calls,
         address purchaseToken,
-        uint256 tokenId,
         uint256 price
     ) external payable;
 

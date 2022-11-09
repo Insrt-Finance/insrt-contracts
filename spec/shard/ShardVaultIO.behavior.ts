@@ -1,6 +1,7 @@
 import hre, { ethers } from 'hardhat';
 import {
   ICryptoPunkMarket,
+  IMarketPlaceHelper,
   IShardCollection,
   IShardVault,
   ShardCollection,
@@ -31,10 +32,10 @@ export function describeBehaviorOfShardVaultIO(
   let cryptoPunkMarket: ICryptoPunkMarket;
   let purchaseDataPUSD: string[];
   let targets: string[];
-  let values: BigNumber[];
 
   const punkId = BigNumber.from('2534');
   const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+  const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
 
   before(async () => {
     [depositor, secondDepositor] = await ethers.getSigners();
@@ -64,8 +65,21 @@ export function describeBehaviorOfShardVaultIO(
       [instance.address, punkId],
     );
 
-    purchaseDataPUSD = [punkPurchaseData, transferDataPUSDVault];
-    targets = [CRYPTO_PUNKS_MARKET, CRYPTO_PUNKS_MARKET];
+    const price = (
+      await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+    ).minValue;
+
+    punkPurchaseCallsPUSD[0] = {
+      data: punkPurchaseData,
+      value: price,
+      target: CRYPTO_PUNKS_MARKET,
+    };
+
+    punkPurchaseCallsPUSD[1] = {
+      data: transferDataPUSDVault,
+      value: 0,
+      target: CRYPTO_PUNKS_MARKET,
+    };
   });
 
   describe('::ShardVaultIO', () => {
@@ -150,16 +164,10 @@ export function describeBehaviorOfShardVaultIO(
             .connect(depositor)
             .deposit({ value: ethers.utils.parseEther('100') });
 
-          const price = (
-            await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-          ).minValue;
-
           await instance
             .connect(owner)
-            ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-              purchaseDataPUSD,
-              targets,
-              [price, 0],
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
               punkId,
             );
 
@@ -292,16 +300,10 @@ export function describeBehaviorOfShardVaultIO(
             .connect(depositor)
             .deposit({ value: ethers.utils.parseEther('100') });
 
-          const price = (
-            await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-          ).minValue;
-
           await instance
             .connect(owner)
-            ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-              purchaseDataPUSD,
-              targets,
-              [price, 0],
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
               punkId,
             );
 

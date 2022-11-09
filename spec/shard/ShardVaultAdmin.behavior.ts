@@ -9,6 +9,7 @@ import {
   INFTVault,
   IShardVault,
   ICurveMetaPool,
+  IMarketPlaceHelper,
 } from '../../typechain-types';
 import { ILPFarming, IVault } from '../../typechain-types/contracts/jpegd';
 
@@ -31,9 +32,6 @@ export function describeBehaviorOfShardVaultAdmin(
     let secondInstance: IShardVault;
     let pethInstance: IShardVault;
     let cryptoPunkMarket: ICryptoPunkMarket;
-    let purchaseDataPUSD: string[];
-    let purchaseDataPETH: string[];
-    let targets: string[];
     let pUSD: IERC20;
     let pETH: IERC20;
     let jpegdVault: INFTVault;
@@ -52,6 +50,8 @@ export function describeBehaviorOfShardVaultAdmin(
     const curvePETHPoolAddress = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
     const targetLTVBP = BigNumber.from('2800');
     const BASIS_POINTS = BigNumber.from('10000');
+    const punkPurchaseCallsPETH: IMarketPlaceHelper.EncodedCallStruct[] = [];
+    const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
 
     before(async () => {
       cryptoPunkMarket = await ethers.getContractAt(
@@ -102,9 +102,33 @@ export function describeBehaviorOfShardVaultAdmin(
         [pethInstance.address, punkId],
       );
 
-      purchaseDataPETH = [punkPurchaseData, transferDataPETHVault];
-      purchaseDataPUSD = [punkPurchaseData, transferDataPUSDVault];
-      targets = [CRYPTO_PUNKS_MARKET, CRYPTO_PUNKS_MARKET];
+      const price = (
+        await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+      ).minValue;
+
+      punkPurchaseCallsPETH[0] = {
+        data: punkPurchaseData,
+        value: price,
+        target: CRYPTO_PUNKS_MARKET,
+      };
+
+      punkPurchaseCallsPETH[1] = {
+        data: transferDataPETHVault,
+        value: 0,
+        target: CRYPTO_PUNKS_MARKET,
+      };
+
+      punkPurchaseCallsPUSD[0] = {
+        data: punkPurchaseData,
+        value: price,
+        target: CRYPTO_PUNKS_MARKET,
+      };
+
+      punkPurchaseCallsPUSD[1] = {
+        data: transferDataPUSDVault,
+        value: 0,
+        target: CRYPTO_PUNKS_MARKET,
+      };
     });
 
     describe('#purchasePunk(uint256)', () => {
@@ -113,16 +137,11 @@ export function describeBehaviorOfShardVaultAdmin(
         await instance
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
 
@@ -143,10 +162,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
 
@@ -167,18 +184,28 @@ export function describeBehaviorOfShardVaultAdmin(
             secondPunkId,
           ]);
 
-        const secondPurchaseData = [secondPunkPurchaseData, secondTransferData];
-
         const secondPrice = (
           await cryptoPunkMarket['punksOfferedForSale(uint256)'](secondPunkId)
         ).minValue;
 
+        const secondPunkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] =
+          [
+            {
+              data: secondPunkPurchaseData,
+              value: secondPrice,
+              target: CRYPTO_PUNKS_MARKET,
+            },
+            {
+              data: secondTransferData,
+              value: 0,
+              target: CRYPTO_PUNKS_MARKET,
+            },
+          ];
+
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            secondPurchaseData,
-            targets,
-            [secondPrice, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            secondPunkPurchaseCallsPUSD,
             secondPunkId,
           );
 
@@ -202,10 +229,9 @@ export function describeBehaviorOfShardVaultAdmin(
         await expect(() =>
           instance
             .connect(owner)
-            ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-              purchaseDataPUSD,
-              targets,
-              [price, 0],
+            .connect(owner)
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
               punkId,
             ),
         ).to.changeEtherBalances(
@@ -220,16 +246,11 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
         expect(await instance.invested()).to.be.true;
@@ -241,16 +262,11 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
 
@@ -263,10 +279,8 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-                purchaseDataPUSD,
-                targets,
-                [0, 0],
+              ['purchasePunk((bytes,uint256,address)[],uint256)'](
+                punkPurchaseCallsPUSD,
                 punkId,
               ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
@@ -275,10 +289,8 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             secondInstance
               .connect(owner)
-              ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-                purchaseDataPUSD,
-                targets,
-                [0, 0],
+              ['purchasePunk((bytes,uint256,address)[],uint256)'](
+                punkPurchaseCallsPUSD,
                 punkId,
               ),
           ).to.be.revertedWith('ShardVault__CollectionNotPunks()');
@@ -293,16 +305,10 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
 
@@ -336,16 +342,10 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
 
@@ -419,16 +419,10 @@ export function describeBehaviorOfShardVaultAdmin(
             .connect(depositor)
             .deposit({ value: ethers.utils.parseEther('100') });
 
-          const price = (
-            await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-          ).minValue;
-
           await instance
             .connect(owner)
-            ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-              purchaseDataPUSD,
-              targets,
-              [price, 0],
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
               punkId,
             );
 
@@ -486,16 +480,10 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPETH,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
             punkId,
           );
         const requestedBorrow = (
@@ -528,16 +516,10 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPETH,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
             punkId,
           );
 
@@ -615,16 +597,10 @@ export function describeBehaviorOfShardVaultAdmin(
             .connect(depositor)
             .deposit({ value: ethers.utils.parseEther('100') });
 
-          const price = (
-            await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-          ).minValue;
-
           await pethInstance
             .connect(owner)
-            ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-              purchaseDataPETH,
-              targets,
-              [price, 0],
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPETH,
               punkId,
             );
 
@@ -684,16 +660,10 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await instance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPUSD,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
             punkId,
           );
 
@@ -781,16 +751,10 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
 
-        const price = (
-          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
-        ).minValue;
-
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes[],address[],uint256[],uint256)'](
-            purchaseDataPETH,
-            targets,
-            [price, 0],
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
             punkId,
           );
 

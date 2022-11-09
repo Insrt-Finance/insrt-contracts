@@ -22,15 +22,11 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
      * @inheritdoc IMarketPlaceHelper
      */
     function purchaseERC721Asset(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
-        address collection,
+        EncodedCall[] calldata calls,
         address purchaseToken,
-        uint256 tokenId,
         uint256 price
     ) external payable {
-        if (purchaseToken == address(0) && msg.value != price) {
+        if (purchaseToken == address(0) && msg.value < price) {
             revert MarketPlaceHelper__InsufficientETH();
         } else if (
             purchaseToken != address(0) &&
@@ -39,16 +35,11 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
             revert MarketPlaceHelper__InsufficientPurchaseToken();
         }
 
-        if (datas.length != targets.length || datas.length != values.length) {
-            revert MarketPlaceHelper__UnequalCallArraysLength();
-        }
-
-        for (uint256 i; i < datas.length; ) {
+        for (uint256 i; i < calls.length; ) {
             unchecked {
-                (bool success, ) = targets[i].call{ value: values[i] }(
-                    datas[i]
-                );
-
+                (bool success, ) = calls[i].target.call{
+                    value: calls[i].value
+                }(calls[i].data);
                 if (!success) {
                     revert MarketPlaceHelper__FailedPurchaseCall();
                 }

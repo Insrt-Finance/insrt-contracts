@@ -2,22 +2,20 @@
 
 pragma solidity ^0.8.0;
 
+import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
+
 /**
  * @title ShardVaultAdmin interace
  */
 interface IShardVaultAdmin {
     /**
      * @notice purchases a punk from CyrptoPunksMarket
-     * @param datas calldata array for encoded calls to purchase punk
-     * @param targets address array for datas to be executed on
-          * @param values msg.value of each arbitrary call made to `targets` with `datas`
-
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
      * @param punkId id of punk
      */
     function purchasePunk(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId
     ) external payable;
 
@@ -51,11 +49,11 @@ interface IShardVaultAdmin {
 
     /**
      * @notice stakes pUSD in curve meta pool, then stakes curve LP in JPEG'd citadel,
-     *         and finally stakes citadel tokens in JPEG'd autocompounder
+     * and finally stakes citadel tokens in JPEG'd autocompounder
      * @param amount pUSD amount
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
     function stakePUSD(
@@ -69,7 +67,7 @@ interface IShardVaultAdmin {
      * @param amount amount of pETH to stake
      * @param minCurveLP minimum LP to receive from pETH staking into curve
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
     function stakePETH(
@@ -79,23 +77,18 @@ interface IShardVaultAdmin {
     ) external returns (uint256 shares);
 
     /**
-     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve
-     *         & JPEG'd
-     * @param datas calldata array for encoded calls to purchase punk
-     * @param targets address array for datas to be executed on
-          * @param values msg.value of each arbitrary call made to `targets` with `datas`
-
+     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve & JPEG'd
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @param insure whether to insure position
      */
     function investPunk(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,

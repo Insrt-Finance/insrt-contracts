@@ -249,16 +249,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice purchases a punk from CryptoPunkMarket
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
      * @param punkId id of punk
-     * @param datas calldata array for encoded calls to purchase punk
-     * @param targets address array for datas to be executed on
-          * @param values msg.value of each arbitrary call made to `targets` with `datas`
-
      */
     function _purchasePunk(
-        bytes[] calldata datas,
-        address[] memory targets,
-        uint256[] calldata values,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
@@ -273,7 +269,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseERC721Asset{
             value: price
-        }(datas, targets, values, PUNKS, address(0), punkId, price);
+        }(calls, address(0), price);
 
         l.invested = true;
         if (l.ownedTokenIds.length() == 0) {
@@ -381,7 +377,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param amount amount of pUSD to stake
      * @param minCurveLP minimum LP to receive from pUSD staking into curve
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
     function _stakePUSD(
@@ -390,7 +386,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
         //pETH is in position 0 in the curve meta pool
-        _stake(
+        shares = _stake(
             amount,
             minCurveLP,
             poolInfoIndex,
@@ -406,7 +402,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param amount amount of pETH to stake
      * @param minCurveLP minimum LP to receive from pETH staking into curve
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
     function _stakePETH(
@@ -415,7 +411,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
         //pETH is in position 1 in the curve meta pool
-        _stake(
+        shares = _stake(
             amount,
             minCurveLP,
             poolInfoIndex,
@@ -455,28 +451,24 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
-     * @param datas calldata array for encoded calls to purchase punk
-     * @param targets address array for datas to be executed on
-          * @param values msg.value of each arbitrary call made to `targets` with `datas`
-
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
      * @param punkId id of punk
      * @param minCurveLP minimum LP to receive from curve LP
      * @param borrowAmount amount to borrow
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @param insure whether to insure
      */
     function _investPunk(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
         bool insure
     ) internal {
-        _purchasePunk(datas, targets, values, punkId);
+        _purchasePunk(calls, punkId);
         _stakePUSD(
             _collateralizePunkPUSD(punkId, borrowAmount, insure),
             minCurveLP,

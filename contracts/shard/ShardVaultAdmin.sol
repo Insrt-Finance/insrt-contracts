@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { IShardVaultAdmin } from './IShardVaultAdmin.sol';
 import { ShardVaultInternal } from './ShardVaultInternal.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
+import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
 contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     constructor(
@@ -39,12 +40,10 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function purchasePunk(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId
     ) external payable onlyProtocolOwner {
-        _purchasePunk(datas, targets, values, punkId);
+        _purchasePunk(calls, punkId);
     }
 
     /**
@@ -95,9 +94,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function investPunk(
-        bytes[] calldata datas,
-        address[] calldata targets,
-        uint256[] calldata values,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
@@ -105,9 +102,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         bool insure
     ) external onlyProtocolOwner {
         _investPunk(
-            datas,
-            targets,
-            values,
+            calls,
             punkId,
             borrowAmount,
             minCurveLP,
