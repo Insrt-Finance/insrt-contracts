@@ -66,7 +66,8 @@ interface IShardVaultView {
     function ownedTokenIds() external view returns (uint256[] memory ids);
 
     /**
-     * @notice returns sum of total fees (sale, yield, acquisition) accrued by the vault
+     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault
+     * @dev accounts for fee withdrawals
      * @return fees accrued fees
      */
     function accruedFees() external view returns (uint256 fees);
