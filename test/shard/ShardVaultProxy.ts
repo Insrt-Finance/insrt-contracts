@@ -17,7 +17,7 @@ import {
   Ownable__factory,
   IShardCollection__factory,
   IShardCollection,
-  ShardVaultPermissioned__factory,
+  ShardVaultAdmin__factory,
   IMarketPlaceHelper,
   MarketPlaceHelper__factory,
   IMarketPlaceHelper__factory,
@@ -171,7 +171,7 @@ describe('ShardVaultProxy', () => {
         convexBooster,
         marketplaceHelper.address,
       ),
-      await new ShardVaultPermissioned__factory(deployer).deploy(
+      await new ShardVaultAdmin__factory(deployer).deploy(
         shardCollectionProxy.address,
         PUSD,
         PETH,
@@ -219,7 +219,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint256,(uint256,uint256,uint256),(uint256,uint256,uint256))'
+        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
@@ -241,7 +241,7 @@ describe('ShardVaultProxy', () => {
       .connect(deployer)
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint256,(uint256,uint256,uint256),(uint256,uint256,uint256))'
+        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         BAYC,
         baycVault,
@@ -266,7 +266,7 @@ describe('ShardVaultProxy', () => {
       .connect(deployer)
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint256,(uint256,uint256,uint256),(uint256,uint256,uint256))'
+        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,

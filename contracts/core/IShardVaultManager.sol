@@ -37,7 +37,7 @@ interface IShardVaultManager {
         address jpegdVault,
         address jpegdVaultHelper,
         uint256 shardValue,
-        uint256 maxSupply,
+        uint16 maxSupply,
         ShardVaultProxy.FeeParams memory feeParams,
         ShardVaultProxy.BufferParams memory bufferParams
     ) external returns (address deployment);

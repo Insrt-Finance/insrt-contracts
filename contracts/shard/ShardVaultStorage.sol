@@ -2,22 +2,21 @@
 
 pragma solidity ^0.8.0;
 
-import { EnumerableSet } from '@solidstate/contracts/utils/EnumerableSet.sol';
+import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 
 library ShardVaultStorage {
     struct Layout {
-        uint256 id;
-        uint256 count;
         uint256 shardValue;
-        uint256 maxSupply;
-        uint256 totalSupply;
-        uint256 saleFeeBP;
-        uint256 acquisitionFeeBP;
-        uint256 yieldFeeBP;
         uint256 accruedFees;
-        uint256 ltvBufferBP;
-        uint256 ltvDeviationBP;
         uint256 conversionBuffer;
+        uint16 count;
+        uint16 maxSupply;
+        uint16 totalSupply;
+        uint16 saleFeeBP;
+        uint16 acquisitionFeeBP;
+        uint16 yieldFeeBP;
+        uint16 ltvBufferBP;
+        uint16 ltvDeviationBP;
         address treasury;
         address jpegdVault;
         address jpegdVaultHelper;

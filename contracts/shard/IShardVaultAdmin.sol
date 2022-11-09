@@ -2,16 +2,22 @@
 
 pragma solidity ^0.8.0;
 
+import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
+
 /**
- * @title ShardVaultPermissioned interace
+ * @title ShardVaultAdmin interace
  */
-interface IShardVaultPermissioned {
+interface IShardVaultAdmin {
     /**
      * @notice purchases a punk from CyrptoPunksMarket
-     * @param data calldata for punk purchase
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
      * @param punkId id of punk
      */
-    function purchasePunk(bytes calldata data, uint256 punkId) external payable;
+    function purchasePunk(
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
+        uint256 punkId
+    ) external payable;
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
@@ -21,7 +27,7 @@ interface IShardVaultPermissioned {
      * @return pUSD borrowed pUSD
      * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
-    function collateralizePunk(
+    function collateralizePunkPUSD(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
@@ -35,7 +41,7 @@ interface IShardVaultPermissioned {
      * @return pETH borrowed pETH
      * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
-    function pethCollateralizePunk(
+    function collateralizePunkPETH(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
@@ -43,14 +49,14 @@ interface IShardVaultPermissioned {
 
     /**
      * @notice stakes pUSD in curve meta pool, then stakes curve LP in JPEG'd citadel,
-     *         and finally stakes citadel tokens in JPEG'd autocompounder
+     * and finally stakes citadel tokens in JPEG'd autocompounder
      * @param amount pUSD amount
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
-    function stake(
+    function stakePUSD(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
@@ -61,28 +67,28 @@ interface IShardVaultPermissioned {
      * @param amount amount of pETH to stake
      * @param minCurveLP minimum LP to receive from pETH staking into curve
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @return shares deposited into JPEGd autocompounder
      */
-    function pethStake(
+    function stakePETH(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) external returns (uint256 shares);
 
     /**
-     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve
-     *         & JPEG'd
-     * @param data calldata for punk purchase
+     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve & JPEG'd
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param minCurveLP minimum LP to be accepted as return from curve staking
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     *                      the pool to deposit into
+     * the pool to deposit into
      * @param insure whether to insure position
      */
     function investPunk(
-        bytes calldata data,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
@@ -94,25 +100,25 @@ interface IShardVaultPermissioned {
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
-    function setAcquisitionFee(uint256 feeBP) external;
+    function setAcquisitionFee(uint16 feeBP) external;
 
     /**
      * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
-    function setSaleFee(uint256 feeBP) external;
+    function setSaleFee(uint16 feeBP) external;
 
     /**
      * @notice sets the Yield fee BP
      * @param feeBP basis points value of fee
      */
-    function setYieldFee(uint256 feeBP) external;
+    function setYieldFee(uint16 feeBP) external;
 
     /**
      * @notice sets the maxSupply of shards
      * @param maxSupply the maxSupply of shards
      */
-    function setMaxSupply(uint256 maxSupply) external;
+    function setMaxSupply(uint16 maxSupply) external;
 
     /**
      * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP

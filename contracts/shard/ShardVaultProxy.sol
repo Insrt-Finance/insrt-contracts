@@ -15,15 +15,15 @@ contract ShardVaultProxy is Proxy {
     address private immutable SHARD_VAULT_DIAMOND;
 
     struct FeeParams {
-        uint256 saleFeeBP;
-        uint256 acquisitionFeeBP;
-        uint256 yieldFeeBP;
+        uint16 saleFeeBP;
+        uint16 acquisitionFeeBP;
+        uint16 yieldFeeBP;
     }
 
     struct BufferParams {
-        uint256 ltvBufferBP;
-        uint256 ltvDeviationBP;
         uint256 conversionBuffer;
+        uint16 ltvBufferBP;
+        uint16 ltvDeviationBP;
     }
 
     constructor(
@@ -32,8 +32,7 @@ contract ShardVaultProxy is Proxy {
         address jpegdVault,
         address jpegdVaultHelper,
         uint256 shardValue,
-        uint256 maxSupply,
-        uint256 id,
+        uint16 maxSupply,
         FeeParams memory feeParams,
         BufferParams memory bufferParams
     ) {
@@ -43,7 +42,6 @@ contract ShardVaultProxy is Proxy {
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        l.id = id;
         l.collection = collection;
         l.jpegdVault = jpegdVault;
         l.jpegdVaultHelper = jpegdVaultHelper;

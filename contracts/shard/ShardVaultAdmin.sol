@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import { IShardVaultPermissioned } from './IShardVaultPermissioned.sol';
+import { IShardVaultAdmin } from './IShardVaultAdmin.sol';
 import { ShardVaultInternal } from './ShardVaultInternal.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
+import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
-contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
+contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     constructor(
         address shardCollection,
         address pUSD,
@@ -36,75 +37,64 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     {}
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function purchasePunk(bytes calldata data, uint256 punkId)
-        external
-        payable
-        onlyProtocolOwner
-    {
-        _purchasePunk(ShardVaultStorage.layout(), data, punkId);
+    function purchasePunk(
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
+        uint256 punkId
+    ) external payable onlyProtocolOwner {
+        _purchasePunk(calls, punkId);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function collateralizePunk(
+    function collateralizePunkPUSD(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
     ) external onlyProtocolOwner returns (uint256 pUSD) {
-        pUSD = _collateralizePunk(
-            ShardVaultStorage.layout(),
-            punkId,
-            borrowAmount,
-            insure
-        );
+        pUSD = _collateralizePunkPUSD(punkId, borrowAmount, insure);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function pethCollateralizePunk(
+    function collateralizePunkPETH(
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
     ) external onlyProtocolOwner returns (uint256 pETH) {
-        pETH = _pethCollateralizePunk(
-            ShardVaultStorage.layout(),
-            punkId,
-            borrowAmount,
-            insure
-        );
+        pETH = _collateralizePunkPETH(punkId, borrowAmount, insure);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function stake(
+    function stakePUSD(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 shares) {
-        return _stake(amount, minCurveLP, poolInfoIndex);
+        return _stakePUSD(amount, minCurveLP, poolInfoIndex);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function pethStake(
+    function stakePETH(
         uint256 amount,
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 shares) {
-        return _pethStake(amount, minCurveLP, poolInfoIndex);
+        return _stakePETH(amount, minCurveLP, poolInfoIndex);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function investPunk(
-        bytes calldata data,
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
         uint256 punkId,
         uint256 borrowAmount,
         uint256 minCurveLP,
@@ -112,8 +102,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
         bool insure
     ) external onlyProtocolOwner {
         _investPunk(
-            ShardVaultStorage.layout(),
-            data,
+            calls,
             punkId,
             borrowAmount,
             minCurveLP,
@@ -123,35 +112,35 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function setAcquisitionFee(uint256 feeBP) external onlyProtocolOwner {
+    function setAcquisitionFee(uint16 feeBP) external onlyProtocolOwner {
         _setAcquisitionFee(feeBP);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function setSaleFee(uint256 feeBP) external onlyProtocolOwner {
+    function setSaleFee(uint16 feeBP) external onlyProtocolOwner {
         _setSaleFee(feeBP);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function setYieldFee(uint256 feeBP) external onlyProtocolOwner {
+    function setYieldFee(uint16 feeBP) external onlyProtocolOwner {
         _setYieldFee(feeBP);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
-    function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
+    function setMaxSupply(uint16 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function unstake(
         uint256 amount,
@@ -162,7 +151,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function pethUnstake(
         uint256 amount,
@@ -173,7 +162,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function closePunkPosition(
         uint256 punkId,
@@ -191,7 +180,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function downPayment(
         uint256 amount,
@@ -209,7 +198,7 @@ contract ShardVaultPermissioned is ShardVaultInternal, IShardVaultPermissioned {
     }
 
     /**
-     * @inheritdoc IShardVaultPermissioned
+     * @inheritdoc IShardVaultAdmin
      */
     function pethDownPayment(
         uint256 amount,

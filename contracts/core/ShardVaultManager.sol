@@ -23,7 +23,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         address jpegdVault,
         address jpegdVaultHelper,
         uint256 shardValue,
-        uint256 maxSupply,
+        uint16 maxSupply,
         ShardVaultProxy.FeeParams memory feeParams,
         ShardVaultProxy.BufferParams memory bufferParams
     ) external onlyOwner returns (address deployment) {
@@ -35,7 +35,6 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 jpegdVaultHelper,
                 shardValue,
                 maxSupply,
-                ++ShardVaultManagerStorage.layout().count,
                 feeParams,
                 bufferParams
             )

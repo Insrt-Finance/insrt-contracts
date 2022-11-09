@@ -9,23 +9,26 @@ import {
   INFTVault,
   IShardVault,
   ICurveMetaPool,
+  IMarketPlaceHelper,
 } from '../../typechain-types';
-import { ILPFarming, IVault } from '../../typechain-types/contracts/jpegd';
-import { curve } from '../../typechain-types/contracts';
-import { IVault__factory } from '../../typechain-types/factories/contracts/jpegd';
+import {
+  ILPFarming,
+  IVault,
+} from '../../typechain-types/contracts/interfaces/jpegd';
+import { IVault__factory } from '../../typechain-types/factories/contracts/interfaces/jpegd';
 
-export interface ShardVaultPermissionedBehaviorArgs {
+export interface ShardVaultAdminBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
 }
 
-export function describeBehaviorOfShardVaultPermissioned(
+export function describeBehaviorOfShardVaultAdmin(
   deploy: () => Promise<IShardVault>,
   secondDeploy: () => Promise<IShardVault>,
   pethDeploy: () => Promise<IShardVault>,
-  args: ShardVaultPermissionedBehaviorArgs,
+  args: ShardVaultAdminBehaviorArgs,
   skips?: string[],
 ) {
-  describe('::ShardVaultPermissioned', () => {
+  describe('::ShardVaultAdmin', () => {
     let depositor: SignerWithAddress;
     let owner: SignerWithAddress;
     let nonOwner: SignerWithAddress;
@@ -33,7 +36,6 @@ export function describeBehaviorOfShardVaultPermissioned(
     let secondInstance: IShardVault;
     let pethInstance: IShardVault;
     let cryptoPunkMarket: ICryptoPunkMarket;
-    let purchaseData: string;
     let pUSD: IERC20;
     let pETH: IERC20;
     let jpegdVault: INFTVault;
@@ -52,6 +54,8 @@ export function describeBehaviorOfShardVaultPermissioned(
     const curvePETHPoolAddress = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
     const targetLTVBP = BigNumber.from('2800');
     const BASIS_POINTS = BigNumber.from('10000');
+    const punkPurchaseCallsPETH: IMarketPlaceHelper.EncodedCallStruct[] = [];
+    const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
 
     before(async () => {
       cryptoPunkMarket = await ethers.getContractAt(
@@ -59,20 +63,16 @@ export function describeBehaviorOfShardVaultPermissioned(
         CRYPTO_PUNKS_MARKET,
       );
 
-      purchaseData = cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
-        punkId,
-      ]);
-
       pUSD = <IERC20>(
         await ethers.getContractAt(
-          '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+          '@solidstate/contracts/interfaces/IERC20.sol:IERC20',
           PUSD,
         )
       );
 
       pETH = <IERC20>(
         await ethers.getContractAt(
-          '@solidstate/contracts/token/ERC20/IERC20.sol:IERC20',
+          '@solidstate/contracts/interfaces/IERC20.sol:IERC20',
           PETH,
         )
       );
@@ -90,6 +90,49 @@ export function describeBehaviorOfShardVaultPermissioned(
       pethInstance = await pethDeploy();
       [depositor, nonOwner] = await ethers.getSigners();
       owner = await args.getProtocolOwner();
+
+      let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
+        'buyPunk',
+        [punkId],
+      );
+
+      let transferDataPUSDVault = cryptoPunkMarket.interface.encodeFunctionData(
+        'transferPunk',
+        [instance.address, punkId],
+      );
+
+      let transferDataPETHVault = cryptoPunkMarket.interface.encodeFunctionData(
+        'transferPunk',
+        [pethInstance.address, punkId],
+      );
+
+      const price = (
+        await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+      ).minValue;
+
+      punkPurchaseCallsPETH[0] = {
+        data: punkPurchaseData,
+        value: price,
+        target: CRYPTO_PUNKS_MARKET,
+      };
+
+      punkPurchaseCallsPETH[1] = {
+        data: transferDataPETHVault,
+        value: 0,
+        target: CRYPTO_PUNKS_MARKET,
+      };
+
+      punkPurchaseCallsPUSD[0] = {
+        data: punkPurchaseData,
+        value: price,
+        target: CRYPTO_PUNKS_MARKET,
+      };
+
+      punkPurchaseCallsPUSD[1] = {
+        data: transferDataPUSDVault,
+        value: 0,
+        target: CRYPTO_PUNKS_MARKET,
+      };
     });
 
     describe('#purchasePunk(uint256)', () => {
@@ -101,7 +144,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         expect(
           await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
@@ -120,7 +166,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         expect(await instance.callStatic.accruedFees()).to.eq(
           price
@@ -129,14 +178,40 @@ export function describeBehaviorOfShardVaultPermissioned(
         );
 
         const secondPunkId = 3588;
-        const secondPurchaseData =
+        const secondPunkPurchaseData =
           cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
             secondPunkId,
           ]);
+        const secondTransferData =
+          cryptoPunkMarket.interface.encodeFunctionData('transferPunk', [
+            instance.address,
+            secondPunkId,
+          ]);
+
+        const secondPrice = (
+          await cryptoPunkMarket['punksOfferedForSale(uint256)'](secondPunkId)
+        ).minValue;
+
+        const secondPunkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] =
+          [
+            {
+              data: secondPunkPurchaseData,
+              value: secondPrice,
+              target: CRYPTO_PUNKS_MARKET,
+            },
+            {
+              data: secondTransferData,
+              value: 0,
+              target: CRYPTO_PUNKS_MARKET,
+            },
+          ];
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](secondPurchaseData, secondPunkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            secondPunkPurchaseCallsPUSD,
+            secondPunkId,
+          );
 
         expect(await instance.callStatic.accruedFees()).to.eq(
           price
@@ -158,7 +233,11 @@ export function describeBehaviorOfShardVaultPermissioned(
         await expect(() =>
           instance
             .connect(owner)
-            ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
+            .connect(owner)
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
+              punkId,
+            ),
         ).to.changeEtherBalances(
           [instance, cryptoPunkMarket],
           [price.mul(ethers.constants.NegativeOne), price],
@@ -173,8 +252,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
-
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
         expect(await instance.invested()).to.be.true;
       });
 
@@ -186,7 +268,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         const [id] = await instance['ownedTokenIds()']();
         expect(id).to.eq(punkId);
@@ -197,20 +283,26 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             instance
               .connect(nonOwner)
-              ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
+              ['purchasePunk((bytes,uint256,address)[],uint256)'](
+                punkPurchaseCallsPUSD,
+                punkId,
+              ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
         it('collection is not punks', async () => {
           await expect(
             secondInstance
               .connect(owner)
-              ['purchasePunk(bytes,uint256)'](purchaseData, punkId),
+              ['purchasePunk((bytes,uint256,address)[],uint256)'](
+                punkPurchaseCallsPUSD,
+                punkId,
+              ),
           ).to.be.revertedWith('ShardVault__CollectionNotPunks()');
         });
       });
     });
 
-    describe('#collateralizePunk(uint256,uint256,bool)', () => {
+    describe('#collateralizePunkPUSD(uint256,uint256,bool)', () => {
       it('borrows requested amount of pUSD', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -219,7 +311,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         const requestedBorrow = (
           await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
@@ -237,7 +332,11 @@ export function describeBehaviorOfShardVaultPermissioned(
         await expect(() =>
           instance
             .connect(owner)
-            .collateralizePunk(punkId, requestedBorrow, false),
+            ['collateralizePunkPUSD(uint256,uint256,bool)'](
+              punkId,
+              requestedBorrow,
+              false,
+            ),
         ).to.changeTokenBalance(pUSD, instance, actualBorrow);
       });
 
@@ -249,7 +348,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         const settings = await jpegdVault.callStatic['settings()']();
         let requestedBorrow = (
@@ -267,7 +369,11 @@ export function describeBehaviorOfShardVaultPermissioned(
         await expect(() =>
           instance
             .connect(owner)
-            .collateralizePunk(punkId, requestedBorrow, false),
+            ['collateralizePunkPUSD(uint256,uint256,bool)'](
+              punkId,
+              requestedBorrow,
+              false,
+            ),
         ).to.changeTokenBalance(pUSD, instance, actualBorrow);
 
         const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
@@ -289,7 +395,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const newBalance = await pUSD['balanceOf(address)'](instance.address);
 
@@ -315,7 +425,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
           await instance
             .connect(owner)
-            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
+              punkId,
+            );
 
           let requestedBorrow = (
             await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
@@ -325,7 +438,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
           await instance
             .connect(owner)
-            .collateralizePunk(
+            ['collateralizePunkPUSD(uint256,uint256,bool)'](
               punkId,
               await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId),
               false,
@@ -342,7 +455,11 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             instance
               .connect(owner)
-              .collateralizePunk(punkId, requestedBorrow, false),
+              ['collateralizePunkPUSD(uint256,uint256,bool)'](
+                punkId,
+                requestedBorrow,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__TargetLTVReached()');
         });
 
@@ -350,13 +467,17 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             instance
               .connect(nonOwner)
-              .collateralizePunk(punkId, ethers.constants.One, false),
+              ['collateralizePunkPUSD(uint256,uint256,bool)'](
+                punkId,
+                ethers.constants.One,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
       });
     });
 
-    describe('#pethCollateralizePunk(uint256,uint256,bool)', () => {
+    describe('#collateralizePunkPETH(uint256,uint256,bool)', () => {
       it('borrows requested amount of pETH', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -365,8 +486,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
-
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
         const requestedBorrow = (
           await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
         )
@@ -383,7 +506,7 @@ export function describeBehaviorOfShardVaultPermissioned(
         await expect(() =>
           pethInstance
             .connect(owner)
-            ['pethCollateralizePunk(uint256,uint256,bool)'](
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
               requestedBorrow,
               false,
@@ -399,7 +522,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
 
         const settings = await pethJpegdVault.callStatic['settings()']();
         let requestedBorrow = (
@@ -417,7 +543,7 @@ export function describeBehaviorOfShardVaultPermissioned(
         await expect(() =>
           pethInstance
             .connect(owner)
-            ['pethCollateralizePunk(uint256,uint256,bool)'](
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
               requestedBorrow,
               false,
@@ -445,7 +571,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['pethCollateralizePunk(uint256,uint256,bool)'](
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
             punkId,
             requestedBorrow,
             false,
@@ -477,7 +603,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPETH,
+              punkId,
+            );
 
           let requestedBorrow = (
             await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
@@ -487,7 +616,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
           await pethInstance
             .connect(owner)
-            .pethCollateralizePunk(
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
               await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](
                 punkId,
@@ -506,7 +635,11 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             pethInstance
               .connect(owner)
-              .pethCollateralizePunk(punkId, requestedBorrow, false),
+              ['collateralizePunkPETH(uint256,uint256,bool)'](
+                punkId,
+                requestedBorrow,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__TargetLTVReached()');
         });
 
@@ -514,13 +647,17 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             pethInstance
               .connect(nonOwner)
-              .collateralizePunk(punkId, ethers.constants.One, false),
+              ['collateralizePunkPETH(uint256,uint256,bool)'](
+                punkId,
+                ethers.constants.One,
+                false,
+              ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });
       });
     });
 
-    describe('#stake(uint256,uint256,uint256)', () => {
+    describe('#stakePUSD(uint256,uint256,uint256)', () => {
       it('completes three stages of staking', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -529,7 +666,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         const requestedBorrow = (
           await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
@@ -546,7 +686,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePUSDPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
@@ -566,7 +710,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         const shares = await instance
           .connect(owner)
-          .callStatic['stake(uint256,uint256,uint256)'](
+          .callStatic['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -574,7 +718,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['stake(uint256,uint256,uint256)'](
+          ['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -594,7 +738,7 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             instance
               .connect(nonOwner)
-              ['stake(uint256,uint256,uint256)'](
+              ['stakePUSD(uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
@@ -604,7 +748,7 @@ export function describeBehaviorOfShardVaultPermissioned(
       });
     });
 
-    describe('#pethStake(uint256,uint256,uint256)', () => {
+    describe('#stakePETH(uint256,uint256,uint256)', () => {
       it('completes three stages of staking', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -613,7 +757,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
 
         const requestedBorrow = (
           await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
@@ -630,7 +777,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          .pethCollateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePETHPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
@@ -650,7 +801,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         const shares = await pethInstance
           .connect(owner)
-          .callStatic['pethStake(uint256,uint256,uint256)'](
+          .callStatic['stakePETH(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.Two,
@@ -658,7 +809,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['pethStake(uint256,uint256,uint256)'](
+          ['stakePETH(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.Two,
@@ -678,7 +829,7 @@ export function describeBehaviorOfShardVaultPermissioned(
           await expect(
             pethInstance
               .connect(nonOwner)
-              ['pethStake(uint256,uint256,uint256)'](
+              ['stakePETH(uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
@@ -696,7 +847,11 @@ export function describeBehaviorOfShardVaultPermissioned(
           .deposit({ value: ethers.utils.parseEther('100') });
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
+
         const requestedBorrow = (
           await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
         )
@@ -704,7 +859,11 @@ export function describeBehaviorOfShardVaultPermissioned(
           .div(BASIS_POINTS);
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const settings = await jpegdVault.callStatic['settings()']();
         const actualBorrow = requestedBorrow.sub(
@@ -725,7 +884,7 @@ export function describeBehaviorOfShardVaultPermissioned(
           'calc_token_amount(uint256[2],bool)'
         ]([actualBorrow, 0], true);
 
-        await instance.connect(owner)['stake(uint256,uint256,uint256)'](
+        await instance.connect(owner)['stakePUSD(uint256,uint256,uint256)'](
           actualBorrow,
           minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
           ethers.constants.One,
@@ -752,7 +911,7 @@ export function describeBehaviorOfShardVaultPermissioned(
             punkId,
           );
 
-        await instance
+        let tx = await instance
           .connect(owner)
           ['downPayment(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
@@ -760,6 +919,8 @@ export function describeBehaviorOfShardVaultPermissioned(
             1,
             punkId,
           );
+
+        await tx.wait();
 
         const newDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
 
@@ -785,7 +946,10 @@ export function describeBehaviorOfShardVaultPermissioned(
           .deposit({ value: ethers.utils.parseEther('100') });
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
         const requestedBorrow = (
           await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
         )
@@ -793,7 +957,11 @@ export function describeBehaviorOfShardVaultPermissioned(
           .div(BASIS_POINTS);
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const settings = await jpegdVault.callStatic['settings()']();
         const actualBorrow = requestedBorrow.sub(
@@ -814,7 +982,7 @@ export function describeBehaviorOfShardVaultPermissioned(
           'calc_token_amount(uint256[2],bool)'
         ]([actualBorrow, 0], true);
 
-        await instance.connect(owner)['stake(uint256,uint256,uint256)'](
+        await instance.connect(owner)['stakePUSD(uint256,uint256,uint256)'](
           actualBorrow,
           minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
           ethers.constants.One,
@@ -883,7 +1051,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
         const requestedBorrow = (
           await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
         )
@@ -892,7 +1064,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          .pethCollateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const settings = await pethJpegdVault.callStatic['settings()']();
         const actualBorrow = requestedBorrow.sub(
@@ -913,7 +1089,7 @@ export function describeBehaviorOfShardVaultPermissioned(
           'calc_token_amount(uint256[2],bool)'
         ]([actualBorrow, 0], true);
 
-        await pethInstance.connect(owner)['pethStake(uint256,uint256,uint256)'](
+        await pethInstance.connect(owner)['stakePETH(uint256,uint256,uint256)'](
           actualBorrow,
           minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
           ethers.constants.Two,
@@ -977,7 +1153,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
         const requestedBorrow = (
           await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
         )
@@ -986,7 +1165,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          .pethCollateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const settings = await pethJpegdVault.callStatic['settings()']();
         const actualBorrow = requestedBorrow.sub(
@@ -1007,7 +1190,7 @@ export function describeBehaviorOfShardVaultPermissioned(
           'calc_token_amount(uint256[2],bool)'
         ]([actualBorrow, 0], true);
 
-        await pethInstance.connect(owner)['pethStake(uint256,uint256,uint256)'](
+        await pethInstance.connect(owner)['stakePETH(uint256,uint256,uint256)'](
           actualBorrow,
           minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
           ethers.constants.Two,
@@ -1079,7 +1262,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         const requestedBorrow = (
           await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
@@ -1096,7 +1282,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePUSDPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
@@ -1116,7 +1306,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         const shares = await instance
           .connect(owner)
-          .callStatic['stake(uint256,uint256,uint256)'](
+          .callStatic['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -1124,7 +1314,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['stake(uint256,uint256,uint256)'](
+          ['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -1160,7 +1350,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
 
         const requestedBorrow = (
           await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
@@ -1177,7 +1370,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          .collateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePUSDPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
@@ -1197,7 +1394,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         const shares = await instance
           .connect(owner)
-          .callStatic['stake(uint256,uint256,uint256)'](
+          .callStatic['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -1205,7 +1402,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await instance
           .connect(owner)
-          ['stake(uint256,uint256,uint256)'](
+          ['stakePUSD(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.One,
@@ -1240,7 +1437,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
 
         const requestedBorrow = (
           await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
@@ -1257,7 +1457,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          .pethCollateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePETHPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
@@ -1277,7 +1481,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['pethStake(uint256,uint256,uint256)'](
+          ['stakePETH(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.Two,
@@ -1314,7 +1518,10 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
 
         const requestedBorrow = (
           await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
@@ -1331,7 +1538,11 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          .pethCollateralizePunk(punkId, requestedBorrow, false);
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
 
         const curvePETHPool = <ICurveMetaPool>(
           await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
@@ -1347,7 +1558,7 @@ export function describeBehaviorOfShardVaultPermissioned(
 
         await pethInstance
           .connect(owner)
-          ['pethStake(uint256,uint256,uint256)'](
+          ['stakePETH(uint256,uint256,uint256)'](
             actualBorrow,
             minCurveLP.mul(curveRemainder).div(curveBasis),
             ethers.constants.Two,

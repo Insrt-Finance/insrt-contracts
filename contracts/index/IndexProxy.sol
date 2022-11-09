@@ -5,12 +5,12 @@ pragma solidity ^0.8.0;
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol';
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 
-import { IInvestmentPoolFactory } from '../balancer/IInvestmentPoolFactory.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
+import { IInvestmentPoolFactory } from '../interfaces/balancer/IInvestmentPoolFactory.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
 import { IndexStorage } from './IndexStorage.sol';
 
 /**

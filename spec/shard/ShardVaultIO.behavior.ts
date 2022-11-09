@@ -1,6 +1,7 @@
 import hre, { ethers } from 'hardhat';
 import {
   ICryptoPunkMarket,
+  IMarketPlaceHelper,
   IShardCollection,
   IShardVault,
   ShardCollection,
@@ -29,10 +30,12 @@ export function describeBehaviorOfShardVaultIO(
   let secondInstance: IShardVault;
   let shardCollection: ShardCollection;
   let cryptoPunkMarket: ICryptoPunkMarket;
-  let purchaseData: string;
+  let purchaseDataPUSD: string[];
+  let targets: string[];
 
   const punkId = BigNumber.from('2534');
   const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+  const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
 
   before(async () => {
     [depositor, secondDepositor] = await ethers.getSigners();
@@ -42,10 +45,6 @@ export function describeBehaviorOfShardVaultIO(
       'ICryptoPunkMarket',
       CRYPTO_PUNKS_MARKET,
     );
-
-    purchaseData = cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
-      punkId,
-    ]);
   });
 
   beforeEach(async () => {
@@ -55,6 +54,32 @@ export function describeBehaviorOfShardVaultIO(
       await instance['shardCollection()'](),
       depositor,
     );
+
+    let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
+      'buyPunk',
+      [punkId],
+    );
+
+    let transferDataPUSDVault = cryptoPunkMarket.interface.encodeFunctionData(
+      'transferPunk',
+      [instance.address, punkId],
+    );
+
+    const price = (
+      await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+    ).minValue;
+
+    punkPurchaseCallsPUSD[0] = {
+      data: punkPurchaseData,
+      value: price,
+      target: CRYPTO_PUNKS_MARKET,
+    };
+
+    punkPurchaseCallsPUSD[1] = {
+      data: transferDataPUSDVault,
+      value: 0,
+      target: CRYPTO_PUNKS_MARKET,
+    };
   });
 
   describe('::ShardVaultIO', () => {
@@ -141,7 +166,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await instance
             .connect(owner)
-            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
+              punkId,
+            );
 
           await expect(
             instance.connect(depositor)['deposit()']({ value: depositAmount }),
@@ -274,7 +302,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await instance
             .connect(owner)
-            ['purchasePunk(bytes,uint256)'](purchaseData, punkId);
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
+              punkId,
+            );
 
           const withdrawTokens = 5;
           const tokens = [];
