@@ -113,13 +113,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         shards -= excessShards;
         l.totalSupply += uint16(shards);
 
-        for (uint256 i; i < shards; ) {
-            unchecked {
+        unchecked {
+            for (uint256 i; i < shards; ++i) {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
                     _formatTokenId(uint96(++l.count))
                 );
-                ++i;
             }
         }
 
@@ -145,23 +144,21 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__InsufficientShards();
         }
 
-        for (uint256 i; i < tokens; ) {
-            if (
-                IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
-                msg.sender
-            ) {
-                revert ShardVault__NotShardOwner();
-            }
+        unchecked {
+            for (uint256 i; i < tokens; ++i) {
+                if (
+                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                    msg.sender
+                ) {
+                    revert ShardVault__NotShardOwner();
+                }
 
-            (address vault, ) = _parseTokenId(tokenIds[i]);
-            if (vault != address(this)) {
-                revert ShardVault__VaultTokenIdMismatch();
-            }
+                (address vault, ) = _parseTokenId(tokenIds[i]);
+                if (vault != address(this)) {
+                    revert ShardVault__VaultTokenIdMismatch();
+                }
 
-            IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
-
-            unchecked {
-                ++i;
+                IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
             }
         }
 
