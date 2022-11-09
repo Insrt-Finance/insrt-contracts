@@ -547,21 +547,19 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk,
-     *         and lists punk for sale
-     * @param l storage layout
+     * and lists punk for sale
      * @param punkId id of punk position pertains to
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
      * @param ask minimum accepted sale price of punk
      */
     function _closePunkPosition(
-        ShardVaultStorage.Layout storage l,
         uint256 punkId,
         uint256 minPUSD,
         uint256 poolInfoIndex,
         uint256 ask
     ) internal {
-        address jpegdVault = l.jpegdVault;
+        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
         _unstakePUSD(
             ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
             minPUSD,
@@ -579,7 +577,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice makes a downpayment for a collateralized NFT in jpeg'd
-     * @param l storage layout
      * @param amount amount of pUSD intended to be repaid
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
@@ -587,26 +584,26 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @return paidDebt amount of debt repaid
      */
     function _downPaymentPUSD(
-        ShardVaultStorage.Layout storage l,
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        uint256 autoComp = _queryAutoCompForPUSD(l, amount);
+        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+
+        uint256 autoComp = _queryAutoCompForPUSD(amount);
         paidDebt = _unstakePUSD(autoComp, minPUSD, poolInfoIndex);
 
         if (amount > paidDebt) {
             revert ShardVault__DownPaymentInsufficient();
         }
 
-        IERC20(PUSD).approve(l.jpegdVault, paidDebt);
-        INFTVault(l.jpegdVault).repay(punkId, paidDebt);
+        IERC20(PUSD).approve(jpegdVault, paidDebt);
+        INFTVault(jpegdVault).repay(punkId, paidDebt);
     }
 
     /**
      * @notice makes a downpayment for a collateralized NFT in jpeg'd
-     * @param l storage layout
      * @param amount amount of pETH intended to be repaid
      * @param minPETH minimum pETH to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
@@ -614,34 +611,35 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @return paidDebt amount of debt repaid
      */
     function _downPaymentPETH(
-        ShardVaultStorage.Layout storage l,
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        uint256 autoComp = _queryAutoCompForPETH(l, amount);
+        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+
+        uint256 autoComp = _queryAutoCompForPETH(amount);
         paidDebt = _unstakePETH(autoComp, minPETH, poolInfoIndex);
 
         if (amount > paidDebt) {
             revert ShardVault__DownPaymentInsufficient();
         }
 
-        IERC20(PETH).approve(l.jpegdVault, paidDebt);
-        INFTVault(l.jpegdVault).repay(punkId, paidDebt);
+        IERC20(PETH).approve(jpegdVault, paidDebt);
+        INFTVault(jpegdVault).repay(punkId, paidDebt);
     }
 
     /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
-     *         to result in a given amount of pUSD
-     * @param l storage layout
+     * to result in a given amount of pUSD
      * @param pUSD desired pUSD amount
      * @return autoComp required AutoComp LP shares
      */
-    function _queryAutoCompForPUSD(
-        ShardVaultStorage.Layout storage l,
-        uint256 pUSD
-    ) internal view returns (uint256 autoComp) {
+    function _queryAutoCompForPUSD(uint256 pUSD)
+        internal
+        view
+        returns (uint256 autoComp)
+    {
         //note: does not account for fees, not meant for precise calculations.
         //      this is alright because it acts as a small 'buffer' to the amount
         //      necessary for the downpayment to impact the debt as intended
@@ -651,8 +649,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         //note: accounts for fees; ball-parks
-        uint256 curveLPAccountingFee = (curveLP * l.conversionBuffer) /
-            (BASIS_POINTS * 100);
+        uint256 curveLPAccountingFee = (curveLP *
+            ShardVaultStorage.layout().conversionBuffer) / (BASIS_POINTS * 100);
 
         autoComp =
             (curveLPAccountingFee * 10**IVault(PUSD_CITADEL).decimals()) /
@@ -660,17 +658,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-    /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
-     *         to result in a given amount of pETH
-     * @param l storage layout
+     * to result in a given amount of pETH
      * @param pETH desired pETH amount
      * @return autoComp required AutoComp LP shares
      */
-    function _queryAutoCompForPETH(
-        ShardVaultStorage.Layout storage l,
-        uint256 pETH
-    ) internal view returns (uint256 autoComp) {
+    function _queryAutoCompForPETH(uint256 pETH)
+        internal
+        view
+        returns (uint256 autoComp)
+    {
         //note: does not account for fees, not meant for precise calculations.
         //      this is alright because it acts as a small 'buffer' to the amount
         //      necessary for the downpayment to impact the debt as intended
@@ -680,8 +677,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         //note: accounts for fees; ball-parks     //conversion_buffer
-        uint256 curveLPAccountingFee = (curveLP * l.conversionBuffer) /
-            (100 * BASIS_POINTS);
+        uint256 curveLPAccountingFee = (curveLP *
+            ShardVaultStorage.layout().conversionBuffer) / (100 * BASIS_POINTS);
 
         autoComp =
             (curveLPAccountingFee * 10**IVault(PETH_CITADEL).decimals()) /
@@ -690,15 +687,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice withdraws any proceeds generated from punk sales
-     * @param l storage layout
      * @param punkId the index of the punk proceeds were generated by
      */
-    function _withdrawPunkProceeds(
-        ShardVaultStorage.Layout storage l,
-        uint256 punkId
-    ) internal {
+    function _withdrawPunkProceeds(uint256 punkId) internal {
         ICryptoPunkMarket(PUNKS).withdraw();
-        l.ownedTokenIds.remove(punkId);
+        ShardVaultStorage.layout().ownedTokenIds.remove(punkId);
     }
 
     /**

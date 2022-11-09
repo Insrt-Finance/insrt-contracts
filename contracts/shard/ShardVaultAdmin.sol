@@ -149,13 +149,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 poolInfoIndex,
         uint256 ask
     ) external onlyProtocolOwner {
-        _closePunkPosition(
-            ShardVaultStorage.layout(),
-            punkId,
-            minPUSD,
-            poolInfoIndex,
-            ask
-        );
+        _closePunkPosition(punkId, minPUSD, poolInfoIndex, ask);
     }
 
     /**
@@ -167,13 +161,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 poolInfoIndex,
         uint256 punkId
     ) external onlyProtocolOwner returns (uint256 paidDebt) {
-        paidDebt = _downPaymentPUSD(
-            ShardVaultStorage.layout(),
-            amount,
-            minPUSD,
-            poolInfoIndex,
-            punkId
-        );
+        paidDebt = _downPaymentPUSD(amount, minPUSD, poolInfoIndex, punkId);
     }
 
     /**
@@ -185,12 +173,6 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 poolInfoIndex,
         uint256 punkId
     ) external onlyProtocolOwner returns (uint256 paidDebt) {
-        paidDebt = _downPaymentPETH(
-            ShardVaultStorage.layout(),
-            amount,
-            minPETH,
-            poolInfoIndex,
-            punkId
-        );
+        paidDebt = _downPaymentPETH(amount, minPETH, poolInfoIndex, punkId);
     }
 }
