@@ -168,7 +168,7 @@ interface IShardVaultAdmin {
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function downPayment(
+    function downPaymentPUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex,
@@ -183,7 +183,7 @@ interface IShardVaultAdmin {
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function pethDownPayment(
+    function downPaymentPETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex,

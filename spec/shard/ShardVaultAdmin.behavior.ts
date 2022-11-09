@@ -904,7 +904,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const paidDebt = await instance
           .connect(owner)
-          .callStatic['downPayment(uint256,uint256,uint256,uint256)'](
+          .callStatic['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
             0,
             1,
@@ -913,7 +913,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         let tx = await instance
           .connect(owner)
-          ['downPayment(uint256,uint256,uint256,uint256)'](
+          ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
             0,
             1,
@@ -1002,7 +1002,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          ['downPayment(uint256,uint256,uint256,uint256)'](
+          ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
             0,
             1,
@@ -1028,7 +1028,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['downPayment(uint256,uint256,uint256,uint256)'](
+              ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
@@ -1042,7 +1042,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#pethDownPayment(uint256,uint256,uint256,uint256)', () => {
+    describe('#downPaymentPETH(uint256,uint256,uint256,uint256)', () => {
       it('debt paid is approximately amount of debt reduction', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -1111,7 +1111,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const paidDebt = await pethInstance
           .connect(owner)
-          .callStatic['pethDownPayment(uint256,uint256,uint256,uint256)'](
+          .callStatic['downPaymentPETH(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
             0,
             2,
@@ -1120,7 +1120,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         let tx = await pethInstance
           .connect(owner)
-          ['pethDownPayment(uint256,uint256,uint256,uint256)'](
+          ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
             0,
             2,
@@ -1212,7 +1212,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['pethDownPayment(uint256,uint256,uint256,uint256)'](
+          ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
             downPaymentAmount,
             0,
             2,
@@ -1239,7 +1239,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             pethInstance
               .connect(nonOwner)
-              ['pethDownPayment(uint256,uint256,uint256,uint256)'](
+              ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,

@@ -613,7 +613,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function _downPayment(
+    function _downPaymentPUSD(
         ShardVaultStorage.Layout storage l,
         uint256 amount,
         uint256 minPUSD,
@@ -640,7 +640,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function _pethDownPayment(
+    function _downPaymentPETH(
         ShardVaultStorage.Layout storage l,
         uint256 amount,
         uint256 minPETH,

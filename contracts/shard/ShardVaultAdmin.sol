@@ -182,13 +182,13 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function downPayment(
+    function downPaymentPUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex,
         uint256 punkId
     ) external onlyProtocolOwner returns (uint256 paidDebt) {
-        paidDebt = _downPayment(
+        paidDebt = _downPaymentPUSD(
             ShardVaultStorage.layout(),
             amount,
             minPUSD,
@@ -200,13 +200,13 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function pethDownPayment(
+    function downPaymentPETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex,
         uint256 punkId
     ) external onlyProtocolOwner returns (uint256 paidDebt) {
-        paidDebt = _pethDownPayment(
+        paidDebt = _downPaymentPETH(
             ShardVaultStorage.layout(),
             amount,
             minPETH,
