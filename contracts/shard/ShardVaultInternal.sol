@@ -450,33 +450,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
-     * @param calls  array of EncodedCall structs containing information to execute necessary low level
-     * calls to purchase a punk
-     * @param punkId id of punk
-     * @param minCurveLP minimum LP to receive from curve LP
-     * @param borrowAmount amount to borrow
-     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     * the pool to deposit into
-     * @param insure whether to insure
-     */
-    function _investPunk(
-        IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        uint256 borrowAmount,
-        uint256 minCurveLP,
-        uint256 poolInfoIndex,
-        bool insure
-    ) internal {
-        _purchasePunk(calls, punkId);
-        _stakePUSD(
-            _collateralizePunkPUSD(punkId, borrowAmount, insure),
-            minCurveLP,
-            poolInfoIndex
-        );
-    }
-
-    /**
      * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
@@ -656,20 +629,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         IERC20(PETH).approve(l.jpegdVault, paidDebt);
         INFTVault(l.jpegdVault).repay(punkId, paidDebt);
-    }
-
-    /**
-     * @notice converts an amount of AutoComp tokens to an amount of pUSD
-     * @param autoComp amount of AutoComp tokens to convert
-     * @return pUSD amount of pUSD returned
-     */
-    function _convertAutoCompToPUSD(
-        uint256 autoComp // autocomp
-    ) internal view returns (uint256 pUSD) {
-        pUSD = ICurveMetaPool(CURVE_PUSD_POOL).calc_withdraw_one_coin(
-            IVault(PUSD_CITADEL).exchangeRate() * autoComp,
-            0
-        );
     }
 
     /**

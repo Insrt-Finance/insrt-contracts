@@ -77,26 +77,6 @@ interface IShardVaultAdmin {
     ) external returns (uint256 shares);
 
     /**
-     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve & JPEG'd
-     * @param calls  array of EncodedCall structs containing information to execute necessary low level
-     * calls to purchase a punk
-     * @param punkId id of punk
-     * @param borrowAmount amount to be borrowed
-     * @param minCurveLP minimum LP to be accepted as return from curve staking
-     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     * the pool to deposit into
-     * @param insure whether to insure position
-     */
-    function investPunk(
-        IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        uint256 borrowAmount,
-        uint256 minCurveLP,
-        uint256 poolInfoIndex,
-        bool insure
-    ) external;
-
-    /**
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
