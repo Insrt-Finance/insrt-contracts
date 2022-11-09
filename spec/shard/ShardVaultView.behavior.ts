@@ -246,7 +246,7 @@ export function describeBehaviorOfShardVaultView(
         );
         const pETH = await pethInstance
           .connect(owner)
-          .callStatic.pethUnstake(autoComp, 0, 2);
+          .callStatic['unstakePETH(uint256,uint256,uint256)'](autoComp, 0, 2);
 
         expect(pETH).to.gte(pETHAmounts[i]);
       }
@@ -318,7 +318,7 @@ export function describeBehaviorOfShardVaultView(
         );
         const pETH = await pethInstance
           .connect(owner)
-          .callStatic.pethUnstake(autoComp, 0, 2);
+          .callStatic['unstakePETH(uint256,uint256,uint256)'](autoComp, 0, 2);
 
         expect(pETH.sub(pETHAmounts[i])).to.gte(ethers.constants.Zero);
         expect(pETHAmounts[i].sub(pETH)).to.lte(
@@ -394,7 +394,7 @@ export function describeBehaviorOfShardVaultView(
         const autoComp = await instance.queryAutoCompForPUSD(pUSDAmounts[i]);
         const pUSD = await instance
           .connect(owner)
-          .callStatic.unstake(autoComp, 0, 1);
+          .callStatic['unstakePUSD(uint256,uint256,uint256)'](autoComp, 0, 1);
 
         expect(pUSD).to.gte(pUSDAmounts[i]);
       }
@@ -465,7 +465,7 @@ export function describeBehaviorOfShardVaultView(
         const autoComp = await instance.queryAutoCompForPUSD(pUSDAmounts[i]);
         const pUSD = await instance
           .connect(owner)
-          .callStatic.unstake(autoComp, 0, 1);
+          .callStatic['unstakePUSD(uint256,uint256,uint256)'](autoComp, 0, 1);
 
         expect(pUSD.sub(pUSDAmounts[i])).to.gte(ethers.constants.Zero);
         expect(pUSD.sub(pUSDAmounts[i])).to.lte(

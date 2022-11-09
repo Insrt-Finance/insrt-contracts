@@ -1253,7 +1253,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#unstake()', () => {
+    describe('#unstakePUSD(uint256,uint256,uint256)', () => {
       it('unstakes requested amount of autoComp shares from lpFarm and JPEG citadel', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -1331,7 +1331,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          ['unstake(uint256,uint256,uint256)'](unstakeAmount, 0, 1);
+          ['unstakePUSD(uint256,uint256,uint256)'](unstakeAmount, 0, 1);
 
         const newAmount = (
           await lpFarm.callStatic['userInfo(uint256,address)'](
@@ -1412,7 +1412,11 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const pUSD = await instance
           .connect(owner)
-          .callStatic['unstake(uint256,uint256,uint256)'](unstakeAmount, 0, 1);
+          .callStatic['unstakePUSD(uint256,uint256,uint256)'](
+            unstakeAmount,
+            0,
+            1,
+          );
 
         const pusdCitadel = IVault__factory.connect(PUSD_CITADEL, owner);
 
@@ -1428,7 +1432,7 @@ export function describeBehaviorOfShardVaultAdmin(
         expect(pUSD).to.eq(calcpUSD);
       });
     });
-    describe('#pethUnstake(uint256,uint256,uint256)', () => {
+    describe('#unstakePETH(uint256,uint256,uint256)', () => {
       it('unstakes requested amount of autoComp shares from lpFarm and JPEG citadel', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -1498,7 +1502,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['pethUnstake(uint256,uint256,uint256)'](unstakeAmount, 0, 2);
+          ['unstakePETH(uint256,uint256,uint256)'](unstakeAmount, 0, 2);
 
         const newAmount = (
           await lpFarm.callStatic['userInfo(uint256,address)'](
@@ -1570,7 +1574,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const pETH = await pethInstance
           .connect(owner)
-          .callStatic['pethUnstake(uint256,uint256,uint256)'](
+          .callStatic['unstakePETH(uint256,uint256,uint256)'](
             unstakeAmount,
             0,
             2,

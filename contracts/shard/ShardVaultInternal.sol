@@ -386,7 +386,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
-        //pETH is in position 0 in the curve meta pool
+        //pUSD is in position 0 in the curve meta pool
         shares = _stake(
             amount,
             minCurveLP,
@@ -433,7 +433,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256[2] memory amounts
     ) private returns (uint256 shares) {
         IERC20(token).approve(pool, amount);
-        //pETH is in position 1 in the curve meta pool
         uint256 curveLP = ICurveMetaPool(pool).add_liquidity(
             amounts,
             minCurveLP
@@ -511,23 +510,19 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param poolInfoIndex the index of the JPEG'd LPFarming pool
      * @return pUSD pUSD amount returned
      */
-    function _unstake(
+    function _unstakePUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex
     ) internal returns (uint256 pUSD) {
-        ILPFarming(LP_FARM).withdraw(poolInfoIndex, amount);
-
-        uint256 curveLP = IVault(PUSD_CITADEL).withdraw(
-            address(this),
-            IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken)
-                .balanceOf(address(this))
-        );
-
-        pUSD = ICurveMetaPool(CURVE_PUSD_POOL).remove_liquidity_one_coin(
-            curveLP,
-            0, //id of pUSD in curve pool
-            minPUSD
+        //pUSD is in position 0 in the curve meta pool
+        pUSD = _unstake(
+            amount,
+            minPUSD,
+            poolInfoIndex,
+            PUSD_CITADEL,
+            CURVE_PUSD_POOL,
+            0
         );
     }
 
@@ -538,23 +533,42 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param poolInfoIndex the index of the JPEG'd LPFarming pool
      * @return pETH pETH amount returned
      */
-    function _pethUnstake(
+    function _unstakePETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex
     ) internal returns (uint256 pETH) {
-        ILPFarming(LP_FARM).withdraw(poolInfoIndex, amount);
+        //pETH is in position 1 in the curve meta pool
+        pETH = _unstake(
+            amount,
+            minPETH,
+            poolInfoIndex,
+            PETH_CITADEL,
+            CURVE_PETH_POOL,
+            1
+        );
+    }
 
-        uint256 curveLP = IVault(PETH_CITADEL).withdraw(
+    function _unstake(
+        uint256 autoCompAmount,
+        uint256 minTokenAmount,
+        uint256 poolInfoIndex,
+        address citadel,
+        address pool,
+        int128 curveID
+    ) internal returns (uint256 tokenAmount) {
+        ILPFarming(LP_FARM).withdraw(poolInfoIndex, autoCompAmount);
+
+        uint256 curveLP = IVault(citadel).withdraw(
             address(this),
             IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken)
                 .balanceOf(address(this))
         );
 
-        pETH = ICurveMetaPool(CURVE_PETH_POOL).remove_liquidity_one_coin(
+        tokenAmount = ICurveMetaPool(pool).remove_liquidity_one_coin(
             curveLP,
-            1, //id of pETH in curve pool
-            minPETH
+            curveID,
+            minTokenAmount
         );
     }
 
@@ -575,7 +589,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 ask
     ) internal {
         address jpegdVault = l.jpegdVault;
-        _unstake(
+        _unstakePUSD(
             ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
             minPUSD,
             poolInfoIndex
@@ -607,7 +621,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
         uint256 autoComp = _queryAutoCompForPUSD(l, amount);
-        paidDebt = _unstake(autoComp, minPUSD, poolInfoIndex);
+        paidDebt = _unstakePUSD(autoComp, minPUSD, poolInfoIndex);
 
         if (amount > paidDebt) {
             revert ShardVault__DownPaymentInsufficient();
@@ -634,7 +648,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
         uint256 autoComp = _queryAutoCompForPETH(l, amount);
-        paidDebt = _pethUnstake(autoComp, minPETH, poolInfoIndex);
+        paidDebt = _unstakePETH(autoComp, minPETH, poolInfoIndex);
 
         if (amount > paidDebt) {
             revert ShardVault__DownPaymentInsufficient();

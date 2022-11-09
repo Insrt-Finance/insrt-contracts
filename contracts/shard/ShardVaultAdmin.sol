@@ -142,23 +142,23 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function unstake(
+    function unstakePUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 pUSD) {
-        pUSD = _unstake(amount, minPUSD, poolInfoIndex);
+        pUSD = _unstakePUSD(amount, minPUSD, poolInfoIndex);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function pethUnstake(
+    function unstakePETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 pETH) {
-        pETH = _pethUnstake(amount, minPETH, poolInfoIndex);
+        pETH = _unstakePETH(amount, minPETH, poolInfoIndex);
     }
 
     /**

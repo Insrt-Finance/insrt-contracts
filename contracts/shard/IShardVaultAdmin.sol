@@ -127,7 +127,7 @@ interface IShardVaultAdmin {
      * @param poolInfoIndex the index of the JPEG'd LPFarming pool
      * @return pUSD pUSD amount returned
      */
-    function unstake(
+    function unstakePUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex
@@ -140,7 +140,7 @@ interface IShardVaultAdmin {
      * @param poolInfoIndex the index of the JPEG'd LPFarming pool
      * @return pETH pETH amount returned
      */
-    function pethUnstake(
+    function unstakePETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex
