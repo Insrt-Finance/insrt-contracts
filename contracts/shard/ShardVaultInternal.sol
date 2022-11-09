@@ -392,21 +392,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
-        IERC20(PUSD).approve(CURVE_PUSD_POOL, amount);
-        //pUSD is in position 0 in the curve meta pool
-        uint256 curveLP = ICurveMetaPool(CURVE_PUSD_POOL).add_liquidity(
-            [amount, 0],
-            minCurveLP
+        //pETH is in position 0 in the curve meta pool
+        _stake(
+            amount,
+            minCurveLP,
+            poolInfoIndex,
+            PUSD,
+            CURVE_PUSD_POOL,
+            PUSD_CITADEL,
+            [amount, 0]
         );
-
-        IERC20(CURVE_PUSD_POOL).approve(PUSD_CITADEL, curveLP);
-        shares = IVault(PUSD_CITADEL).deposit(address(this), curveLP);
-
-        IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
-            LP_FARM,
-            shares
-        );
-        ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
     }
 
     /**
@@ -422,15 +417,36 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
-        IERC20(PETH).approve(CURVE_PETH_POOL, amount);
         //pETH is in position 1 in the curve meta pool
-        uint256 curveLP = ICurveMetaPool(CURVE_PETH_POOL).add_liquidity(
-            [0, amount],
+        _stake(
+            amount,
+            minCurveLP,
+            poolInfoIndex,
+            PETH,
+            CURVE_PETH_POOL,
+            PETH_CITADEL,
+            [0, amount]
+        );
+    }
+
+    function _stake(
+        uint256 amount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex,
+        address token,
+        address pool,
+        address citadel,
+        uint256[2] memory amounts
+    ) private returns (uint256 shares) {
+        IERC20(token).approve(pool, amount);
+        //pETH is in position 1 in the curve meta pool
+        uint256 curveLP = ICurveMetaPool(pool).add_liquidity(
+            amounts,
             minCurveLP
         );
 
-        IERC20(CURVE_PETH_POOL).approve(PETH_CITADEL, curveLP);
-        shares = IVault(PETH_CITADEL).deposit(address(this), curveLP);
+        IERC20(pool).approve(citadel, curveLP);
+        shares = IVault(citadel).deposit(address(this), curveLP);
 
         IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken).approve(
             LP_FARM,
