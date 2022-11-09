@@ -21,7 +21,6 @@ contract ShardVaultProxy is Proxy {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        uint16 id,
         uint16 saleFeeBP,
         uint16 acquisitionFeeBP,
         uint16 yieldFeeBP,
@@ -34,7 +33,6 @@ contract ShardVaultProxy is Proxy {
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        l.id = id;
         l.collection = collection;
         l.jpegdVault = jpegdVault;
         l.jpegdVaultHelper = jpegdVaultHelper;

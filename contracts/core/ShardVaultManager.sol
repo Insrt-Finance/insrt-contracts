@@ -38,7 +38,6 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 jpegdVaultHelper,
                 shardValue,
                 maxSupply,
-                ++ShardVaultManagerStorage.layout().count,
                 saleFeeBP,
                 acquisitionFeeBP,
                 yieldFeeBP,
