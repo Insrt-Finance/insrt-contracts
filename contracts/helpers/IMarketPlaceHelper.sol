@@ -35,11 +35,6 @@ interface IMarketPlaceHelper {
     error MarketPlaceHelper__FailedBidAcceptanceCall();
 
     /**
-     * @notice thrown when datas and targets arrays have different lengths
-     */
-    error MarketPlaceHelper__UnequalCallArraysLength();
-
-    /**
      * @notice ERC721 purchasing call made to arbitrary marketplace
      * @param calls array of EncodedCall structs containing information to execute the desired
      * number of low level calls

@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardVaultManager } from './IShardVaultManager.sol';
-import { ShardVaultManagerStorage } from './ShardVaultManagerStorage.sol';
 import { ShardVaultProxy } from '../shard/ShardVaultProxy.sol';
 
 contract ShardVaultManager is IShardVaultManager, OwnableInternal {
