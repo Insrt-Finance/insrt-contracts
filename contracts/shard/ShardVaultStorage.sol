@@ -9,6 +9,7 @@ library ShardVaultStorage {
         uint256 shardValue;
         uint256 accruedFees;
         uint256 conversionBuffer;
+        uint256 totalJPEGClaimed;
         uint16 count;
         uint16 maxSupply;
         uint16 totalSupply;
@@ -25,6 +26,7 @@ library ShardVaultStorage {
         bool invested;
         bool divested;
         EnumerableSet.UintSet ownedTokenIds;
+        mapping(address => uint256) userTotalJPEGClaimed;
     }
 
     bytes32 internal constant STORAGE_SLOT =

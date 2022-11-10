@@ -36,7 +36,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
-    address internal immutable BOOSTER;
+    address internal immutable JPEG;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
@@ -50,7 +50,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address lpFarm,
         address curvePUSDPool,
         address curvePETHPool,
-        address booster,
+        address jpeg,
         address marketplaceHelper
     ) {
         SHARD_COLLECTION = shardCollection;
@@ -62,7 +62,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         CURVE_PETH_POOL = curvePETHPool;
-        BOOSTER = booster;
+        JPEG = jpeg;
         MARKETPLACE_HELPER = marketplaceHelper;
     }
 
@@ -626,6 +626,25 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         IERC20(PETH).approve(jpegdVault, paidDebt);
         INFTVault(jpegdVault).repay(punkId, paidDebt);
+    }
+
+    function _jpegClaim(uint256 pid, address account) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        l.totalJPEGClaimed += ILPFarming(LP_FARM).pendingReward(
+            pid,
+            address(this)
+        );
+        ILPFarming(LP_FARM).claim(pid);
+
+        uint256 jpegAmount = (l.totalJPEGClaimed *
+            IShardCollection(SHARD_COLLECTION).balanceOf(account)) /
+            l.totalSupply -
+            l.userTotalJPEGClaimed[account];
+
+        IERC20(JPEG).transfer(account, jpegAmount);
+
+        l.userTotalJPEGClaimed[account] += jpegAmount;
     }
 
     /**
