@@ -75,13 +75,4 @@ interface ILPFarming {
     /// @notice Allows users to claim rewards from all pools. Non whitelisted contracts can't call this function
     /// @dev Emits a {ClaimAll} event
     function claimAll() external;
-
-    /// @notice Frontend function used to calculate the amount of rewards `_user` can claim from the pool with id `_pid`
-    /// @param _pid The pool id
-    /// @param _user The address of the user
-    /// @return The amount of rewards claimable from `_pid` by user `_user`
-    function pendingReward(uint256 _pid, address _user)
-        external
-        view
-        returns (uint256);
 }
