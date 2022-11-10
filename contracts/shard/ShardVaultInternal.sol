@@ -39,7 +39,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable BOOSTER;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
-    uint256 internal constant INTEREST_BUFFER = 5;
 
     constructor(
         address shardCollection,
@@ -566,10 +565,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             poolInfoIndex
         );
 
-        uint256 bufferedDebt = _totalDebtWithBuffer(jpegdVault, punkId);
+        uint256 debt = _totalDebt(jpegdVault, punkId);
 
-        IERC20(PUSD).approve(jpegdVault, bufferedDebt);
-        INFTVault(jpegdVault).repay(punkId, bufferedDebt);
+        IERC20(PUSD).approve(jpegdVault, debt);
+        INFTVault(jpegdVault).repay(punkId, debt);
         INFTVault(jpegdVault).closePosition(punkId);
 
         ICryptoPunkMarket(PUNKS).offerPunkForSale(punkId, ask);
@@ -708,19 +707,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         debt =
             INFTVault(jpegdVault).getDebtInterest(tokenId) +
             INFTVault(jpegdVault).positions(tokenId).debtPrincipal;
-    }
-
-    function _totalDebtWithBuffer(address jpegdVault, uint256 tokenId)
-        internal
-        view
-        returns (uint256 bufferedDebt)
-    {
-        uint256 interest = INFTVault(jpegdVault).getDebtInterest(tokenId);
-        bufferedDebt =
-            INFTVault(jpegdVault).positions(tokenId).debtPrincipal +
-            interest +
-            (interest * INTEREST_BUFFER) /
-            BASIS_POINTS;
     }
 
     /**
