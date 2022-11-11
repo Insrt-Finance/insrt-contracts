@@ -169,4 +169,23 @@ interface IShardVaultAdmin {
         uint256 poolInfoIndex,
         uint256 punkId
     ) external returns (uint256 paidDebt);
+
+    /**
+     * @notice stakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function stakeCard(uint256 tokenId) external;
+
+    /**
+     * @notice unstakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function unstakeCard(uint256 tokenId) external;
+
+    /**
+     * @notice transfers a jpeg card to an address
+     * @param tokenId id of card in card collection
+     * @param to address to transfer to
+     */
+    function transferCard(uint256 tokenId, address to) external;
 }

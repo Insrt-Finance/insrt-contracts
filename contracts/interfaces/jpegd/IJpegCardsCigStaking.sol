@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IJpegCardsStaking {
+interface IJpegCardsCigStaking {
     struct UserData {
         uint256 stakedCig;
         bool isStaking;

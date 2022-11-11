@@ -21,7 +21,8 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         address curvePUSDPool,
         address curvePETHPool,
         address booster,
-        address marketplaceHelper
+        address marketplaceHelper,
+        address jpegCardCigStaking
     )
         ShardVaultInternal(
             shardCollection,
@@ -34,7 +35,8 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
             curvePUSDPool,
             curvePETHPool,
             booster,
-            marketplaceHelper
+            marketplaceHelper,
+            jpegCardCigStaking
         )
     {}
 

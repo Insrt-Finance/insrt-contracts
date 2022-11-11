@@ -14,7 +14,7 @@ import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
-import { IJpegCardsStaking } from '../interfaces/jpegd/IJpegCardsStaking.sol';
+import { IJpegCardsCigStaking } from '../interfaces/jpegd/IJpegCardsCigStaking.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -40,7 +40,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CURVE_PETH_POOL;
     address internal immutable JPEG;
     address internal immutable MARKETPLACE_HELPER;
-    address internal immutable JPEG_CARDS_STAKING;
+    address internal immutable JPEG_CARDS_CIG_STAKING;
     address internal immutable JPEGS_CARDS;
     uint256 internal constant BASIS_POINTS = 10000;
 
@@ -56,7 +56,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address curvePETHPool,
         address jpeg,
         address marketplaceHelper,
-        address jpegCardsStaking
+        address jpegCardsCigStaking
     ) {
         SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
@@ -69,8 +69,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CURVE_PETH_POOL = curvePETHPool;
         JPEG = jpeg;
         MARKETPLACE_HELPER = marketplaceHelper;
-        JPEG_CARDS_STAKING = jpegCardsStaking;
-        JPEGS_CARDS = IJpegCardsStaking(JPEG_CARDS_STAKING).cards();
+        JPEG_CARDS_CIG_STAKING = jpegCardsCigStaking;
+        JPEGS_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
     }
 
     modifier onlyProtocolOwner() {
@@ -792,7 +792,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param tokenId id of card in card collection
      */
     function _stakeCard(uint256 tokenId) internal {
-        IJpegCardsStaking(JPEG_CARDS_STAKING).deposit(tokenId);
+        IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).deposit(tokenId);
     }
 
     /**
@@ -800,7 +800,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param tokenId id of card in card collection
      */
     function _unstakeCard(uint256 tokenId) internal {
-        IJpegCardsStaking(JPEG_CARDS_STAKING).withdraw(tokenId);
+        IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).withdraw(tokenId);
     }
 
     /**

@@ -19,7 +19,8 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         address curvePUSDPool,
         address curvePETHPool,
         address booster,
-        address marketplaceHelper
+        address marketplaceHelper,
+        address jpegCardCigStaking
     )
         ShardVaultInternal(
             shardCollection,
@@ -32,7 +33,8 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             curvePUSDPool,
             curvePETHPool,
             booster,
-            marketplaceHelper
+            marketplaceHelper,
+            jpegCardCigStaking
         )
     {}
 
@@ -174,5 +176,29 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 punkId
     ) external onlyProtocolOwner returns (uint256 paidDebt) {
         paidDebt = _downPaymentPETH(amount, minPETH, poolInfoIndex, punkId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function stakeCard(uint256 tokenId) external onlyProtocolOwner {
+        _stakeCard(tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function unstakeCard(uint256 tokenId) external onlyProtocolOwner {
+        _unstakeCard(tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function transferCard(uint256 tokenId, address to)
+        external
+        onlyProtocolOwner
+    {
+        _transferCard(tokenId, to);
     }
 }
