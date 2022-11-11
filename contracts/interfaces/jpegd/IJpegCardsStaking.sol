@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IJPEGCardsStaking {
+interface IJpegCardsStaking {
     struct UserData {
         uint256 stakedCig;
         bool isStaking;
@@ -25,4 +25,10 @@ interface IJPEGCardsStaking {
      * @return UserData UserData struct
      */
     function userData(address user) external view returns (UserData memory);
+
+    /**
+     * @notice custom getter for jpeg'd card collection
+     * @return address of jpeg'd card collection
+     */
+    function cards() external view returns (address);
 }

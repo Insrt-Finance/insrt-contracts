@@ -6,6 +6,7 @@ import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { IERC173 } from '@solidstate/contracts/interfaces/IERC173.sol';
+import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
@@ -13,6 +14,7 @@ import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
+import { IJpegCardsStaking } from '../interfaces/jpegd/IJpegCardsStaking.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -38,6 +40,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CURVE_PETH_POOL;
     address internal immutable JPEG;
     address internal immutable MARKETPLACE_HELPER;
+    address internal immutable JPEG_CARDS_STAKING;
+    address internal immutable JPEGS_CARDS;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -51,7 +55,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address curvePUSDPool,
         address curvePETHPool,
         address jpeg,
-        address marketplaceHelper
+        address marketplaceHelper,
+        address jpegCardsStaking
     ) {
         SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
@@ -64,6 +69,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CURVE_PETH_POOL = curvePETHPool;
         JPEG = jpeg;
         MARKETPLACE_HELPER = marketplaceHelper;
+        JPEG_CARDS_STAKING = jpegCardsStaking;
+        JPEGS_CARDS = IJpegCardsStaking(JPEG_CARDS_STAKING).cards();
     }
 
     modifier onlyProtocolOwner() {
@@ -778,5 +785,30 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _enforceBasis(uint16 value) internal pure {
         if (value > 10000) revert ShardVault__BasisExceeded();
+    }
+
+    /**
+     * @notice stakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function _stakeCard(uint256 tokenId) internal {
+        IJpegCardsStaking(JPEG_CARDS_STAKING).deposit(tokenId);
+    }
+
+    /**
+     * @notice unstakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function _unstakeCard(uint256 tokenId) internal {
+        IJpegCardsStaking(JPEG_CARDS_STAKING).withdraw(tokenId);
+    }
+
+    /**
+     * @notice transfers a jpeg card to an address
+     * @param tokenId id of card in card collection
+     * @param to address to transfer to
+     */
+    function _transferCard(uint256 tokenId, address to) internal {
+        IERC721(JPEGS_CARDS).transferFrom(address(this), to, tokenId);
     }
 }
