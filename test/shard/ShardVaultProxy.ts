@@ -9,6 +9,7 @@ import {
   ShardVaultManager__factory,
   ShardVaultIO__factory,
   ShardVaultView__factory,
+  ShardVaultBase__factory,
   ShardCollection,
   ShardCollection__factory,
   ShardCollectionProxy,
@@ -60,6 +61,7 @@ describe('ShardVaultProxy', () => {
   const pethPunkVaultHelper = '0x2bE665ee27096344B8f015b1952D3dFDb4Db4691';
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
+  const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
@@ -157,6 +159,7 @@ describe('ShardVaultProxy', () => {
         curvePETHPool,
         convexBooster,
         marketplaceHelper.address,
+        JPEG_CARDS_CIG_STAKING,
       ),
       await new ShardVaultView__factory(deployer).deploy(
         shardCollectionProxy.address,
@@ -170,6 +173,7 @@ describe('ShardVaultProxy', () => {
         curvePETHPool,
         convexBooster,
         marketplaceHelper.address,
+        JPEG_CARDS_CIG_STAKING,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
         shardCollectionProxy.address,
@@ -183,6 +187,21 @@ describe('ShardVaultProxy', () => {
         curvePETHPool,
         convexBooster,
         marketplaceHelper.address,
+        JPEG_CARDS_CIG_STAKING,
+      ),
+      await new ShardVaultBase__factory(deployer).deploy(
+        shardCollectionProxy.address,
+        PUSD,
+        PETH,
+        CRYPTO_PUNKS_MARKET,
+        pusdCitadel,
+        pethCitadel,
+        lpFarm,
+        curvePUSDPool,
+        curvePETHPool,
+        convexBooster,
+        marketplaceHelper.address,
+        JPEG_CARDS_CIG_STAKING,
       ),
     ].map(function (f) {
       return {
@@ -215,7 +234,6 @@ describe('ShardVaultProxy', () => {
     );
 
     core = ICore__factory.connect(coreDiamond.address, ethers.provider);
-
     const deployShardVaultTx = await core
       .connect(deployer)
       [
