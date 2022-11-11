@@ -41,7 +41,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable JPEG;
     address internal immutable MARKETPLACE_HELPER;
     address internal immutable JPEG_CARDS_CIG_STAKING;
-    address internal immutable JPEGS_CARDS;
+    address internal immutable JPEG_CARDS;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -70,7 +70,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         JPEG = jpeg;
         MARKETPLACE_HELPER = marketplaceHelper;
         JPEG_CARDS_CIG_STAKING = jpegCardsCigStaking;
-        JPEGS_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
+        JPEG_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
     }
 
     modifier onlyProtocolOwner() {
@@ -792,6 +792,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param tokenId id of card in card collection
      */
     function _stakeCard(uint256 tokenId) internal {
+        IERC721(JPEG_CARDS).approve(JPEG_CARDS_CIG_STAKING, tokenId);
         IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).deposit(tokenId);
     }
 
@@ -809,6 +810,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param to address to transfer to
      */
     function _transferCard(uint256 tokenId, address to) internal {
-        IERC721(JPEGS_CARDS).transferFrom(address(this), to, tokenId);
+        IERC721(JPEG_CARDS).transferFrom(address(this), to, tokenId);
     }
 }
