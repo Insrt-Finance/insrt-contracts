@@ -146,10 +146,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function closePunkPosition(
         uint256 punkId,
         uint256 minPUSD,
-        uint256 poolInfoIndex,
-        uint256 ask
+        uint256 poolInfoIndex
     ) external onlyProtocolOwner {
-        _closePunkPosition(punkId, minPUSD, poolInfoIndex, ask);
+        _closePunkPosition(punkId, minPUSD, poolInfoIndex);
     }
 
     /**
@@ -174,5 +173,15 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 punkId
     ) external onlyProtocolOwner returns (uint256 paidDebt) {
         paidDebt = _downPaymentPETH(amount, minPETH, poolInfoIndex, punkId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function listPunk(IMarketPlaceHelper.EncodedCall[] memory calls)
+        external
+        onlyProtocolOwner
+    {
+        _listPunk(calls);
     }
 }

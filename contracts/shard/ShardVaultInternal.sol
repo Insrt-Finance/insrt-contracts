@@ -267,9 +267,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             .punksOfferedForSale(punkId)
             .minValue;
 
-        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseERC721Asset{
-            value: price
-        }(calls, address(0), price);
+        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseAsset{ value: price }(
+            calls,
+            address(0),
+            price
+        );
 
         if (l.ownedTokenIds.length() == 0) {
             //first fee withdraw, so no account for previous
@@ -545,18 +547,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk,
-     * and lists punk for sale
+     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
      * @param punkId id of punk position pertains to
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
-     * @param ask minimum accepted sale price of punk
      */
     function _closePunkPosition(
         uint256 punkId,
         uint256 minPUSD,
-        uint256 poolInfoIndex,
-        uint256 ask
+        uint256 poolInfoIndex
     ) internal {
         address jpegdVault = ShardVaultStorage.layout().jpegdVault;
         _unstakePUSD(
@@ -570,8 +569,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         IERC20(PUSD).approve(jpegdVault, debt);
         INFTVault(jpegdVault).repay(punkId, debt);
         INFTVault(jpegdVault).closePosition(punkId);
+    }
 
-        ICryptoPunkMarket(PUNKS).offerPunkForSale(punkId, ask);
+    /**
+     * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
+     * @param calls encoded call array for listing the punk
+     */
+    function _listPunk(IMarketPlaceHelper.EncodedCall[] memory calls) internal {
+        IMarketPlaceHelper(MARKETPLACE_HELPER).listAsset(calls);
     }
 
     /**

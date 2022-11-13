@@ -132,13 +132,11 @@ interface IShardVaultAdmin {
      * @param punkId id of punk position pertains to
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
-     * @param ask minimum accepted sale price of punk
      */
     function closePunkPosition(
         uint256 punkId,
         uint256 minPUSD,
-        uint256 poolInfoIndex,
-        uint256 ask
+        uint256 poolInfoIndex
     ) external;
 
     /**
@@ -169,4 +167,10 @@ interface IShardVaultAdmin {
         uint256 poolInfoIndex,
         uint256 punkId
     ) external returns (uint256 paidDebt);
+
+    /**
+     * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
+     * @param calls encoded call array for listing the punk
+     */
+    function listPunk(IMarketPlaceHelper.EncodedCall[] memory calls) external;
 }
