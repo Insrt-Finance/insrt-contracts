@@ -54,10 +54,10 @@ interface IShardVaultView {
         returns (address vault, uint96 internalId);
 
     /**
-     * @notice return invested flag state
-     * @return bool invested flag
+     * @notice return isInvested flag state
+     * @return bool isInvested flag
      */
-    function invested() external view returns (bool);
+    function isInvested() external view returns (bool);
 
     /**
      * @notice return array of NFT ids owned by the vault

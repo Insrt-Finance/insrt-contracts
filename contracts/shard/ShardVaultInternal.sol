@@ -99,7 +99,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         if (amount % shardValue != 0 || amount == 0) {
             revert ShardVault__InvalidDepositAmount();
         }
-        if (l.invested || totalSupply == maxSupply) {
+        if (l.isInvested || totalSupply == maxSupply) {
             revert ShardVault__DepositForbidden();
         }
 
@@ -134,7 +134,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.totalSupply == l.maxSupply) {
+        if (l.isInvested || l.totalSupply == l.maxSupply) {
             revert ShardVault__WithdrawalForbidden();
         }
 
@@ -204,11 +204,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice return invested flag state
-     * @return bool invested flag
+     * @notice return isInvested flag state
+     * @return bool isInvested flag
      */
-    function _invested() internal view returns (bool) {
-        return ShardVaultStorage.layout().invested;
+    function _isInvested() internal view returns (bool) {
+        return ShardVaultStorage.layout().isInvested;
     }
 
     /**
@@ -275,7 +275,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             //first fee withdraw, so no account for previous
             //fee accruals need to be considered
             l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
-            l.invested = true;
+            l.isInvested = true;
         }
         l.ownedTokenIds.add(punkId);
     }
