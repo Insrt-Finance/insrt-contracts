@@ -93,25 +93,25 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
-        uint256 totalSupply = l.totalSupply;
-        uint256 maxSupply = l.maxSupply;
+        uint16 totalSupply = l.totalSupply;
+        uint16 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert ShardVault__InvalidDepositAmount();
         }
-        if (l.invested || totalSupply == maxSupply) {
+        if (l.isInvested || totalSupply == maxSupply) {
             revert ShardVault__DepositForbidden();
         }
 
-        uint256 shards = amount / shardValue;
-        uint256 excessShards;
+        uint16 shards = uint16(amount / shardValue);
+        uint16 excessShards;
 
         if (shards + totalSupply >= maxSupply) {
             excessShards = shards + totalSupply - maxSupply;
         }
 
         shards -= excessShards;
-        l.totalSupply += uint16(shards);
+        l.totalSupply += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -134,11 +134,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _withdraw(uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        if (l.invested || l.totalSupply == l.maxSupply) {
+        if (l.isInvested || l.totalSupply == l.maxSupply) {
             revert ShardVault__WithdrawalForbidden();
         }
 
-        uint256 tokens = tokenIds.length;
+        uint16 tokens = uint16(tokenIds.length);
 
         if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
             revert ShardVault__InsufficientShards();
@@ -162,7 +162,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             }
         }
 
-        l.totalSupply -= uint16(tokens);
+        l.totalSupply -= tokens;
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }
@@ -170,14 +170,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice returns total minted shards amount
      */
-    function _totalSupply() internal view returns (uint256) {
+    function _totalSupply() internal view returns (uint16) {
         return ShardVaultStorage.layout().totalSupply;
     }
 
     /**
      * @notice returns maximum possible minted shards
      */
-    function _maxSupply() internal view returns (uint256) {
+    function _maxSupply() internal view returns (uint16) {
         return ShardVaultStorage.layout().maxSupply;
     }
 
@@ -199,16 +199,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice return minted token count
      * @dev does not reduce when tokens are burnt
      */
-    function _count() internal view returns (uint256) {
+    function _count() internal view returns (uint16) {
         return ShardVaultStorage.layout().count;
     }
 
     /**
-     * @notice return invested flag state
-     * @return bool invested flag
+     * @notice return isInvested flag state
+     * @return bool isInvested flag
      */
-    function _invested() internal view returns (bool) {
-        return ShardVaultStorage.layout().invested;
+    function _isInvested() internal view returns (bool) {
+        return ShardVaultStorage.layout().isInvested;
     }
 
     /**
@@ -271,11 +271,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             value: price
         }(calls, address(0), price);
 
-        l.invested = true;
         if (l.ownedTokenIds.length() == 0) {
             //first fee withdraw, so no account for previous
             //fee accruals need to be considered
             l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
+            l.isInvested = true;
         }
         l.ownedTokenIds.add(punkId);
     }
@@ -732,7 +732,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _acquisitionFeeBP()
         internal
         view
-        returns (uint256 acquisitionFeeBP)
+        returns (uint16 acquisitionFeeBP)
     {
         acquisitionFeeBP = ShardVaultStorage.layout().acquisitionFeeBP;
     }
@@ -741,7 +741,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice returns sale fee BP
      * @return saleFeeBP basis points of sale fee
      */
-    function _saleFeeBP() internal view returns (uint256 saleFeeBP) {
+    function _saleFeeBP() internal view returns (uint16 saleFeeBP) {
         saleFeeBP = ShardVaultStorage.layout().saleFeeBP;
     }
 
@@ -749,7 +749,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice returns yield fee BP
      * @return yieldFeeBP basis points of yield fee
      */
-    function _yieldFeeBP() internal view returns (uint256 yieldFeeBP) {
+    function _yieldFeeBP() internal view returns (uint16 yieldFeeBP) {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
     }
 

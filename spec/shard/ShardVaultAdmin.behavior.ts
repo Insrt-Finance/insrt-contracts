@@ -257,7 +257,7 @@ export function describeBehaviorOfShardVaultAdmin(
             punkPurchaseCallsPUSD,
             punkId,
           );
-        expect(await instance.invested()).to.be.true;
+        expect(await instance.isInvested()).to.be.true;
       });
 
       it('adds punkId to `ownedTokenIds`', async () => {

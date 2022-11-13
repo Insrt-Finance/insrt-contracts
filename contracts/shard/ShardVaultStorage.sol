@@ -22,7 +22,7 @@ library ShardVaultStorage {
         address jpegdVaultHelper;
         address jpegdLP;
         address collection;
-        bool invested;
+        bool isInvested;
         bool divested;
         EnumerableSet.UintSet ownedTokenIds;
     }

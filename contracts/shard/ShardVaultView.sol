@@ -41,14 +41,14 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() external view returns (uint16) {
         return _totalSupply();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function maxSupply() external view returns (uint256) {
+    function maxSupply() external view returns (uint16) {
         return _maxSupply();
     }
 
@@ -69,7 +69,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function count() external view returns (uint256) {
+    function count() external view returns (uint16) {
         return _count();
     }
 
@@ -98,8 +98,8 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function invested() external view returns (bool) {
-        return _invested();
+    function isInvested() external view returns (bool) {
+        return _isInvested();
     }
 
     /**
@@ -142,24 +142,21 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         autoComp = _queryAutoCompForPETH(pETH);
     }
 
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function acquisitionFeeBP() external view returns (uint256 feeBP) {
+    function acquisitionFeeBP() external view returns (uint16 feeBP) {
         feeBP = _acquisitionFeeBP();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function saleFeeBP() external view returns (uint256 feeBP) {
+    function saleFeeBP() external view returns (uint16 feeBP) {
         feeBP = _saleFeeBP();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function yieldFeeBP() external view returns (uint256 feeBP) {
+    function yieldFeeBP() external view returns (uint16 feeBP) {
         feeBP = _yieldFeeBP();
     }
 }

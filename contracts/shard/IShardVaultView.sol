@@ -9,12 +9,12 @@ interface IShardVaultView {
     /**
      * @notice returns total shards minted
      */
-    function totalSupply() external view returns (uint256);
+    function totalSupply() external view returns (uint16);
 
     /**
      * @notice returns maximum possible minted shards
      */
-    function maxSupply() external view returns (uint256);
+    function maxSupply() external view returns (uint16);
 
     /**
      * @notice returns ETH value of shard at time of mint
@@ -30,7 +30,7 @@ interface IShardVaultView {
      * @notice return minted token count
      * @dev does not reduce when tokens are burnt
      */
-    function count() external view returns (uint256);
+    function count() external view returns (uint16);
 
     /**
      * @notice formats a tokenId given the internalId and address of ShardVault contract
@@ -54,10 +54,10 @@ interface IShardVaultView {
         returns (address vault, uint96 internalId);
 
     /**
-     * @notice return invested flag state
-     * @return bool invested flag
+     * @notice return isInvested flag state
+     * @return bool isInvested flag
      */
-    function invested() external view returns (bool);
+    function isInvested() external view returns (bool);
 
     /**
      * @notice return array of NFT ids owned by the vault
@@ -105,17 +105,17 @@ interface IShardVaultView {
      * @notice returns acquisition fee BP
      * @return feeBP basis points of acquisition fee
      */
-    function acquisitionFeeBP() external view returns (uint256 feeBP);
+    function acquisitionFeeBP() external view returns (uint16 feeBP);
 
     /**
      * @notice returns sale fee BP
      * @return feeBP basis points of sale fee
      */
-    function saleFeeBP() external view returns (uint256 feeBP);
+    function saleFeeBP() external view returns (uint16 feeBP);
 
     /**
      * @notice returns yield fee BP
      * @return feeBP basis points of yield fee
      */
-    function yieldFeeBP() external view returns (uint256 feeBP);
+    function yieldFeeBP() external view returns (uint16 feeBP);
 }
