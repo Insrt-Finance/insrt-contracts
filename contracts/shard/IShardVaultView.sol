@@ -30,7 +30,7 @@ interface IShardVaultView {
      * @notice return minted token count
      * @dev does not reduce when tokens are burnt
      */
-    function count() external view returns (uint256);
+    function count() external view returns (uint16);
 
     /**
      * @notice formats a tokenId given the internalId and address of ShardVault contract
@@ -76,17 +76,17 @@ interface IShardVaultView {
      * @notice returns acquisition fee BP
      * @return feeBP basis points of acquisition fee
      */
-    function acquisitionFeeBP() external view returns (uint256 feeBP);
+    function acquisitionFeeBP() external view returns (uint16 feeBP);
 
     /**
      * @notice returns sale fee BP
      * @return feeBP basis points of sale fee
      */
-    function saleFeeBP() external view returns (uint256 feeBP);
+    function saleFeeBP() external view returns (uint16 feeBP);
 
     /**
      * @notice returns yield fee BP
      * @return feeBP basis points of yield fee
      */
-    function yieldFeeBP() external view returns (uint256 feeBP);
+    function yieldFeeBP() external view returns (uint16 feeBP);
 }

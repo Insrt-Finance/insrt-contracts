@@ -199,7 +199,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice return minted token count
      * @dev does not reduce when tokens are burnt
      */
-    function _count() internal view returns (uint256) {
+    function _count() internal view returns (uint16) {
         return ShardVaultStorage.layout().count;
     }
 
@@ -526,7 +526,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _acquisitionFeeBP()
         internal
         view
-        returns (uint256 acquisitionFeeBP)
+        returns (uint16 acquisitionFeeBP)
     {
         acquisitionFeeBP = ShardVaultStorage.layout().acquisitionFeeBP;
     }
@@ -535,7 +535,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice returns sale fee BP
      * @return saleFeeBP basis points of sale fee
      */
-    function _saleFeeBP() internal view returns (uint256 saleFeeBP) {
+    function _saleFeeBP() internal view returns (uint16 saleFeeBP) {
         saleFeeBP = ShardVaultStorage.layout().saleFeeBP;
     }
 
@@ -543,7 +543,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice returns yield fee BP
      * @return yieldFeeBP basis points of yield fee
      */
-    function _yieldFeeBP() internal view returns (uint256 yieldFeeBP) {
+    function _yieldFeeBP() internal view returns (uint16 yieldFeeBP) {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
     }
 
