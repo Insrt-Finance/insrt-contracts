@@ -145,10 +145,11 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      */
     function closePunkPosition(
         uint256 punkId,
-        uint256 minPUSD,
-        uint256 poolInfoIndex
+        uint256 minTokenAmount,
+        uint256 poolInfoIndex,
+        bool isPUSD
     ) external onlyProtocolOwner {
-        _closePunkPosition(punkId, minPUSD, poolInfoIndex);
+        _closePunkPosition(punkId, minTokenAmount, poolInfoIndex, isPUSD);
     }
 
     /**

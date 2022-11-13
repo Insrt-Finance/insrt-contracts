@@ -549,24 +549,38 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
      * @param punkId id of punk position pertains to
-     * @param minPUSD minimum pUSD to receive from curveLP
+     * @param minTokenAmount minimum token (pETH/pUSD) to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param isPUSD indicates whether loan position is denominated in pUSD or pETH
      */
     function _closePunkPosition(
         uint256 punkId,
-        uint256 minPUSD,
-        uint256 poolInfoIndex
+        uint256 poolInfoIndex,
+        uint256 minTokenAmount,
+        bool isPUSD
     ) internal {
         address jpegdVault = ShardVaultStorage.layout().jpegdVault;
-        _unstakePUSD(
-            ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
-            minPUSD,
-            poolInfoIndex
-        );
-
         uint256 debt = _totalDebt(jpegdVault, punkId);
 
-        IERC20(PUSD).approve(jpegdVault, debt);
+        if (isPUSD) {
+            _unstakePUSD(
+                ILPFarming(LP_FARM)
+                    .userInfo(poolInfoIndex, address(this))
+                    .amount,
+                minTokenAmount,
+                poolInfoIndex
+            );
+            IERC20(PUSD).approve(jpegdVault, debt);
+        } else {
+            _unstakePETH(
+                ILPFarming(LP_FARM)
+                    .userInfo(poolInfoIndex, address(this))
+                    .amount,
+                minTokenAmount,
+                poolInfoIndex
+            );
+            IERC20(PETH).approve(jpegdVault, debt);
+        }
         INFTVault(jpegdVault).repay(punkId, debt);
         INFTVault(jpegdVault).closePosition(punkId);
     }
