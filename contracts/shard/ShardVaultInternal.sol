@@ -93,8 +93,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
-        uint256 totalSupply = l.totalSupply;
-        uint256 maxSupply = l.maxSupply;
+        uint16 totalSupply = l.totalSupply;
+        uint16 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert ShardVault__InvalidDepositAmount();
@@ -103,15 +103,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__DepositForbidden();
         }
 
-        uint256 shards = amount / shardValue;
-        uint256 excessShards;
+        uint16 shards = uint16(amount / shardValue);
+        uint16 excessShards;
 
         if (shards + totalSupply >= maxSupply) {
             excessShards = shards + totalSupply - maxSupply;
         }
 
         shards -= excessShards;
-        l.totalSupply += uint16(shards);
+        l.totalSupply += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -138,7 +138,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__WithdrawalForbidden();
         }
 
-        uint256 tokens = tokenIds.length;
+        uint16 tokens = uint16(tokenIds.length);
 
         if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
             revert ShardVault__InsufficientShards();
@@ -162,7 +162,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             }
         }
 
-        l.totalSupply -= uint16(tokens);
+        l.totalSupply -= tokens;
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }

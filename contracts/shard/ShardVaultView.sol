@@ -68,7 +68,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function count() external view returns (uint256) {
+    function count() external view returns (uint16) {
         return _count();
     }
 
@@ -118,21 +118,21 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function acquisitionFeeBP() external view returns (uint256 feeBP) {
+    function acquisitionFeeBP() external view returns (uint16 feeBP) {
         feeBP = _acquisitionFeeBP();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function saleFeeBP() external view returns (uint256 feeBP) {
+    function saleFeeBP() external view returns (uint16 feeBP) {
         feeBP = _saleFeeBP();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function yieldFeeBP() external view returns (uint256 feeBP) {
+    function yieldFeeBP() external view returns (uint16 feeBP) {
         feeBP = _yieldFeeBP();
     }
 }
