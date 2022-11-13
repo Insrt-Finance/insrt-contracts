@@ -21,7 +21,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
     /**
      * @inheritdoc IMarketPlaceHelper
      */
-    function purchaseERC721Asset(
+    function purchaseAsset(
         EncodedCall[] calldata calls,
         address purchaseToken,
         uint256 price
@@ -51,16 +51,22 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
     /**
      * @inheritdoc IMarketPlaceHelper
      */
-    function listERC721Asset(bytes calldata data, address target) external {
-        (bool success, ) = target.call(data);
-
-        if (!success) {
-            revert MarketPlaceHelper__FailedListCall();
+    function listAsset(EncodedCall[] memory calls) external {
+        for (uint256 i; i < calls.length; ) {
+            unchecked {
+                (bool success, ) = calls[i].target.call{
+                    value: calls[i].value
+                }(calls[i].data);
+                if (!success) {
+                    revert MarketPlaceHelper__FailedListCall();
+                }
+                ++i;
+            }
         }
     }
 
     //TODO
-    function acceptERC721Bid(
+    function acceptAssetBid(
         bytes calldata data,
         address target,
         address collection,
