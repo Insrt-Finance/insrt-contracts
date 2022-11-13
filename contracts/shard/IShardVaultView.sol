@@ -9,12 +9,12 @@ interface IShardVaultView {
     /**
      * @notice returns total shards minted
      */
-    function totalSupply() external view returns (uint256);
+    function totalSupply() external view returns (uint16);
 
     /**
      * @notice returns maximum possible minted shards
      */
-    function maxSupply() external view returns (uint256);
+    function maxSupply() external view returns (uint16);
 
     /**
      * @notice returns ETH value of shard at time of mint

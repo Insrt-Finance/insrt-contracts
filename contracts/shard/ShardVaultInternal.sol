@@ -170,14 +170,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice returns total minted shards amount
      */
-    function _totalSupply() internal view returns (uint256) {
+    function _totalSupply() internal view returns (uint16) {
         return ShardVaultStorage.layout().totalSupply;
     }
 
     /**
      * @notice returns maximum possible minted shards
      */
-    function _maxSupply() internal view returns (uint256) {
+    function _maxSupply() internal view returns (uint16) {
         return ShardVaultStorage.layout().maxSupply;
     }
 
@@ -271,11 +271,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             value: price
         }(calls, address(0), price);
 
-        l.invested = true;
         if (l.ownedTokenIds.length() == 0) {
             //first fee withdraw, so no account for previous
             //fee accruals need to be considered
             l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
+            l.invested = true;
         }
         l.ownedTokenIds.add(punkId);
     }

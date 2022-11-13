@@ -11,7 +11,10 @@ import {
   ICurveMetaPool,
   IMarketPlaceHelper,
 } from '../../typechain-types';
-import { ILPFarming, IVault } from '../../typechain-types/contracts/jpegd';
+import {
+  ILPFarming,
+  IVault,
+} from '../../typechain-types/contracts/interfaces/jpegd';
 
 export interface ShardVaultAdminBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
