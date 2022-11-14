@@ -118,4 +118,10 @@ interface IShardVaultView {
      * @return feeBP basis points of yield fee
      */
     function yieldFeeBP() external view returns (uint16 feeBP);
+
+    /**
+     * @notice returns address of market place helper
+     * @return MARKETPLACE_HELPER address
+     */
+    function marketplaceHelper() external view returns (address);
 }

@@ -172,6 +172,10 @@ interface IShardVaultAdmin {
     /**
      * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
      * @param calls encoded call array for listing the punk
+     * @param punkId id of punk to list
      */
-    function listPunk(IMarketPlaceHelper.EncodedCall[] memory calls) external;
+    function listPunk(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) external;
 }

@@ -159,4 +159,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function yieldFeeBP() external view returns (uint16 feeBP) {
         feeBP = _yieldFeeBP();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function marketplaceHelper() external view returns (address) {
+        return _marketplaceHelper();
+    }
 }

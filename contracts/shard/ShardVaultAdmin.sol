@@ -179,10 +179,10 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function listPunk(IMarketPlaceHelper.EncodedCall[] memory calls)
-        external
-        onlyProtocolOwner
-    {
-        _listPunk(calls);
+    function listPunk(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) external onlyProtocolOwner {
+        _listPunk(calls, punkId);
     }
 }

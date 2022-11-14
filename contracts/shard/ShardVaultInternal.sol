@@ -555,13 +555,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _closePunkPosition(
         uint256 punkId,
-        uint256 poolInfoIndex,
         uint256 minTokenAmount,
+        uint256 poolInfoIndex,
         bool isPUSD
     ) internal {
         address jpegdVault = ShardVaultStorage.layout().jpegdVault;
         uint256 debt = _totalDebt(jpegdVault, punkId);
-
         if (isPUSD) {
             _unstakePUSD(
                 ILPFarming(LP_FARM)
@@ -588,8 +587,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
      * @param calls encoded call array for listing the punk
+     * @param punkId id of punk to list
      */
-    function _listPunk(IMarketPlaceHelper.EncodedCall[] memory calls) internal {
+    function _listPunk(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) internal {
+        ICryptoPunkMarket(PUNKS).transferPunk(MARKETPLACE_HELPER, punkId);
         IMarketPlaceHelper(MARKETPLACE_HELPER).listAsset(calls);
     }
 
@@ -770,6 +774,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _yieldFeeBP() internal view returns (uint16 yieldFeeBP) {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
+    }
+
+    /**
+     * @notice returns address of market place helper
+     * @return MARKETPLACE_HELPER address
+     */
+    function _marketplaceHelper() internal view returns (address) {
+        return MARKETPLACE_HELPER;
     }
 
     /**
