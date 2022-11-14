@@ -717,6 +717,35 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice accepts a punk bid and withdraws any proceeds generated from punk sales
+     * @dev called from marketPlaceHelper contract to transfer ETH proceeds from punk sale
+     * @param calls encoded calls required to accept bid on an asset
+     */
+    function _acceptPunkBid(IMarketPlaceHelper.EncodedCall[] memory calls)
+        internal
+    {
+        IMarketPlaceHelper(MARKETPLACE_HELPER).acceptAssetBid(calls);
+    }
+
+    /**
+     * @notice receives proceeds from punk sales
+     * @dev specific to CryptoPunkMarketPlace
+     * @param punkId id of punk to remove from ownedTokenIds
+     */
+    function _receivePunkProceeds(uint256 punkId) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (
+            ICryptoPunkMarket(PUNKS).punkIndexToAddress(punkId) !=
+            MARKETPLACE_HELPER
+        ) {
+            l.ownedTokenIds.remove(punkId);
+        }
+
+        l.accruedFees += (msg.value * l.saleFeeBP) / BASIS_POINTS;
+    }
+
+    /**
      * @notice returns total debt owed to jpeg'd vault for a given token
      * @param jpegdVault address of jpeg'd NFT vault
      * @param tokenId id of token position pertains to
