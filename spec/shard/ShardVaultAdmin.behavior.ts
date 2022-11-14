@@ -135,7 +135,7 @@ export function describeBehaviorOfShardVaultAdmin(
       };
     });
 
-    describe('#purchasePunk(uint256)', () => {
+    describe('#purchasePunk((bytes,uint256,address)[],uint256)', () => {
       it('purchases punk from CryptoPunkMarket', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -1432,6 +1432,7 @@ export function describeBehaviorOfShardVaultAdmin(
         expect(pUSD).to.eq(calcpUSD);
       });
     });
+
     describe('#unstakePETH(uint256,uint256,uint256)', () => {
       it('unstakes requested amount of autoComp shares from lpFarm and JPEG citadel', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
@@ -1590,6 +1591,186 @@ export function describeBehaviorOfShardVaultAdmin(
         );
 
         expect(pETH).to.eq(calcPETH);
+      });
+    });
+
+    describe('#closePunkPosition(uint256,uint256,uint256,bool)', () => {
+      it('closes punk position', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([0, actualBorrow], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        const lpFarm = <ILPFarming>(
+          await ethers.getContractAt('ILPFarming', LP_FARM)
+        );
+
+        await (
+          await pethInstance
+            .connect(owner)
+            ['stakePETH(uint256,uint256,uint256)'](
+              actualBorrow,
+              minCurveLP.mul(curveRemainder).div(curveBasis),
+              ethers.constants.Two,
+            )
+        ).wait();
+
+        //provide pETH to pay back interest
+        await curvePETHPool
+          .connect(owner)
+          .exchange(0, 1, ethers.utils.parseEther('20'), 1, {
+            value: ethers.utils.parseEther('20'),
+          });
+
+        await pETH
+          .connect(owner)
+          ['transfer(address,uint256)'](
+            pethInstance.address,
+            ethers.utils.parseEther('10'),
+          );
+
+        await pethInstance
+          .connect(owner)
+          ['closePunkPosition(uint256,uint256,uint256,bool)'](
+            punkId,
+            0,
+            2,
+            false,
+          );
+
+        expect(
+          (await jpegdVault['positions(uint256)'](punkId)).debtPrincipal,
+        ).to.eq(ethers.constants.Zero);
+        expect(await pethInstance['totalDebt(uint256)'](punkId)).to.eq(
+          ethers.constants.Zero,
+        );
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance
+              .connect(nonOwner)
+              ['closePunkPosition(uint256,uint256,uint256,bool)'](
+                ethers.constants.Zero,
+                ethers.constants.Zero,
+                ethers.constants.Zero,
+                false,
+              ),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+      });
+    });
+
+    describe('#listPunk((bytes,uint256,address)[])', () => {
+      it('lists a punk on cryptoPunkMarket', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        expect(
+          await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
+        ).to.eq(pethInstance.address);
+
+        const listPrice = ethers.utils.parseEther('100');
+        const listPunkCalls = [];
+
+        const encodedOfferPunkForSale =
+          cryptoPunkMarket.interface.encodeFunctionData(
+            'offerPunkForSale(uint256,uint256)',
+            [punkId, listPrice],
+          );
+
+        const encodedListCall = {
+          data: encodedOfferPunkForSale,
+          target: CRYPTO_PUNKS_MARKET,
+          value: ethers.constants.Zero,
+        };
+
+        listPunkCalls.push(encodedListCall);
+
+        console.log(pethInstance.address);
+        console.log(await pethInstance['marketplaceHelper()']());
+        console.log(
+          await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
+        );
+        await pethInstance
+          .connect(owner)
+          ['listPunk((bytes,uint256,address)[],uint256)'](
+            listPunkCalls,
+            punkId,
+          );
+
+        expect(
+          (await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId))
+            .minValue,
+        ).to.eq(listPrice);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance
+              .connect(nonOwner)
+              ['listPunk((bytes,uint256,address)[],uint256)'](
+                [
+                  {
+                    data: '0x',
+                    target: ethers.constants.AddressZero,
+                    value: ethers.constants.Zero,
+                  },
+                ],
+                ethers.constants.Zero,
+              ),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
       });
     });
   });
