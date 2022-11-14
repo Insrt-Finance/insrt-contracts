@@ -65,32 +65,19 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         }
     }
 
-    //TODO
-    function acceptAssetBid(
-        bytes calldata data,
-        address target,
-        address collection,
-        uint256 tokenId,
-        uint256 minBidValue
-    ) external payable {
-        if (collection == CRYPTO_PUNK_MARKET) {
-            ICryptoPunkMarket(CRYPTO_PUNK_MARKET).acceptBidForPunk(
-                tokenId,
-                minBidValue
-            );
-
-            uint256 oldBalance = address(this).balance;
-            ICryptoPunkMarket(CRYPTO_PUNK_MARKET).withdraw();
-            uint256 newBalance = address(this).balance;
-
+    /**
+     * @inheritdoc IMarketPlaceHelper
+     */
+    function acceptAssetBid(EncodedCall[] memory calls) external payable {
+        for (uint256 i; i < calls.length; ) {
             unchecked {
-                payable(msg.sender).sendValue(newBalance - oldBalance);
-            }
-        } else {
-            (bool success, ) = target.call(data);
-
-            if (!success) {
-                revert MarketPlaceHelper__FailedBidAcceptanceCall();
+                (bool success, ) = calls[i].target.call{
+                    value: calls[i].value
+                }(calls[i].data);
+                if (!success) {
+                    revert MarketPlaceHelper__FailedAcceptBidCall();
+                }
+                ++i;
             }
         }
     }
