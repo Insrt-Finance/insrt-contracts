@@ -6,6 +6,7 @@ import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { IERC173 } from '@solidstate/contracts/interfaces/IERC173.sol';
+import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
@@ -36,7 +37,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
-    address internal immutable BOOSTER;
+    address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
@@ -50,7 +51,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address lpFarm,
         address curvePUSDPool,
         address curvePETHPool,
-        address booster,
+        address dawnOfInsrt,
         address marketplaceHelper
     ) {
         SHARD_COLLECTION = shardCollection;
@@ -62,7 +63,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         CURVE_PETH_POOL = curvePETHPool;
-        BOOSTER = booster;
+        DAWN_OF_INSRT = dawnOfInsrt;
         MARKETPLACE_HELPER = marketplaceHelper;
     }
 
@@ -90,6 +91,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _deposit() internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (l.totalSupply < l.whitelistShards) {
+            if (
+                block.timestamp < l.endWhitelistAt &&
+                IERC721(DAWN_OF_INSRT).balanceOf(msg.sender) == 0
+            ) {
+                revert ShardVault__NotWhitelisted();
+            }
+        }
 
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
