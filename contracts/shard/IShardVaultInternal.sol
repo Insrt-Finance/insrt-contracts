@@ -64,4 +64,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to act without being whitelisted
      */
     error ShardVault__NotWhitelisted();
+
+    /**
+     * @notice thrown when attempting to call a disabled function
+     */
+    error ShardVault__NotEnabled();
 }

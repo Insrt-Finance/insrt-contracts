@@ -25,6 +25,7 @@ library ShardVaultStorage {
         address collection;
         bool isInvested;
         bool divested;
+        bool isEnabled;
         EnumerableSet.UintSet ownedTokenIds;
     }
 

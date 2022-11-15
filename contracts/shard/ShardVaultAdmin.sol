@@ -148,4 +148,33 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     {
         _setWhitelistEndsAt(whitelistEndsAt);
     }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setWhitelistShads(uint16 whitelistShards)
+        external
+        onlyProtocolOwner
+    {
+        _setWhitelistShards(whitelistShards);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setIsEnabled(bool isEnabled) external onlyProtocolOwner {
+        _setIsEnabled(isEnabled);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function initiateWhitelistAndDeposits(
+        uint256 whitelistEndsAt,
+        uint16 whitelistShards
+    ) external onlyProtocolOwner {
+        _setWhitelistEndsAt(whitelistEndsAt);
+        _setWhitelistShards(whitelistShards);
+        _setIsEnabled(true);
+    }
 }

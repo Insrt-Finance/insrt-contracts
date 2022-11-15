@@ -92,6 +92,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _deposit() internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        if (!l.isEnabled) {
+            revert ShardVault__NotEnabled();
+        }
+
         if (l.totalSupply < l.whitelistShards) {
             if (
                 block.timestamp < l.whitelistEndsAt &&
@@ -527,6 +531,22 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _setWhitelistEndsAt(uint256 whitelistEndsAt) internal {
         ShardVaultStorage.layout().whitelistEndsAt = whitelistEndsAt;
+    }
+
+    /**
+     * @notice sets the maximum amount of shard to be minted during whitelist
+     * @param whitelistShards whitelist shard amount
+     */
+    function _setWhitelistShards(uint16 whitelistShards) internal {
+        ShardVaultStorage.layout().whitelistShards = whitelistShards;
+    }
+
+    /**
+     * @notice sets the isEnabled flag
+     * @param isEnabled boolean value
+     */
+    function _setIsEnabled(bool isEnabled) internal {
+        ShardVaultStorage.layout().isEnabled = isEnabled;
     }
 
     /**
