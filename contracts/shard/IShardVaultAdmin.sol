@@ -119,4 +119,10 @@ interface IShardVaultAdmin {
      * @param maxSupply the maxSupply of shards
      */
     function setMaxSupply(uint16 maxSupply) external;
+
+    /**
+     * @notice sets the whitelistEndsAt timestamp
+     * @param whitelistEndsAt timestamp of whitelist end
+     */
+    function setWhitelistEndsAt(uint256 whitelistEndsAt) external;
 }

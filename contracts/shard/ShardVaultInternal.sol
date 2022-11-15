@@ -94,7 +94,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         if (l.totalSupply < l.whitelistShards) {
             if (
-                block.timestamp < l.endWhitelistAt &&
+                block.timestamp < l.whitelistEndsAt &&
                 IERC721(DAWN_OF_INSRT).balanceOf(msg.sender) == 0
             ) {
                 revert ShardVault__NotWhitelisted();
@@ -519,6 +519,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _setMaxSupply(uint16 maxSupply) internal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
+    }
+
+    /**
+     * @notice sets the whitelistEndsAt timestamp
+     * @param whitelistEndsAt timestamp of whitelist end
+     */
+    function _setWhitelistEndsAt(uint256 whitelistEndsAt) internal {
+        ShardVaultStorage.layout().whitelistEndsAt = whitelistEndsAt;
     }
 
     /**

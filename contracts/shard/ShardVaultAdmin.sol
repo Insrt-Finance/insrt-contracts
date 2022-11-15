@@ -138,4 +138,14 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function setMaxSupply(uint16 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);
     }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setWhitelistEndsAt(uint256 whitelistEndsAt)
+        external
+        onlyProtocolOwner
+    {
+        _setWhitelistEndsAt(whitelistEndsAt);
+    }
 }
