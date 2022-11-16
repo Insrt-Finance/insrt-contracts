@@ -97,6 +97,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         uint16 supplyCap = l.maxSupply;
+        uint16 userShards = l.userShards[msg.sender];
+        uint16 maxUserShards = l.maxShardsPerUser;
+
+        if (userShards == maxUserShards) {
+            revert ShardVault__MaxUserShards();
+        }
 
         if (block.timestamp < l.whitelistEndsAt) {
             if (IERC721(DAWN_OF_INSRT).balanceOf(msg.sender) == 0) {
@@ -124,9 +130,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             excessShards = shards + totalSupply - supplyCap;
             shards -= excessShards;
         }
-
-        uint16 userShards = l.userShards[msg.sender];
-        uint16 maxUserShards = l.maxShardsPerUser;
 
         if (userShards + shards > maxUserShards) {
             excessShards = shards + userShards - maxUserShards;
