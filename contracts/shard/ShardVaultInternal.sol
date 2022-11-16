@@ -96,36 +96,45 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__NotEnabled();
         }
 
-        if (l.totalSupply < l.whitelistShards) {
-            if (
-                block.timestamp < l.whitelistEndsAt &&
-                IERC721(DAWN_OF_INSRT).balanceOf(msg.sender) == 0
-            ) {
+        uint16 supplyCap = l.maxSupply;
+
+        if (block.timestamp < l.whitelistEndsAt) {
+            if (IERC721(DAWN_OF_INSRT).balanceOf(msg.sender) == 0) {
                 revert ShardVault__NotWhitelisted();
             }
+
+            supplyCap = l.whitelistShards;
         }
 
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
         uint16 totalSupply = l.totalSupply;
-        uint16 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert ShardVault__InvalidDepositAmount();
         }
-        if (l.isInvested || totalSupply == maxSupply) {
+        if (totalSupply == supplyCap || l.isInvested) {
             revert ShardVault__DepositForbidden();
         }
 
         uint16 shards = uint16(amount / shardValue);
         uint16 excessShards;
 
-        if (shards + totalSupply >= maxSupply) {
-            excessShards = shards + totalSupply - maxSupply;
+        if (shards + totalSupply >= supplyCap) {
+            excessShards = shards + totalSupply - supplyCap;
+            shards -= excessShards;
         }
 
-        shards -= excessShards;
+        uint16 userShards = l.userShards[msg.sender];
+        uint16 maxUserShards = l.maxShardsPerUser;
+
+        if (userShards + shards > maxUserShards) {
+            excessShards = shards + userShards - maxUserShards;
+            shards -= excessShards;
+        }
+
         l.totalSupply += shards;
+        l.userShards[msg.sender] += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -177,6 +186,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply -= tokens;
+        l.userShards[msg.sender] -= tokens;
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }
@@ -583,6 +593,33 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _yieldFeeBP() internal view returns (uint16 yieldFeeBP) {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
+    }
+
+    function _userRemainingShards(address account)
+        internal
+        view
+        returns (uint256 shards)
+    {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        shards = l.maxShardsPerUser - l.userShards[account];
+    }
+
+    function _whitelistRemainingShards()
+        internal
+        view
+        returns (uint256 shards)
+    {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        if (block.timestamp < l.whitelistEndsAt) {
+            shards = l.maxSupply - l.totalSupply;
+        } else {
+            shards = 0;
+        }
+    }
+
+    function _remainingShards() internal view returns (uint256 shards) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        shards = l.maxSupply - l.totalSupply;
     }
 
     /**
