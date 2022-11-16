@@ -564,7 +564,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice returns accrued fees
+     * @notice sets maxShardsPerUser
+     * @param maxShardsPerUser new maxShardsPerUser value
+     */
+    function _setMaxShardsPerUser(uint16 maxShardsPerUser) internal {
+        ShardVaultStorage.layout().maxShardsPerUser = maxShardsPerUser;
+    }
+
+    /**
+     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault
+     * @dev accounts for fee withdrawals
      * @return fees accrued fees
      */
     function _accruedFees() internal view returns (uint256 fees) {

@@ -147,4 +147,10 @@ interface IShardVaultAdmin {
         uint256 whitelistEndsAt,
         uint16 whitelistShards
     ) external;
+
+    /**
+     * @notice sets maxShardsPerUser
+     * @param maxShardsPerUser new maxShardsPerUser value
+     */
+    function setMaxShardsPerUser(uint16 maxShardsPerUser) external;
 }

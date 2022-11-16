@@ -177,4 +177,14 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         _setWhitelistEndsAt(whitelistEndsAt);
         _setIsEnabled(true);
     }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setMaxShardsPerUser(uint16 maxShardsPerUser)
+        external
+        onlyProtocolOwner
+    {
+        _setMaxShardsPerUser(maxShardsPerUser);
+    }
 }
