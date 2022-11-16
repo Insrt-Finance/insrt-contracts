@@ -25,7 +25,8 @@ contract ShardVaultProxy is Proxy {
         uint16 acquisitionFeeBP,
         uint16 yieldFeeBP,
         uint16 bufferBP,
-        uint16 deviationBP
+        uint16 deviationBP,
+        uint16 maxShardsPerUser
     ) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
 
@@ -43,6 +44,7 @@ contract ShardVaultProxy is Proxy {
         l.yieldFeeBP = yieldFeeBP;
         l.bufferBP = bufferBP;
         l.deviationBP = deviationBP;
+        l.maxShardsPerUser = maxShardsPerUser;
     }
 
     /**
