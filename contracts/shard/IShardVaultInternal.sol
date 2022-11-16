@@ -69,4 +69,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to call a disabled function
      */
     error ShardVault__NotEnabled();
+
+    /**
+     * @notice thrown when attempting to set whitelist deadline without setting whitelist shards
+     */
+    error ShardVault__NoWhitelistShards();
 }

@@ -130,7 +130,7 @@ interface IShardVaultAdmin {
      * @notice sets the maximum amount of shard to be minted during whitelist
      * @param whitelistShards whitelist shard amount
      */
-    function setWhitelistShads(uint16 whitelistShards) external;
+    function setWhitelistShards(uint16 whitelistShards) external;
 
     /**
      * @notice sets the isEnabled flag
