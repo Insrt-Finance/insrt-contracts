@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.11;
 
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 
 /**
  * @title Insrt Finance Staking Pool Storage library

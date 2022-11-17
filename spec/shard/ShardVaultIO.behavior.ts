@@ -1,5 +1,7 @@
 import hre, { ethers } from 'hardhat';
 import {
+  ICryptoPunkMarket,
+  IMarketPlaceHelper,
   IShardCollection,
   IShardVault,
   ShardCollection,
@@ -9,29 +11,75 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
+import { formatTokenId } from './ShardVaultView.behavior';
 
-export interface ShardVaultIOBehaviorArgs {}
+export interface ShardVaultIOBehaviorArgs {
+  getProtocolOwner: () => Promise<SignerWithAddress>;
+}
 
 export function describeBehaviorOfShardVaultIO(
   deploy: () => Promise<IShardVault>,
+  secondDeploy: () => Promise<IShardVault>,
   args: ShardVaultIOBehaviorArgs,
   skips?: string[],
 ) {
+  let owner: SignerWithAddress;
   let depositor: SignerWithAddress;
   let secondDepositor: SignerWithAddress;
   let instance: IShardVault;
+  let secondInstance: IShardVault;
   let shardCollection: ShardCollection;
+  let cryptoPunkMarket: ICryptoPunkMarket;
+  let purchaseDataPUSD: string[];
+  let targets: string[];
+
+  const punkId = BigNumber.from('2534');
+  const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+  const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
 
   before(async () => {
     [depositor, secondDepositor] = await ethers.getSigners();
+    owner = await args.getProtocolOwner();
+
+    cryptoPunkMarket = await ethers.getContractAt(
+      'ICryptoPunkMarket',
+      CRYPTO_PUNKS_MARKET,
+    );
   });
 
   beforeEach(async () => {
     instance = await deploy();
+    secondInstance = await secondDeploy();
     shardCollection = ShardCollection__factory.connect(
       await instance['shardCollection()'](),
       depositor,
     );
+
+    let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
+      'buyPunk',
+      [punkId],
+    );
+
+    let transferDataPUSDVault = cryptoPunkMarket.interface.encodeFunctionData(
+      'transferPunk',
+      [instance.address, punkId],
+    );
+
+    const price = (
+      await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+    ).minValue;
+
+    punkPurchaseCallsPUSD[0] = {
+      data: punkPurchaseData,
+      value: price,
+      target: CRYPTO_PUNKS_MARKET,
+    };
+
+    punkPurchaseCallsPUSD[1] = {
+      data: transferDataPUSDVault,
+      value: 0,
+      target: CRYPTO_PUNKS_MARKET,
+    };
   });
 
   describe('::ShardVaultIO', () => {
@@ -111,8 +159,21 @@ export function describeBehaviorOfShardVaultIO(
         });
 
         it('shard vault has invested', async () => {
-          //TODO
-          console.log('TODO');
+          await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
+          await instance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+
+          await instance
+            .connect(owner)
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
+              punkId,
+            );
+
+          await expect(
+            instance.connect(depositor)['deposit()']({ value: depositAmount }),
+          ).to.be.revertedWith('ShardVault__DepositForbidden()');
         });
       });
     });
@@ -197,7 +258,21 @@ export function describeBehaviorOfShardVaultIO(
           ).to.be.revertedWith('ShardVault__NotShardOwner()');
         });
         it('owned shards correspond to different vault', async () => {
-          console.log('TODO');
+          await secondInstance
+            .connect(depositor)
+            ['deposit()']({ value: depositAmount });
+
+          const withdrawTokens = 5;
+          const tokens = [];
+          for (let i = 0; i < withdrawTokens; i++) {
+            tokens.push(
+              await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+            );
+          }
+
+          await expect(
+            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+          ).to.be.revertedWith('ShardVault__VaultTokenIdMismatch()');
         });
         it('vault is full', async () => {
           await instance
@@ -220,7 +295,29 @@ export function describeBehaviorOfShardVaultIO(
           ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
         });
         it('vault is invested', async () => {
-          console.log('TODO');
+          await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
+          await instance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+
+          await instance
+            .connect(owner)
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPUSD,
+              punkId,
+            );
+
+          const withdrawTokens = 5;
+          const tokens = [];
+          for (let i = 0; i < withdrawTokens; i++) {
+            tokens.push(
+              await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
+            );
+          }
+
+          await expect(
+            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+          ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
         });
       });
     });

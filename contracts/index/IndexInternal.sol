@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import { IERC173 } from '@solidstate/contracts/access/IERC173.sol';
+import { IERC173 } from '@solidstate/contracts/interfaces/IERC173.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { ERC20BaseInternal } from '@solidstate/contracts/token/ERC20/base/ERC20BaseInternal.sol';
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { ERC4626BaseInternal } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseInternal.sol';
 import { UintUtils } from '@solidstate/contracts/utils/UintUtils.sol';
 import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
@@ -15,9 +15,9 @@ import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
 
 import { IIndexInternal } from './IIndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
-import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
-import { IAsset, IVault } from '../balancer/IVault.sol';
+import { IBalancerHelpers } from '../interfaces/balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
+import { IAsset, IVault } from '../interfaces/balancer/IVault.sol';
 
 /**
  * @title Infra Index internal functions

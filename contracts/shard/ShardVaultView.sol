@@ -9,19 +9,45 @@ import { IShardVaultView } from './IShardVaultView.sol';
  * @title ShardVaultView facet containing view functions
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
-    constructor(address shardCollection) ShardVaultInternal(shardCollection) {}
+    constructor(
+        address shardCollection,
+        address pUSD,
+        address pETH,
+        address punkMarket,
+        address pusdCitadel,
+        address pethCitadel,
+        address lpFarm,
+        address curvePUSDPool,
+        address curvePETHPool,
+        address booster,
+        address marketplaceHelper
+    )
+        ShardVaultInternal(
+            shardCollection,
+            pUSD,
+            pETH,
+            punkMarket,
+            pusdCitadel,
+            pethCitadel,
+            lpFarm,
+            curvePUSDPool,
+            curvePETHPool,
+            booster,
+            marketplaceHelper
+        )
+    {}
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function totalSupply() external view returns (uint256) {
+    function totalSupply() external view returns (uint16) {
         return _totalSupply();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function maxSupply() external view returns (uint256) {
+    function maxSupply() external view returns (uint16) {
         return _maxSupply();
     }
 
@@ -42,7 +68,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function count() external view returns (uint256) {
+    function count() external view returns (uint16) {
         return _count();
     }
 
@@ -66,5 +92,47 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         returns (address vault, uint96 internalId)
     {
         (vault, internalId) = _parseTokenId(tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function isInvested() external view returns (bool) {
+        return _isInvested();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function ownedTokenIds() external view returns (uint256[] memory ids) {
+        ids = _ownedTokenIds();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function accruedFees() external view returns (uint256 fees) {
+        fees = _accruedFees();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function acquisitionFeeBP() external view returns (uint16 feeBP) {
+        feeBP = _acquisitionFeeBP();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function saleFeeBP() external view returns (uint16 feeBP) {
+        feeBP = _saleFeeBP();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function yieldFeeBP() external view returns (uint16 feeBP) {
+        feeBP = _yieldFeeBP();
     }
 }
