@@ -22,6 +22,11 @@ interface IShardVaultIO {
      * @dev only SHARD_COLLECTION proxy may call - purpose is to maintain correct balances
      * @param from address transferring
      * @param to address receiving
+     * @param tokenId id of shard
      */
-    function beforeShardTransfer(address from, address to) external;
+    function beforeShardTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 }

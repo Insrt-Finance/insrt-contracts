@@ -563,18 +563,59 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
+    function _claimETH(address account, uint256[] memory tokenIds) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 tokens = tokenIds.length;
+        if (l.userShards[account] < tokens) {
+            revert ShardVault__InsufficientShards();
+        }
+
+        unchecked {
+            for (uint256 i; i < tokens; ++i) {
+                if (
+                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                    account
+                ) {
+                    revert ShardVault__NotShardOwner();
+                }
+
+                (address vault, ) = _parseTokenId(tokenIds[i]);
+                if (vault != address(this)) {
+                    revert ShardVault__VaultTokenIdMismatch();
+                }
+            }
+        }
+
+        uint256 amount = (tokens * (address(this).balance - l.accruedFees)) /
+            l.totalSupply;
+        uint256 fee = (amount * l.yieldFeeBP) / BASIS_POINTS;
+        l.accruedFees += fee;
+
+        payable(account).sendValue(amount - fee);
+    }
+
     /**
      * @notice before shard transfer hook
      * @dev only SHARD_COLLECTION proxy may call - purpose is to maintain correct balances
      * @param from address transferring
      * @param to address receiving
      */
-    function _beforeShardTransfer(address from, address to) internal {
+    function _beforeShardTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         if (msg.sender != SHARD_COLLECTION) {
             revert ShardVault__NotShardCollection();
         }
+
+        uint256[] memory tokenIds;
+        tokenIds[0] = tokenId;
+
+        _claimETH(from, tokenIds);
 
         --l.userShards[from];
         ++l.userShards[to];
