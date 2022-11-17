@@ -135,4 +135,25 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function yieldFeeBP() external view returns (uint16 feeBP) {
         feeBP = _yieldFeeBP();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function maxShardsPerUser() external view returns (uint16) {
+        return _maxShardsPerUser();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function userShards(address account) external view returns (uint16) {
+        return _userShards(account);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function whitelistShards() external view returns (uint16) {
+        return _whitelistShards();
+    }
 }

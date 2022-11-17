@@ -89,4 +89,23 @@ interface IShardVaultView {
      * @return feeBP basis points of yield fee
      */
     function yieldFeeBP() external view returns (uint16 feeBP);
+
+    /**
+     * @notice return maxShardsPerUser
+     * @return uint16 maxShardsPerUser value
+     */
+    function maxShardsPerUser() external view returns (uint16);
+
+    /**
+     * @notice return vault shards owned by an account
+     * @param account address owning shards
+     * @return uint16 shards owned by account
+     */
+    function userShards(address account) external view returns (uint16);
+
+    /**
+     * @notice return amount of shards reserved for whitelist
+     * @return uint16 amount of shards reserved for whitelist
+     */
+    function whitelistShards() external view returns (uint16);
 }

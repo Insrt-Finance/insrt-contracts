@@ -239,6 +239,31 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice return maxShardsPerUser
+     * @return uint16 maxShardsPerUser value
+     */
+    function _maxShardsPerUser() internal view returns (uint16) {
+        return ShardVaultStorage.layout().maxShardsPerUser;
+    }
+
+    /**
+     * @notice return vault shards owned by an account
+     * @param account address owning shards
+     * @return uint16 shards owned by account
+     */
+    function _userShards(address account) internal view returns (uint16) {
+        return ShardVaultStorage.layout().userShards[account];
+    }
+
+    /**
+     * @notice return amount of shards reserved for whitelist
+     * @return uint16 amount of shards reserved for whitelist
+     */
+    function _whitelistShards() internal view returns (uint16) {
+        return ShardVaultStorage.layout().whitelistShards;
+    }
+
+    /**
      * @notice return array with owned token IDs
      * @return uint256[]  array of owned token IDs
      */
