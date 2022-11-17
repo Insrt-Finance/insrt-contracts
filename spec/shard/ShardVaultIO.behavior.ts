@@ -123,7 +123,7 @@ export function describeBehaviorOfShardVaultIO(
     };
   });
 
-  describe.only('::ShardVaultIO', () => {
+  describe('::ShardVaultIO', () => {
     describe('#deposit()', () => {
       const depositAmount = ethers.utils.parseEther('10');
       it('transfers ETH from depositor to vault', async () => {
@@ -471,7 +471,11 @@ export function describeBehaviorOfShardVaultIO(
           ).to.be.revertedWith('ShardVault__NotShardOwner()');
         });
         it('owned shards correspond to different vault', async () => {
+          await instance.connect(owner)['setIsEnabled(bool)'](true);
           await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
+          await instance
+            .connect(depositor)
+            ['deposit()']({ value: depositAmount });
           await secondInstance
             .connect(depositor)
             ['deposit()']({ value: depositAmount });
@@ -485,7 +489,7 @@ export function describeBehaviorOfShardVaultIO(
           }
 
           await expect(
-            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+            secondInstance.connect(depositor)['withdraw(uint256[])'](tokens),
           ).to.be.revertedWith('ShardVault__VaultTokenIdMismatch()');
         });
         it('vault is full', async () => {

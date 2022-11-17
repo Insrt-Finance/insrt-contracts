@@ -93,7 +93,7 @@ describe('ShardVaultProxy', () => {
     ).deploy();
     const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
-    ).deploy('ShardVaultCollection', 'SVC', 'shards/');
+    ).deploy('ShardVaultCollection', 'SVC', 'shards');
 
     const shardCollectionFacetCuts = [
       await new ShardCollection__factory(deployer).deploy(),

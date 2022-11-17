@@ -90,6 +90,19 @@ export function describeBehaviorOfShardVaultAdmin(
       [depositor, nonOwner] = await ethers.getSigners();
       owner = await args.getProtocolOwner();
 
+      await instance.connect(owner)['setIsEnabled(bool)'](true);
+      await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
+      await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
+
+      await instance
+        .connect(owner)
+        ['setMaxShardsPerUser(uint16)'](BigNumber.from('110'));
+      await secondInstance
+        .connect(owner)
+        ['setMaxShardsPerUser(uint16)'](BigNumber.from('110'));
+      await pethInstance
+        .connect(owner)
+        ['setMaxShardsPerUser(uint16)'](BigNumber.from('110'));
       let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
         'buyPunk',
         [punkId],
@@ -154,6 +167,9 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       it('collects acquisition fee if first purchase', async () => {
+        await instance
+          .connect(owner)
+          .setMaxShardsPerUser(BigNumber.from('200'));
         await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await instance
           .connect(depositor)
