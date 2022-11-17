@@ -126,14 +126,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint16 shards = uint16(amount / shardValue);
         uint16 excessShards;
 
-        if (shards + totalSupply >= supplyCap) {
-            excessShards = shards + totalSupply - supplyCap;
-            shards -= excessShards;
-        }
-
         if (userShards + shards > maxUserShards) {
             excessShards = shards + userShards - maxUserShards;
             shards -= excessShards;
+        }
+
+        if (shards + totalSupply >= supplyCap) {
+            excessShards += shards + totalSupply - supplyCap;
+            shards -= shards + totalSupply - supplyCap;
         }
 
         l.totalSupply += shards;
@@ -166,7 +166,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint16 tokens = uint16(tokenIds.length);
 
-        if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
+        if (l.userShards[msg.sender] < tokens) {
             revert ShardVault__InsufficientShards();
         }
 
