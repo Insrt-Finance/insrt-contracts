@@ -52,7 +52,7 @@ describe('ShardVaultProxy', () => {
   const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
   const curvePUSDPool = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
   const curvePETHPool = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
-  const convexBooster = '0xF403C135812408BFbE8713b5A23a04b3D48AAE31';
+  const DAWN_OF_INSRT = '0x1522C79D2044BBC06f4368c07b88A32e9Cd64BD1';
   const pusdPunkVault = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
   const pusdPunkVaultHelper = '0x810fdbc7E5Cfe998127a1f2Aa26f34E64e0364f4';
   const pethPunkVault = '0x4e5F305bFCa77b17f804635A9bA669e187d51719';
@@ -64,6 +64,7 @@ describe('ShardVaultProxy', () => {
   const yieldFeeBP = BigNumber.from('1000');
   const bufferBP = BigNumber.from('500');
   const deviationBP = BigNumber.from('200');
+  const maxShardsPerUser = BigNumber.from('10');
   const BASIS = BigNumber.from('10000');
 
   before(async () => {
@@ -134,7 +135,7 @@ describe('ShardVaultProxy', () => {
         lpFarm,
         curvePUSDPool,
         curvePETHPool,
-        convexBooster,
+        DAWN_OF_INSRT,
         marketplaceHelper.address,
       ),
       await new ShardVaultView__factory(deployer).deploy(
@@ -147,7 +148,7 @@ describe('ShardVaultProxy', () => {
         lpFarm,
         curvePUSDPool,
         curvePETHPool,
-        convexBooster,
+        DAWN_OF_INSRT,
         marketplaceHelper.address,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
@@ -160,7 +161,7 @@ describe('ShardVaultProxy', () => {
         lpFarm,
         curvePUSDPool,
         curvePETHPool,
-        convexBooster,
+        DAWN_OF_INSRT,
         marketplaceHelper.address,
       ),
     ].map(function (f) {
@@ -198,7 +199,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16,uint16)'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
@@ -210,6 +211,7 @@ describe('ShardVaultProxy', () => {
         yieldFeeBP,
         bufferBP,
         deviationBP,
+        maxShardsPerUser,
       );
 
     const { events } = await deployShardVaultTx.wait();
@@ -222,7 +224,7 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16,uint16)'
       ](
         BAYC,
         baycVault,
@@ -234,6 +236,7 @@ describe('ShardVaultProxy', () => {
         yieldFeeBP,
         bufferBP,
         deviationBP,
+        maxShardsPerUser,
       );
 
     const rcpt = await deploySecondShardVaultTx.wait();
@@ -249,7 +252,7 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16,uint16)'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
@@ -261,6 +264,7 @@ describe('ShardVaultProxy', () => {
         yieldFeeBP,
         bufferBP,
         deviationBP,
+        maxShardsPerUser,
       );
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();
