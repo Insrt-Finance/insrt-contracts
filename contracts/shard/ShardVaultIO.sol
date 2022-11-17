@@ -47,4 +47,11 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     function withdraw(uint256[] memory tokenIds) external payable {
         _withdraw(tokenIds);
     }
+
+    /**
+     * @inheritdoc IShardVaultIO
+     */
+    function beforeShardTransfer(address from, address to) external {
+        _beforeShardTransfer(from, to);
+    }
 }

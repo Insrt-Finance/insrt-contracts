@@ -564,6 +564,23 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice before shard transfer hook
+     * @dev only SHARD_COLLECTION proxy may call - purpose is to maintain correct balances
+     * @param from address transferring
+     * @param to address receiving
+     */
+    function _beforeShardTransfer(address from, address to) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (msg.sender != SHARD_COLLECTION) {
+            revert ShardVault__NotShardCollection();
+        }
+
+        --l.userShards[from];
+        ++l.userShards[to];
+    }
+
+    /**
      * @notice sets the whitelistEndsAt timestamp
      * @param whitelistEndsAt timestamp of whitelist end
      */

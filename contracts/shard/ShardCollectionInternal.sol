@@ -6,12 +6,16 @@ import { ERC721BaseInternal } from '@solidstate/contracts/token/ERC721/base/ERC7
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardCollectionInternal } from './IShardCollectionInternal.sol';
+import { IShardVault } from './IShardVault.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
 
 /**
  * @title Internal logic for ShardCollection
  */
-contract ShardCollectionInternal is IShardCollectionInternal {
+contract ShardCollectionInternal is
+    ERC721BaseInternal,
+    IShardCollectionInternal
+{
     modifier onlyVault() {
         _onlyVault(msg.sender);
         _;
@@ -52,5 +56,16 @@ contract ShardCollectionInternal is IShardCollectionInternal {
      */
     function _isWhitelisted(address vault) internal view returns (bool) {
         return ShardCollectionStorage.layout().whitelist[vault];
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
+        (address shardVault, ) = IShardVault(
+            ShardCollectionStorage.layout().shardVaultDiamond
+        ).parseTokenId(tokenId);
+        IShardVault(shardVault).beforeShardTransfer(from, to);
     }
 }
