@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardVaultManager } from './IShardVaultManager.sol';
+import { IShardVault } from '../shard/IShardVault.sol';
 import { ShardVaultProxy } from '../shard/ShardVaultProxy.sol';
 
 contract ShardVaultManager is IShardVaultManager, OwnableInternal {
@@ -23,8 +24,8 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        ShardVaultProxy.FeeParams memory feeParams,
-        ShardVaultProxy.BufferParams memory bufferParams
+        IShardVault.FeeParams memory feeParams,
+        IShardVault.BufferParams memory bufferParams
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new ShardVaultProxy(

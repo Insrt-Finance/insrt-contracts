@@ -23,7 +23,6 @@ import {
   IMarketPlaceHelper__factory,
   ShardVaultProxy,
 } from '../../typechain-types';
-
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
 import { BigNumber } from 'ethers';
 
@@ -69,19 +68,31 @@ describe('ShardVaultProxy', () => {
   const pETHConversionBuffer = BigNumber.from('1000269');
   const BASIS = BigNumber.from('10000');
 
-  const feeParams: ShardVaultProxy.FeeParamsStruct = {
+  interface FeeParamsStruct {
+    saleFeeBP: BigNumber;
+    acquisitionFeeBP: BigNumber;
+    yieldFeeBP: BigNumber;
+  }
+
+  interface BufferParamsStruct {
+    ltvBufferBP: BigNumber;
+    ltvDeviationBP: BigNumber;
+    conversionBuffer: BigNumber;
+  }
+
+  const feeParams: FeeParamsStruct = {
     saleFeeBP: saleFeeBP,
     acquisitionFeeBP: acquisitionFeeBP,
     yieldFeeBP: yieldFeeBP,
   };
 
-  const pUSDBufferParams: ShardVaultProxy.BufferParamsStruct = {
+  const pUSDBufferParams: BufferParamsStruct = {
     ltvBufferBP: ltvBufferBP,
     ltvDeviationBP: ltvDeviationBP,
     conversionBuffer: pUSDConversionBuffer,
   };
 
-  const pETHBufferParams: ShardVaultProxy.BufferParamsStruct = {
+  const pETHBufferParams: BufferParamsStruct = {
     ltvBufferBP: ltvBufferBP,
     ltvDeviationBP: ltvDeviationBP,
     conversionBuffer: pETHConversionBuffer,

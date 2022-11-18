@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import { ShardVaultProxy } from '../shard/ShardVaultProxy.sol';
+import { IShardVault } from '../shard/IShardVault.sol';
 
 /**
  * @title ShardVault Manager contract interface
@@ -38,7 +38,7 @@ interface IShardVaultManager {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        ShardVaultProxy.FeeParams memory feeParams,
-        ShardVaultProxy.BufferParams memory bufferParams
+        IShardVault.FeeParams memory feeParams,
+        IShardVault.BufferParams memory bufferParams
     ) external returns (address deployment);
 }
