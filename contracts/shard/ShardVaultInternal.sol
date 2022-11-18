@@ -598,14 +598,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice makes a downpayment for a collateralized NFT in jpeg'd
+     * @notice makes a debt payment for a collateralized NFT in jpeg'd
      * @param amount amount of pUSD intended to be repaid
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function _downPaymentPUSD(
+    function _repayLoanPUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex,
@@ -625,14 +625,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice makes a downpayment for a collateralized NFT in jpeg'd
+     * @notice makes a debt payment for a collateralized NFT in jpeg'd
      * @param amount amount of pETH intended to be repaid
      * @param minPETH minimum pETH to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function _downPaymentPETH(
+    function _repayLoanPETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex,

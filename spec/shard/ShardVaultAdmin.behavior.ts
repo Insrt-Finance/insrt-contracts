@@ -839,7 +839,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#downPayment(uint256,uint256,uint256,uint256)', () => {
+    describe('#repayLoanPUSD(uint256,uint256,uint256,uint256)', () => {
       it('debt paid is approximately amount of debt reduction', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -895,7 +895,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -904,8 +904,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const paidDebt = await instance
           .connect(owner)
-          .callStatic['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          .callStatic['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             1,
             punkId,
@@ -913,8 +913,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         let tx = await instance
           .connect(owner)
-          ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             1,
             punkId,
@@ -993,7 +993,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -1002,8 +1002,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             1,
             punkId,
@@ -1018,9 +1018,7 @@ export function describeBehaviorOfShardVaultAdmin(
         //debt increased
         const debtDifference = newDebt.sub(oldDebt);
 
-        expect(accruedDebtInterest.sub(debtDifference)).to.gt(
-          downPaymentAmount,
-        );
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
       });
 
       describe('reverts if', () => {
@@ -1028,7 +1026,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
+              ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
@@ -1042,7 +1040,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#downPaymentPETH(uint256,uint256,uint256,uint256)', () => {
+    describe('#repayLoanPETH(uint256,uint256,uint256,uint256)', () => {
       it('debt paid is approximately amount of debt reduction', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -1102,7 +1100,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -1111,8 +1109,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const paidDebt = await pethInstance
           .connect(owner)
-          .callStatic['downPaymentPETH(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          .callStatic['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             2,
             punkId,
@@ -1120,8 +1118,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         let tx = await pethInstance
           .connect(owner)
-          ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             2,
             punkId,
@@ -1203,7 +1201,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -1212,8 +1210,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             2,
             punkId,
@@ -1230,16 +1228,14 @@ export function describeBehaviorOfShardVaultAdmin(
         ///debt increased
         const debtDifference = newDebt.sub(oldDebt);
 
-        expect(accruedDebtInterest.sub(debtDifference)).to.gt(
-          downPaymentAmount,
-        );
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
       });
       describe('reverts if', () => {
         it('called by non-owner', async () => {
           await expect(
             pethInstance
               .connect(nonOwner)
-              ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
+              ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
@@ -1737,11 +1733,6 @@ export function describeBehaviorOfShardVaultAdmin(
 
         listPunkCalls.push(encodedListCall);
 
-        console.log(pethInstance.address);
-        console.log(await pethInstance['marketplaceHelper()']());
-        console.log(
-          await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
-        );
         await pethInstance
           .connect(owner)
           ['listPunk((bytes,uint256,address)[],uint256)'](
