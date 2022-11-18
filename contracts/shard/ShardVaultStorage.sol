@@ -8,6 +8,7 @@ library ShardVaultStorage {
     struct Layout {
         uint256 shardValue;
         uint256 accruedFees;
+        uint256 cumulativeEPS; //EPS = ETH per shard
         uint256 whitelistEndsAt;
         uint16 whitelistShards;
         uint16 maxShardsPerUser;
@@ -25,10 +26,12 @@ library ShardVaultStorage {
         address jpegdLP;
         address collection;
         bool isInvested;
-        bool divested;
+        bool isDivested;
         bool isEnabled;
+        bool claimableETHProvided;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => uint16) userShards;
+        mapping(uint256 => uint256) claimedEPS; //EPS = ETH per shard
     }
 
     bytes32 internal constant STORAGE_SLOT =

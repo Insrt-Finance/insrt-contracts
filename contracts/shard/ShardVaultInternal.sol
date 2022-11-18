@@ -571,6 +571,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__InsufficientShards();
         }
 
+        uint256 cumulativeEPS = l.cumulativeEPS;
+        uint256 totalETH;
+        uint256 claimedEPS;
+
         unchecked {
             for (uint256 i; i < tokens; ++i) {
                 if (
@@ -584,15 +588,20 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
                 if (vault != address(this)) {
                     revert ShardVault__VaultTokenIdMismatch();
                 }
+
+                claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
+                totalETH += claimedEPS;
+                l.claimedEPS[tokenIds[i]] += claimedEPS;
             }
         }
 
-        uint256 amount = (tokens * (address(this).balance - l.accruedFees)) /
-            l.totalSupply;
-        uint256 fee = (amount * l.yieldFeeBP) / BASIS_POINTS;
-        l.accruedFees += fee;
+        if (l.claimableETHProvided) {
+            uint256 fee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
+            l.accruedFees += fee;
+            totalETH -= fee;
+        }
 
-        payable(account).sendValue(amount - fee);
+        payable(account).sendValue(totalETH);
     }
 
     /**
