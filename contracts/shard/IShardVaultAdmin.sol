@@ -170,6 +170,20 @@ interface IShardVaultAdmin {
     ) external returns (uint256 paidDebt);
 
     /**
+     * @notice makes loan repayment in PUSD without unstaking
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function directRepayLoanPUSD(uint256 amount, uint256 punkId) external;
+
+    /**
+     * @notice makes loan repayment in PETH without unstaking
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function directRepayLoanPETH(uint256 amount, uint256 punkId) external;
+
+    /**
      * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
      * @param calls encoded call array for listing the punk
      * @param punkId id of punk to list

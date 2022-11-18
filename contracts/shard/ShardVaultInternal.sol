@@ -652,6 +652,23 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice makes loan repayment without unstaking
+     * @param token payment token
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function _directRepayLoan(
+        address token,
+        uint256 amount,
+        uint256 punkId
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        IERC20(token).approve(l.jpegdVault, amount);
+        INFTVault(l.jpegdVault).repay(punkId, amount);
+    }
+
+    /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
      * to result in a given amount of pUSD
      * @param pUSD desired pUSD amount
