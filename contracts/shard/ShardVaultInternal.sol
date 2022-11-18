@@ -307,7 +307,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId
+        uint256 punkId,
+        bool isFinalPurchase
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -324,12 +325,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }(calls, address(0), price);
 
         if (l.ownedTokenIds.length() == 0) {
-            //first fee withdraw, so no account for previous
-            //fee accruals need to be considered
-            l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
             l.isInvested = true;
         }
+        l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
         l.ownedTokenIds.add(punkId);
+
+        if (isFinalPurchase) {
+            l.cumulativeEPS +=
+                (address(this).balance - l.accruedFees) /
+                _totalSupply();
+        }
     }
 
     /**
@@ -511,6 +516,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
      * the pool to deposit into
      * @param insure whether to insure
+     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
+     * any excess ETH for claiming
      */
     function _investPunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
@@ -518,9 +525,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
-        bool insure
+        bool insure,
+        bool isFinalPurchase
     ) internal {
-        _purchasePunk(calls, punkId);
+        _purchasePunk(calls, punkId, isFinalPurchase);
         _stakePUSD(
             _collateralizePunkPUSD(punkId, borrowAmount, insure),
             minCurveLP,
