@@ -34,16 +34,14 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         ) {
             revert MarketPlaceHelper__InsufficientPurchaseToken();
         }
-
-        for (uint256 i; i < calls.length; ) {
-            unchecked {
+        unchecked {
+            for (uint256 i; i < calls.length; ++i) {
                 (bool success, ) = calls[i].target.call{
                     value: calls[i].value
                 }(calls[i].data);
                 if (!success) {
                     revert MarketPlaceHelper__FailedPurchaseCall();
                 }
-                ++i;
             }
         }
     }
@@ -52,15 +50,14 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
      * @inheritdoc IMarketPlaceHelper
      */
     function listAsset(EncodedCall[] memory calls) external {
-        for (uint256 i; i < calls.length; ) {
-            unchecked {
+        unchecked {
+            for (uint256 i; i < calls.length; ++i) {
                 (bool success, ) = calls[i].target.call{
                     value: calls[i].value
                 }(calls[i].data);
                 if (!success) {
                     revert MarketPlaceHelper__FailedListCall();
                 }
-                ++i;
             }
         }
     }
