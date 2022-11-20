@@ -130,16 +130,16 @@ interface IShardVaultAdmin {
      * @notice sets the whitelistEndsAt timestamp
      * @param whitelistEndsAt timestamp of whitelist end
      */
-    function setWhitelistEndsAt(uint256 whitelistEndsAt) external;
+    function setWhitelistEndsAt(uint64 whitelistEndsAt) external;
 
     /**
      * @notice sets the maximum amount of shard to be minted during whitelist
-     * @param whitelistShards whitelist shard amount
+     * @param reservedShards reserved shard amount
      */
-    function setWhitelistShards(uint16 whitelistShards) external;
+    function setReservedShards(uint16 reservedShards) external;
 
     /**
-     * @notice sets the isEnabled flag
+     * @notice sets the isEnabled flag, allowing or prohibiting deposits
      * @param isEnabled boolean value
      */
     function setIsEnabled(bool isEnabled) external;
@@ -147,16 +147,18 @@ interface IShardVaultAdmin {
     /**
      * @notice sets the whitelist deadline and allows deposits
      * @param whitelistEndsAt whitelist deadline timestamp
-     * @param whitelistShards whitelist shard amount
+     * @param reservedShards whitelist shard amount
      */
     function initiateWhitelistAndDeposits(
-        uint256 whitelistEndsAt,
-        uint16 whitelistShards
+        uint64 whitelistEndsAt,
+        uint16 reservedShards
     ) external;
 
     /**
-     * @notice sets maxShardsPerUser
-     * @param maxShardsPerUser new maxShardsPerUser value
+     * @notice return the maximum shards a user is allowed to mint
+     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
+     * said user may not deposit more
+     * @param maxUserShards new maxUserShards value
      */
-    function setMaxShardsPerUser(uint16 maxShardsPerUser) external;
+    function setMaxUserShards(uint16 maxUserShards) external;
 }

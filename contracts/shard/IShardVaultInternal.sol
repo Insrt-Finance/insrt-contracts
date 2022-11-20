@@ -71,9 +71,9 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__NotEnabled();
 
     /**
-     * @notice thrown when attempting to set whitelist deadline without setting whitelist shards
+     * @notice thrown when attempting to set whitelist deadline without setting reserved shards
      */
-    error ShardVault__NoWhitelistShards();
+    error ShardVault__NoReservedShards();
 
     /**
      * @notice thrown when user is attempting to deposit when already owning max shards

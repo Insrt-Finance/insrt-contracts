@@ -8,29 +8,34 @@ pragma solidity ^0.8.0;
 interface IShardVaultView {
     /**
      * @notice returns total shards minted
+     * @return totalSupply total minted shards amount
      */
-    function totalSupply() external view returns (uint16);
+    function totalSupply() external view returns (uint16 totalSupply);
 
     /**
      * @notice returns maximum possible minted shards
+     * @return maxSupply maximum possible minted shards
      */
-    function maxSupply() external view returns (uint16);
+    function maxSupply() external view returns (uint16 maxSupply);
 
     /**
      * @notice returns ETH value of shard at time of mint
+     * @return shardValue ETH value of a shard
      */
-    function shardValue() external view returns (uint256);
+    function shardValue() external view returns (uint256 shardValue);
 
     /**
      * @notice return ShardCollection address
+     * @return shardCollection address
      */
-    function shardCollection() external view returns (address);
+    function shardCollection() external view returns (address shardCollection);
 
     /**
      * @notice return minted token count
      * @dev does not reduce when tokens are burnt
+     * @return count minted token count
      */
-    function count() external view returns (uint16);
+    function count() external view returns (uint16 count);
 
     /**
      * @notice formats a tokenId given the internalId and address of ShardVault contract
@@ -55,15 +60,18 @@ interface IShardVaultView {
 
     /**
      * @notice return isInvested flag state
-     * @return bool isInvested flag
+     * @return isInvested isInvested flag
      */
-    function isInvested() external view returns (bool);
+    function isInvested() external view returns (bool isInvested);
 
     /**
      * @notice return array of NFT ids owned by the vault
-     * @return ids array of owned token IDs
+     * @return ownedTokenIds array of owned token IDs
      */
-    function ownedTokenIds() external view returns (uint256[] memory ids);
+    function ownedTokenIds()
+        external
+        view
+        returns (uint256[] memory ownedTokenIds);
 
     /**
      * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault
@@ -91,21 +99,26 @@ interface IShardVaultView {
     function yieldFeeBP() external view returns (uint16 feeBP);
 
     /**
-     * @notice return maxShardsPerUser
-     * @return uint16 maxShardsPerUser value
+     * @notice return the maximum shards a user is allowed to mint
+     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
+     * said user may not deposit more
+     * @return maxShards maxShardsPerUser value
      */
-    function maxShardsPerUser() external view returns (uint16);
+    function maxUserShards() external view returns (uint16 maxShards);
 
     /**
-     * @notice return vault shards owned by an account
+     * @notice return quantity of vault shards owned by an account
      * @param account address owning shards
-     * @return uint16 shards owned by account
+     * @return shards quantity of shards
      */
-    function userShards(address account) external view returns (uint16);
+    function shardBalances(address account)
+        external
+        view
+        returns (uint16 shards);
 
     /**
      * @notice return amount of shards reserved for whitelist
-     * @return uint16 amount of shards reserved for whitelist
+     * @return reservedShards amount of shards reserved for whitelist
      */
-    function whitelistShards() external view returns (uint16);
+    function reservedShards() external view returns (uint16 reservedShards);
 }

@@ -9,9 +9,9 @@ library ShardVaultStorage {
         uint256 shardValue;
         uint256 accruedFees;
         uint256 cumulativeEPS; //EPS = ETH per shard
-        uint256 whitelistEndsAt;
-        uint16 whitelistShards;
-        uint16 maxShardsPerUser;
+        uint64 whitelistEndsAt;
+        uint16 reservedShards;
+        uint16 maxUserShards;
         uint16 count;
         uint16 maxSupply;
         uint16 totalSupply;
@@ -30,7 +30,7 @@ library ShardVaultStorage {
         bool isEnabled;
         bool claimableETHProvided;
         EnumerableSet.UintSet ownedTokenIds;
-        mapping(address => uint16) userShards;
+        mapping(address => uint16) shardBalances;
         mapping(uint256 => uint256) claimedEPS; //EPS = ETH per shard
     }
 

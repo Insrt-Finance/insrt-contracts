@@ -123,7 +123,7 @@ export function describeBehaviorOfShardVaultIO(
     };
   });
 
-  describe.only('::ShardVaultIO', () => {
+  describe('::ShardVaultIO', () => {
     describe('#deposit()', () => {
       const depositAmount = ethers.utils.parseEther('10');
       it('transfers ETH from depositor to vault', async () => {
@@ -171,11 +171,11 @@ export function describeBehaviorOfShardVaultIO(
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
 
-        expect(await instance['userShards(address)'](depositor.address)).to.eq(
-          depositAmount.div(ethers.utils.parseEther('1')),
-        );
+        expect(
+          await instance['shardBalances(address)'](depositor.address),
+        ).to.eq(depositAmount.div(ethers.utils.parseEther('1')));
       });
-      it('returns any excess ETH after maxShardsPerUser is reached', async () => {
+      it('returns any excess ETH after MaxUserShards is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         const depositOneAmount = ethers.utils.parseEther('5');
         const depositTwoAmount = ethers.utils.parseEther('6');
@@ -194,7 +194,7 @@ export function describeBehaviorOfShardVaultIO(
           .add(depositOneAmount)
           .sub(
             BigNumber.from(
-              (await instance['maxShardsPerUser()']()).toString(),
+              (await instance['maxUserShards()']()).toString(),
             ).mul(ethers.utils.parseEther('1')),
           );
         const change = depositTwoAmount.sub(excess);
@@ -206,7 +206,7 @@ export function describeBehaviorOfShardVaultIO(
           [change, change.mul(ethers.constants.NegativeOne)],
         );
       });
-      it('returns any excess ETH after maxSupply is reached, if depositor has not reached maxShardsPerUser', async () => {
+      it('returns any excess ETH after maxSupply is reached, if depositor has not reached MaxUserShards', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         const depositOneAmount = ethers.utils.parseEther('5');
         const depositTwoAmount = ethers.utils.parseEther('6');
@@ -237,7 +237,7 @@ export function describeBehaviorOfShardVaultIO(
           [change, change.mul(ethers.constants.NegativeOne)],
         );
       });
-      it('during whitelist, returns any excess ETH after whitelistShards is reached, if depositor has not reached maxShardsPerUser', async () => {
+      it('during whitelist, returns any excess ETH after whitelistShards is reached, if depositor has not reached MaxUserShards', async () => {
         const depositOneAmount = ethers.utils.parseEther('5');
         const depositTwoAmount = ethers.utils.parseEther('6');
         const { timestamp: latestTS } = await ethers.provider.getBlock(
@@ -250,7 +250,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await instance
           .connect(owner)
-          ['initiateWhitelistAndDeposits(uint256,uint16)'](
+          ['initiateWhitelistAndDeposits(uint64,uint16)'](
             whitelistEndsAt,
             whitelistShards,
           );
@@ -263,7 +263,7 @@ export function describeBehaviorOfShardVaultIO(
           .add(depositTwoAmount)
           .sub(
             BigNumber.from(
-              (await instance['whitelistShards()']()).toString(),
+              (await instance['reservedShards()']()).toString(),
             ).mul(await instance['shardValue()']()),
           );
         const change = depositTwoAmount.sub(excess);
@@ -308,7 +308,7 @@ export function describeBehaviorOfShardVaultIO(
           await instance.connect(owner)['setIsEnabled(bool)'](true);
           await instance
             .connect(owner)
-            ['setMaxShardsPerUser(uint16)'](BigNumber.from('200'));
+            ['setMaxUserShards(uint16)'](BigNumber.from('200'));
           await instance
             .connect(depositor)
             ['deposit()']({ value: depositAmount });
@@ -324,7 +324,7 @@ export function describeBehaviorOfShardVaultIO(
           await instance.connect(owner)['setIsEnabled(bool)'](true);
           await instance
             .connect(owner)
-            ['setMaxShardsPerUser(uint16)'](BigNumber.from('200'));
+            ['setMaxUserShards(uint16)'](BigNumber.from('200'));
           await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
           await instance
             .connect(depositor)
@@ -353,7 +353,7 @@ export function describeBehaviorOfShardVaultIO(
           const whitelistShards = BigNumber.from('50');
           await instance
             .connect(owner)
-            ['initiateWhitelistAndDeposits(uint256,uint16)'](
+            ['initiateWhitelistAndDeposits(uint64,uint16)'](
               whitelistEndsAt,
               whitelistShards,
             );
@@ -374,7 +374,7 @@ export function describeBehaviorOfShardVaultIO(
           const whitelistShards = BigNumber.from('5');
           await instance
             .connect(owner)
-            ['initiateWhitelistAndDeposits(uint256,uint16)'](
+            ['initiateWhitelistAndDeposits(uint64,uint16)'](
               whitelistEndsAt,
               whitelistShards,
             );
@@ -471,7 +471,11 @@ export function describeBehaviorOfShardVaultIO(
           ).to.be.revertedWith('ShardVault__NotShardOwner()');
         });
         it('owned shards correspond to different vault', async () => {
+          await instance.connect(owner)['setIsEnabled(bool)'](true);
           await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
+          await instance
+            .connect(depositor)
+            ['deposit()']({ value: depositAmount });
           await secondInstance
             .connect(depositor)
             ['deposit()']({ value: depositAmount });
@@ -485,7 +489,7 @@ export function describeBehaviorOfShardVaultIO(
           }
 
           await expect(
-            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+            secondInstance.connect(depositor)['withdraw(uint256[])'](tokens),
           ).to.be.revertedWith('ShardVault__VaultTokenIdMismatch()');
         });
         it('vault is full', async () => {
@@ -511,7 +515,7 @@ export function describeBehaviorOfShardVaultIO(
         });
         it('vault is invested', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
-          await instance['setMaxShardsPerUser(uint16)'](BigNumber.from('100'));
+          await instance['setMaxUserShards(uint16)'](BigNumber.from('100'));
           await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
           await instance
             .connect(depositor)

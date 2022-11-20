@@ -28,7 +28,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         uint16 yieldFeeBP,
         uint16 bufferBP,
         uint16 deviationBP,
-        uint16 maxShardsPerUser
+        uint16 maxUserShards
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new ShardVaultProxy(
@@ -43,7 +43,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 yieldFeeBP,
                 bufferBP,
                 deviationBP,
-                maxShardsPerUser
+                maxUserShards
             )
         );
 

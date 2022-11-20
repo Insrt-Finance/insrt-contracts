@@ -31,7 +31,7 @@ interface IShardVaultManager {
      * @param yieldFeeBP yield fee basis points
      * @param bufferBP LTV buffer basis points
      * @param deviationBP LTV deviation basis points
-     * @param maxShardsPerUser maximum amount of shards allowed per user
+     * @param maxUserShards maximum amount of shards allowed per user
      * @return deployment address of ShardVaultProxy deployed
      */
     function deployShardVault(
@@ -45,6 +45,6 @@ interface IShardVaultManager {
         uint16 yieldFeeBP,
         uint16 bufferBP,
         uint16 deviationBP,
-        uint16 maxShardsPerUser
+        uint16 maxUserShards
     ) external returns (address deployment);
 }
