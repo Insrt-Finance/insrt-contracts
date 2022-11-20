@@ -149,8 +149,10 @@ interface IShardVaultAdmin {
     ) external;
 
     /**
-     * @notice sets maxShardsPerUser
-     * @param maxShardsPerUser new maxShardsPerUser value
+     * @notice return the maximum shards a user is allowed to mint
+     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
+     * said user may not deposit more
+     * @param maxUserShards new maxUserShards value
      */
-    function setMaxShardsPerUser(uint16 maxShardsPerUser) external;
+    function setMaxUserShards(uint16 maxUserShards) external;
 }

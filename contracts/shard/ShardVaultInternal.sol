@@ -98,7 +98,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint16 supplyCap = l.maxSupply;
         uint16 balance = l.shardBalances[msg.sender];
-        uint16 maxUserShards = l.maxShardsPerUser;
+        uint16 maxUserShards = l.maxUserShards;
 
         if (balance == maxUserShards) {
             revert ShardVault__MaxUserShards();
@@ -239,11 +239,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice return maxShardsPerUser
-     * @return uint16 maxShardsPerUser value
+     * @notice return maxUserShards
+     * @return uint16 maxUserShards value
      */
-    function _maxShardsPerUser() internal view returns (uint16) {
-        return ShardVaultStorage.layout().maxShardsPerUser;
+    function _maxUserShards() internal view returns (uint16) {
+        return ShardVaultStorage.layout().maxUserShards;
     }
 
     /**
@@ -592,11 +592,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice sets maxShardsPerUser
-     * @param maxShardsPerUser new maxShardsPerUser value
+     * @notice return the maximum shards a user is allowed to mint
+     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
+     * said user may not deposit more
+     * @param maxUserShards new maxUserShards value
      */
-    function _setMaxShardsPerUser(uint16 maxShardsPerUser) internal {
-        ShardVaultStorage.layout().maxShardsPerUser = maxShardsPerUser;
+    function _setMaxUserShards(uint16 maxUserShards) internal {
+        ShardVaultStorage.layout().maxUserShards = maxUserShards;
     }
 
     /**
@@ -642,7 +644,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         returns (uint256 shards)
     {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        shards = l.maxShardsPerUser - l.shardBalances[account];
+        shards = l.maxUserShards - l.shardBalances[account];
     }
 
     function _whitelistRemainingShards()

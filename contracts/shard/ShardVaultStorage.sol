@@ -10,7 +10,7 @@ library ShardVaultStorage {
         uint256 accruedFees;
         uint64 whitelistEndsAt;
         uint16 reservedShards;
-        uint16 maxShardsPerUser;
+        uint16 maxUserShards;
         uint16 count;
         uint16 maxSupply;
         uint16 totalSupply;

@@ -96,7 +96,7 @@ interface IShardVaultView {
      * said user may not deposit more
      * @return maxShards maxShardsPerUser value
      */
-    function maxShardsPerUser() external view returns (uint16 maxShards);
+    function maxUserShards() external view returns (uint16 maxShards);
 
     /**
      * @notice return quantity of vault shards owned by an account
