@@ -105,10 +105,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         if (block.timestamp < l.whitelistEndsAt) {
-            if (IERC721(DAWN_OF_INSRT).balanceOf(msg.sender) == 0) {
-                revert ShardVault__NotWhitelisted();
-            }
-
+            _enforceWhitelist(msg.sender);
             maxSupply = l.reservedShards;
         }
 
@@ -663,6 +660,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _remainingShards() internal view returns (uint256 shards) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         shards = l.maxSupply - l.totalSupply;
+    }
+
+    /**
+     * @notice check to ensure account is whitelisted (holding a DAWN_OF_INSRT token)
+     * @param account address to check
+     */
+    function _enforceWhitelist(address account) internal view {
+        if (IERC721(DAWN_OF_INSRT).balanceOf(account) == 0) {
+            revert ShardVault__NotWhitelisted();
+        }
     }
 
     /**
