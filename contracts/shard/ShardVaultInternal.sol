@@ -97,10 +97,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         uint16 supplyCap = l.maxSupply;
-        uint16 userShards = l.userShards[msg.sender];
+        uint16 balance = l.shardBalances[msg.sender];
         uint16 maxUserShards = l.maxShardsPerUser;
 
-        if (userShards == maxUserShards) {
+        if (balance == maxUserShards) {
             revert ShardVault__MaxUserShards();
         }
 
@@ -126,8 +126,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint16 shards = uint16(amount / shardValue);
         uint16 excessShards;
 
-        if (userShards + shards > maxUserShards) {
-            excessShards = shards + userShards - maxUserShards;
+        if (balance + shards > maxUserShards) {
+            excessShards = shards + balance - maxUserShards;
             shards -= excessShards;
         }
 
@@ -137,7 +137,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply += shards;
-        l.userShards[msg.sender] += shards;
+        l.shardBalances[msg.sender] += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -166,7 +166,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint16 tokens = uint16(tokenIds.length);
 
-        if (l.userShards[msg.sender] < tokens) {
+        if (l.shardBalances[msg.sender] < tokens) {
             revert ShardVault__InsufficientShards();
         }
 
@@ -189,7 +189,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply -= tokens;
-        l.userShards[msg.sender] -= tokens;
+        l.shardBalances[msg.sender] -= tokens;
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }
@@ -251,8 +251,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param account address owning shards
      * @return uint16 shards owned by account
      */
-    function _userShards(address account) internal view returns (uint16) {
-        return ShardVaultStorage.layout().userShards[account];
+    function _shardBalances(address account) internal view returns (uint16) {
+        return ShardVaultStorage.layout().shardBalances[account];
     }
 
     /**
@@ -642,7 +642,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         returns (uint256 shards)
     {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        shards = l.maxShardsPerUser - l.userShards[account];
+        shards = l.maxShardsPerUser - l.shardBalances[account];
     }
 
     function _whitelistRemainingShards()

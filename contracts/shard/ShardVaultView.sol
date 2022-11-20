@@ -146,8 +146,8 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function userShards(address account) external view returns (uint16) {
-        return _userShards(account);
+    function shardBalances(address account) external view returns (uint16) {
+        return _shardBalances(account);
     }
 
     /**

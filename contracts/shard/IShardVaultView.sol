@@ -101,7 +101,7 @@ interface IShardVaultView {
      * @param account address owning shards
      * @return uint16 shards owned by account
      */
-    function userShards(address account) external view returns (uint16);
+    function shardBalances(address account) external view returns (uint16);
 
     /**
      * @notice return amount of shards reserved for whitelist

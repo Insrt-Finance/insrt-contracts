@@ -171,9 +171,9 @@ export function describeBehaviorOfShardVaultIO(
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
 
-        expect(await instance['userShards(address)'](depositor.address)).to.eq(
-          depositAmount.div(ethers.utils.parseEther('1')),
-        );
+        expect(
+          await instance['shardBalances(address)'](depositor.address),
+        ).to.eq(depositAmount.div(ethers.utils.parseEther('1')));
       });
       it('returns any excess ETH after maxShardsPerUser is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -250,7 +250,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await instance
           .connect(owner)
-          ['initiateWhitelistAndDeposits(uint256,uint16)'](
+          ['initiateWhitelistAndDeposits(uint64,uint16)'](
             whitelistEndsAt,
             whitelistShards,
           );
@@ -353,7 +353,7 @@ export function describeBehaviorOfShardVaultIO(
           const whitelistShards = BigNumber.from('50');
           await instance
             .connect(owner)
-            ['initiateWhitelistAndDeposits(uint256,uint16)'](
+            ['initiateWhitelistAndDeposits(uint64,uint16)'](
               whitelistEndsAt,
               whitelistShards,
             );
@@ -374,7 +374,7 @@ export function describeBehaviorOfShardVaultIO(
           const whitelistShards = BigNumber.from('5');
           await instance
             .connect(owner)
-            ['initiateWhitelistAndDeposits(uint256,uint16)'](
+            ['initiateWhitelistAndDeposits(uint64,uint16)'](
               whitelistEndsAt,
               whitelistShards,
             );

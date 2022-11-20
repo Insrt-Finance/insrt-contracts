@@ -28,7 +28,7 @@ library ShardVaultStorage {
         bool divested;
         bool isEnabled;
         EnumerableSet.UintSet ownedTokenIds;
-        mapping(address => uint16) userShards;
+        mapping(address => uint16) shardBalances;
     }
 
     bytes32 internal constant STORAGE_SLOT =
