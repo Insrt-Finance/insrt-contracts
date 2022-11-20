@@ -96,7 +96,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__NotEnabled();
         }
 
-        uint16 supplyCap = l.maxSupply;
+        uint16 maxSupply = l.maxSupply;
         uint16 balance = l.shardBalances[msg.sender];
         uint16 maxUserShards = l.maxUserShards;
 
@@ -109,7 +109,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
                 revert ShardVault__NotWhitelisted();
             }
 
-            supplyCap = l.reservedShards;
+            maxSupply = l.reservedShards;
         }
 
         uint256 amount = msg.value;
@@ -119,7 +119,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         if (amount % shardValue != 0 || amount == 0) {
             revert ShardVault__InvalidDepositAmount();
         }
-        if (totalSupply == supplyCap || l.isInvested) {
+        if (totalSupply == maxSupply || l.isInvested) {
             revert ShardVault__DepositForbidden();
         }
 
@@ -131,9 +131,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             shards -= excessShards;
         }
 
-        if (shards + totalSupply >= supplyCap) {
-            excessShards += shards + totalSupply - supplyCap;
-            shards -= shards + totalSupply - supplyCap;
+        if (shards + totalSupply >= maxSupply) {
+            excessShards += shards + totalSupply - maxSupply;
+            shards = maxSupply - totalSupply;
         }
 
         l.totalSupply += shards;
