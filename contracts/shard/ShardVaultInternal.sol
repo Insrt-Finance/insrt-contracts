@@ -109,7 +109,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
                 revert ShardVault__NotWhitelisted();
             }
 
-            supplyCap = l.whitelistShards;
+            supplyCap = l.reservedShards;
         }
 
         uint256 amount = msg.value;
@@ -259,8 +259,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice return amount of shards reserved for whitelist
      * @return uint16 amount of shards reserved for whitelist
      */
-    function _whitelistShards() internal view returns (uint16) {
-        return ShardVaultStorage.layout().whitelistShards;
+    function _reservedShards() internal view returns (uint16) {
+        return ShardVaultStorage.layout().reservedShards;
     }
 
     /**
@@ -569,18 +569,18 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _setWhitelistEndsAt(uint64 whitelistEndsAt) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        if (l.whitelistShards == 0) {
-            revert ShardVault__NoWhitelistShards();
+        if (l.reservedShards == 0) {
+            revert ShardVault__NoReservedShards();
         }
         l.whitelistEndsAt = whitelistEndsAt;
     }
 
     /**
      * @notice sets the maximum amount of shard to be minted during whitelist
-     * @param whitelistShards whitelist shard amount
+     * @param reservedShards whitelist shard amount
      */
-    function _setWhitelistShards(uint16 whitelistShards) internal {
-        ShardVaultStorage.layout().whitelistShards = whitelistShards;
+    function _setReservedShards(uint16 reservedShards) internal {
+        ShardVaultStorage.layout().reservedShards = reservedShards;
     }
 
     /**

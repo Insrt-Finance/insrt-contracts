@@ -263,7 +263,7 @@ export function describeBehaviorOfShardVaultIO(
           .add(depositTwoAmount)
           .sub(
             BigNumber.from(
-              (await instance['whitelistShards()']()).toString(),
+              (await instance['reservedShards()']()).toString(),
             ).mul(await instance['shardValue()']()),
           );
         const change = depositTwoAmount.sub(excess);

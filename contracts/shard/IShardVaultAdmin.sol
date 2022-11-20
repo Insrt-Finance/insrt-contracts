@@ -128,12 +128,12 @@ interface IShardVaultAdmin {
 
     /**
      * @notice sets the maximum amount of shard to be minted during whitelist
-     * @param whitelistShards whitelist shard amount
+     * @param reservedShards reserved shard amount
      */
-    function setWhitelistShards(uint16 whitelistShards) external;
+    function setReservedShards(uint16 reservedShards) external;
 
     /**
-     * @notice sets the isEnabled flag
+     * @notice sets the isEnabled flag, allowing or prohibiting deposits
      * @param isEnabled boolean value
      */
     function setIsEnabled(bool isEnabled) external;
@@ -141,11 +141,11 @@ interface IShardVaultAdmin {
     /**
      * @notice sets the whitelist deadline and allows deposits
      * @param whitelistEndsAt whitelist deadline timestamp
-     * @param whitelistShards whitelist shard amount
+     * @param reservedShards whitelist shard amount
      */
     function initiateWhitelistAndDeposits(
         uint64 whitelistEndsAt,
-        uint16 whitelistShards
+        uint16 reservedShards
     ) external;
 
     /**

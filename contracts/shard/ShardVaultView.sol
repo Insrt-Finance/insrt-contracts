@@ -153,7 +153,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function whitelistShards() external view returns (uint16) {
-        return _whitelistShards();
+    function reservedShards() external view returns (uint16) {
+        return _reservedShards();
     }
 }

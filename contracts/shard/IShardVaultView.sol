@@ -94,20 +94,23 @@ interface IShardVaultView {
      * @notice return the maximum shards a user is allowed to mint
      * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
      * said user may not deposit more
-     * @return uint16 maxShardsPerUser value
+     * @return maxShards maxShardsPerUser value
      */
-    function maxShardsPerUser() external view returns (uint16);
+    function maxShardsPerUser() external view returns (uint16 maxShards);
 
     /**
-     * @notice return vault shards owned by an account
+     * @notice return quantity of vault shards owned by an account
      * @param account address owning shards
-     * @return uint16 shards owned by account
+     * @return shards quantity of shards
      */
-    function shardBalances(address account) external view returns (uint16);
+    function shardBalances(address account)
+        external
+        view
+        returns (uint16 shards);
 
     /**
      * @notice return amount of shards reserved for whitelist
-     * @return uint16 amount of shards reserved for whitelist
+     * @return reservedShards amount of shards reserved for whitelist
      */
-    function whitelistShards() external view returns (uint16);
+    function reservedShards() external view returns (uint16 reservedShards);
 }
