@@ -124,7 +124,7 @@ interface IShardVaultAdmin {
      * @notice sets the whitelistEndsAt timestamp
      * @param whitelistEndsAt timestamp of whitelist end
      */
-    function setWhitelistEndsAt(uint256 whitelistEndsAt) external;
+    function setWhitelistEndsAt(uint64 whitelistEndsAt) external;
 
     /**
      * @notice sets the maximum amount of shard to be minted during whitelist
@@ -144,7 +144,7 @@ interface IShardVaultAdmin {
      * @param whitelistShards whitelist shard amount
      */
     function initiateWhitelistAndDeposits(
-        uint256 whitelistEndsAt,
+        uint64 whitelistEndsAt,
         uint16 whitelistShards
     ) external;
 

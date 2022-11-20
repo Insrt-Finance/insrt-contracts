@@ -142,7 +142,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setWhitelistEndsAt(uint256 whitelistEndsAt)
+    function setWhitelistEndsAt(uint64 whitelistEndsAt)
         external
         onlyProtocolOwner
     {
@@ -170,7 +170,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function initiateWhitelistAndDeposits(
-        uint256 whitelistEndsAt,
+        uint64 whitelistEndsAt,
         uint16 whitelistShards
     ) external onlyProtocolOwner {
         _setWhitelistShards(whitelistShards);

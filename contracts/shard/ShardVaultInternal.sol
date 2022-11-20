@@ -567,7 +567,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice sets the whitelistEndsAt timestamp
      * @param whitelistEndsAt timestamp of whitelist end
      */
-    function _setWhitelistEndsAt(uint256 whitelistEndsAt) internal {
+    function _setWhitelistEndsAt(uint64 whitelistEndsAt) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         if (l.whitelistShards == 0) {
             revert ShardVault__NoWhitelistShards();
