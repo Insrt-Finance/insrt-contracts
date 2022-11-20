@@ -131,7 +131,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             shards -= excessShards;
         }
 
-        if (shards + totalSupply >= maxSupply) {
+        if (shards + totalSupply > maxSupply) {
             excessShards += shards + totalSupply - maxSupply;
             shards = maxSupply - totalSupply;
         }
