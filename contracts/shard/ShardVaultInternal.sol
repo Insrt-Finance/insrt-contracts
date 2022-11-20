@@ -193,79 +193,97 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice returns total minted shards amount
+     * @return totalSupply total minted shards amount
      */
-    function _totalSupply() internal view returns (uint16) {
-        return ShardVaultStorage.layout().totalSupply;
+    function _totalSupply() internal view returns (uint16 totalSupply) {
+        totalSupply = ShardVaultStorage.layout().totalSupply;
     }
 
     /**
      * @notice returns maximum possible minted shards
+     * @return maxSupply maximum possible minted shards
      */
-    function _maxSupply() internal view returns (uint16) {
-        return ShardVaultStorage.layout().maxSupply;
+    function _maxSupply() internal view returns (uint16 maxSupply) {
+        maxSupply = ShardVaultStorage.layout().maxSupply;
     }
 
     /**
-     * @notice returns ETH value of shard
+     * @notice returns ETH value of a shard
+     * @return shardValue ETH value of a shard
      */
-    function _shardValue() internal view returns (uint256) {
-        return ShardVaultStorage.layout().shardValue;
+    function _shardValue() internal view returns (uint256 shardValue) {
+        shardValue = ShardVaultStorage.layout().shardValue;
     }
 
     /**
      * @notice return ShardCollection address
+     * @return shardCollection address
      */
-    function _shardCollection() internal view returns (address) {
-        return SHARD_COLLECTION;
+    function _shardCollection()
+        internal
+        view
+        returns (address shardCollection)
+    {
+        shardCollection = SHARD_COLLECTION;
     }
 
     /**
      * @notice return minted token count
      * @dev does not reduce when tokens are burnt
+     * @return count minted token count
      */
-    function _count() internal view returns (uint16) {
-        return ShardVaultStorage.layout().count;
+    function _count() internal view returns (uint16 count) {
+        count = ShardVaultStorage.layout().count;
     }
 
     /**
      * @notice return isInvested flag state
-     * @return bool isInvested flag
+     * @dev indicates whether last asset purchase has been made
+     * @return isInvested isInvested flag
      */
-    function _isInvested() internal view returns (bool) {
-        return ShardVaultStorage.layout().isInvested;
+    function _isInvested() internal view returns (bool isInvested) {
+        isInvested = ShardVaultStorage.layout().isInvested;
     }
 
     /**
      * @notice return maxUserShards
-     * @return uint16 maxUserShards value
+     * @return maxUserShards maxUserShards value
      */
-    function _maxUserShards() internal view returns (uint16) {
-        return ShardVaultStorage.layout().maxUserShards;
+    function _maxUserShards() internal view returns (uint16 maxUserShards) {
+        maxUserShards = ShardVaultStorage.layout().maxUserShards;
     }
 
     /**
      * @notice return vault shards owned by an account
      * @param account address owning shards
-     * @return uint16 shards owned by account
+     * @return shardBalance shards owned by account
      */
-    function _shardBalances(address account) internal view returns (uint16) {
-        return ShardVaultStorage.layout().shardBalances[account];
+    function _shardBalances(address account)
+        internal
+        view
+        returns (uint16 shardBalance)
+    {
+        shardBalance = ShardVaultStorage.layout().shardBalances[account];
     }
 
     /**
      * @notice return amount of shards reserved for whitelist
-     * @return uint16 amount of shards reserved for whitelist
+     * @return reserverdShards amount of shards reserved for whitelist
      */
-    function _reservedShards() internal view returns (uint16) {
-        return ShardVaultStorage.layout().reservedShards;
+    function _reservedShards() internal view returns (uint16 reserverdShards) {
+        reserverdShards = ShardVaultStorage.layout().reservedShards;
     }
 
     /**
      * @notice return array with owned token IDs
-     * @return uint256[]  array of owned token IDs
+     * @return ownedTokenIds  array of owned token IDs
      */
-    function _ownedTokenIds() internal view returns (uint256[] memory) {
-        return ShardVaultStorage.layout().ownedTokenIds.toArray();
+    function _ownedTokenIds()
+        internal
+        view
+        returns (uint256[] memory ownedTokenIds)
+    {
+        ownedTokenIds = ShardVaultStorage.layout().ownedTokenIds.toArray();
     }
 
     /**
