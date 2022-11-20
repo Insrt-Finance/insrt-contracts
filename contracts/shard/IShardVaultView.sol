@@ -91,7 +91,9 @@ interface IShardVaultView {
     function yieldFeeBP() external view returns (uint16 feeBP);
 
     /**
-     * @notice return maxShardsPerUser
+     * @notice return the maximum shards a user is allowed to mint
+     * @dev a user may theoretically have more than this amount, but once this amount is exceeded
+     * said user may not deposit more
      * @return uint16 maxShardsPerUser value
      */
     function maxShardsPerUser() external view returns (uint16);
