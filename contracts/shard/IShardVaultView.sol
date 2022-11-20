@@ -92,7 +92,7 @@ interface IShardVaultView {
 
     /**
      * @notice return the maximum shards a user is allowed to mint
-     * @dev a user may theoretically have more than this amount, but once this amount is exceeded
+     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
      * said user may not deposit more
      * @return uint16 maxShardsPerUser value
      */
