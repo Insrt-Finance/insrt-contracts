@@ -1764,5 +1764,104 @@ export function describeBehaviorOfShardVaultAdmin(
         });
       });
     });
+
+    describe('#setAcquisitionFee(uint16)', () => {
+      it('sets acquisition fee value', async () => {
+        const feeValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setAcquisitionFee(uint16)'](feeValue);
+
+        expect(await instance['acquisitionFeeBP()']()).to.eq(feeValue);
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setAcquisitionFee(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+        it('value exceeds BASIS_POINTS', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['setAcquisitionFee(uint16)'](BigNumber.from('10001')),
+          ).to.be.revertedWith('ShardVault__BasisExceeded()');
+        });
+      });
+    });
+
+    describe('#setSaleFee(uint16)', () => {
+      it('sets sale fee value', async () => {
+        const feeValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setSaleFee(uint16)'](feeValue);
+
+        expect(await instance['saleFeeBP()']()).to.eq(feeValue);
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setSaleFee(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+        it('value exceeds BASIS_POINTS', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['setSaleFee(uint16)'](BigNumber.from('10001')),
+          ).to.be.revertedWith('ShardVault__BasisExceeded()');
+        });
+      });
+    });
+
+    describe('#setYieldFee(uint16)', () => {
+      it('sets yield fee value', async () => {
+        const feeValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setYieldFee(uint16)'](feeValue);
+
+        expect(await instance['yieldFeeBP()']()).to.eq(feeValue);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setYieldFee(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+        it('value exceeds BASIS_POINTS', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['setYieldFee(uint16)'](BigNumber.from('10001')),
+          ).to.be.revertedWith('ShardVault__BasisExceeded()');
+        });
+      });
+    });
+
+    describe('#setMaxSupply(uint16)', () => {
+      it('sets maxSupply value', async () => {
+        const newValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setMaxSupply(uint16)'](newValue);
+
+        expect(await instance['maxSupply()']()).to.eq(newValue);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setMaxSupply(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+      });
+    });
   });
 }
