@@ -653,16 +653,28 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
     }
 
+    /**
+     * @notice returns the amount of shards a given account has left to mint
+     * @param account address to calculate for
+     * @return shards the amount of shards the account may mint
+     */
     function _userRemainingShards(address account)
         internal
         view
         returns (uint256 shards)
     {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        shards = l.maxUserShards - l.shardBalances[account];
+        if (l.maxUserShards > l.shardBalances[account]) {
+            shards = l.maxUserShards - l.shardBalances[account];
+        }
     }
 
-    function _whitelistRemainingShards()
+    /**
+     * @notice returns how many remaining reservations for shards are left
+     * @dev returns 0 if whitelist period has elapsed
+     * @return shards the amount of remaining shard reservations
+     */
+    function _remainingShardReservations()
         internal
         view
         returns (uint256 shards)
@@ -670,11 +682,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         if (block.timestamp < l.whitelistEndsAt) {
             shards = l.maxSupply - l.totalSupply;
-        } else {
-            shards = 0;
         }
     }
 
+    /**
+     * @notice returns vault-wide amount of shards that can still be minted
+     * @return shards amount of shards which can still be minted
+     */
     function _remainingShards() internal view returns (uint256 shards) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         shards = l.maxSupply - l.totalSupply;
