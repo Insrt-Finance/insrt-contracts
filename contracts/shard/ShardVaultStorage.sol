@@ -31,7 +31,7 @@ library ShardVaultStorage {
         bool isInvested;
         bool isDivested;
         bool isEnabled;
-        bool claimableETHProvided;
+        bool isYieldClaiming;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => uint16) shardBalances;
         mapping(uint256 => uint256) claimedEPS; //EPS = ETH per shard

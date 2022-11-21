@@ -89,4 +89,14 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when the actual downpayment amount is too small
      */
     error ShardVault__DownPaymentInsufficient();
+
+    /**
+     * @notice thrown when attempting to claim yield before yield claiming is initialized
+     */
+    error ShardVault__YieldClaimingForbidden();
+
+    /**
+     * @notice thrown when attempting to claim excess ETH after yield claiming is initialized
+     */
+    error ShardVault__ClaimingExcessETHForbidden();
 }

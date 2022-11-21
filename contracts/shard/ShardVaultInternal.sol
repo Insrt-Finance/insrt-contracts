@@ -868,8 +868,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             minETH
         );
 
-        if (!l.claimableETHProvided) {
-            l.claimableETHProvided = true;
+        if (!l.isYieldClaiming) {
+            l.isYieldClaiming = true;
         }
         l.cumulativeEPS += ETH / l.totalSupply;
     }
@@ -886,38 +886,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         l.cumulativeJPS += jpeg / l.totalSupply;
     }
 
-    function _claimJPEG(address account, uint256[] memory tokenIds) internal {
-        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
-        uint256 tokens = tokenIds.length;
-        _enforceSufficientBalance(account, tokens);
-
-        uint256 cumulativeJPS = l.cumulativeJPS;
-        uint256 totalJPEG;
-        uint256 claimedJPS;
-
-        unchecked {
-            for (uint256 i; i < tokens; ++i) {
-                _enforceShardOwnership(account, tokenIds[i]);
-                _enforceVaultTokenIdMatch(tokenIds[i]);
-
-                claimedJPS = cumulativeJPS - l.claimedJPS[tokenIds[i]];
-                totalJPEG += claimedJPS;
-                l.claimedJPS[tokenIds[i]] += claimedJPS;
-            }
-        }
-
-        uint256 fee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
-        l.accruedJPEG += fee;
-
-        IERC20(JPEG).transfer(account, totalJPEG - fee);
-    }
-
-    function _claimETH(address account, uint256[] memory tokenIds) internal {
+    function _claimExcessETH(address account, uint256[] memory tokenIds)
+        internal
+    {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = tokenIds.length;
 
+        _enforceNotYieldClaiming();
         _enforceSufficientBalance(account, tokens);
 
         uint256 cumulativeEPS = l.cumulativeEPS;
@@ -935,13 +911,53 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             }
         }
 
-        if (l.claimableETHProvided) {
-            uint256 fee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
-            l.accruedFees += fee;
-            totalETH -= fee;
+        payable(account).sendValue(totalETH);
+    }
+
+    function _claimYield(address account, uint256[] memory tokenIds) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 tokens = tokenIds.length;
+
+        _enforceYieldClaiming();
+        _enforceSufficientBalance(account, tokens);
+
+        //parameters for ETH claiming
+        uint256 cumulativeEPS = l.cumulativeEPS;
+        uint256 totalETH;
+        uint256 claimedEPS;
+        //parameters for JPEG claiming
+        uint256 cumulativeJPS = l.cumulativeJPS;
+        uint256 totalJPEG;
+        uint256 claimedJPS;
+
+        unchecked {
+            for (uint256 i; i < tokens; ++i) {
+                _enforceShardOwnership(account, tokenIds[i]);
+                _enforceVaultTokenIdMatch(tokenIds[i]);
+
+                //account for claimable ETH
+                claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
+                totalETH += claimedEPS;
+                l.claimedEPS[tokenIds[i]] += claimedEPS;
+
+                //account for claimable JPEG
+                claimedJPS = cumulativeJPS - l.claimedJPS[tokenIds[i]];
+                totalJPEG += claimedJPS;
+                l.claimedJPS[tokenIds[i]] += claimedJPS;
+            }
         }
 
-        payable(account).sendValue(totalETH);
+        //apply fees
+        uint256 ETHfee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
+        l.accruedFees += ETHfee;
+
+        uint256 jpegFee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
+        l.accruedJPEG += jpegFee;
+
+        //transfer yield
+        IERC20(JPEG).transfer(account, totalJPEG - jpegFee);
+        payable(account).sendValue(totalETH - ETHfee);
     }
 
     /**
@@ -964,7 +980,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256[] memory tokenIds;
         tokenIds[0] = tokenId;
 
-        _claimETH(from, tokenIds);
+        if (l.isYieldClaiming) {
+            _claimYield(from, tokenIds);
+        } else {
+            _claimExcessETH(from, tokenIds);
+        }
 
         --l.shardBalances[from];
         ++l.shardBalances[to];
@@ -1137,6 +1157,24 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     {
         if (ShardVaultStorage.layout().shardBalances[account] < amount) {
             revert ShardVault__InsufficientShards();
+        }
+    }
+
+    /**
+     * @notice check to ensure yield claiming is initialized
+     */
+    function _enforceYieldClaiming() internal view {
+        if (!ShardVaultStorage.layout().isYieldClaiming) {
+            revert ShardVault__YieldClaimingForbidden();
+        }
+    }
+
+    /**
+     * @notice check to ensure yield claiming is not initialized
+     */
+    function _enforceNotYieldClaiming() internal view {
+        if (ShardVaultStorage.layout().isYieldClaiming) {
+            revert ShardVault__ClaimingExcessETHForbidden();
         }
     }
 
