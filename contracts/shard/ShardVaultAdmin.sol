@@ -19,7 +19,8 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         address curvePUSDPool,
         address curvePETHPool,
         address booster,
-        address marketplaceHelper
+        address marketplaceHelper,
+        address jpeg
     )
         ShardVaultInternal(
             shardCollection,
@@ -32,7 +33,8 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             curvePUSDPool,
             curvePETHPool,
             booster,
-            marketplaceHelper
+            marketplaceHelper,
+            jpeg
         )
     {}
 

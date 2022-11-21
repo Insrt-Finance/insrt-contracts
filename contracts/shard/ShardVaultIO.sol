@@ -17,7 +17,8 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
         address curvePUSDPool,
         address curvePETHPool,
         address booster,
-        address marketplaceHelper
+        address marketplaceHelper,
+        address jpeg
     )
         ShardVaultInternal(
             shardCollection,
@@ -30,7 +31,8 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
             curvePUSDPool,
             curvePETHPool,
             booster,
-            marketplaceHelper
+            marketplaceHelper,
+            jpeg
         )
     {}
 

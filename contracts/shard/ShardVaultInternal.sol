@@ -53,7 +53,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address curvePUSDPool,
         address curvePETHPool,
         address dawnOfInsrt,
-        address marketplaceHelper
+        address marketplaceHelper,
+        address jpeg
     ) {
         SHARD_COLLECTION = shardCollection;
         PUNKS = punkMarket;
@@ -66,6 +67,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CURVE_PETH_POOL = curvePETHPool;
         DAWN_OF_INSRT = dawnOfInsrt;
         MARKETPLACE_HELPER = marketplaceHelper;
+        JPEG = jpeg;
     }
 
     modifier onlyProtocolOwner() {
