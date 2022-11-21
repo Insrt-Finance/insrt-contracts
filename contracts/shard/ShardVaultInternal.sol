@@ -866,10 +866,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 pETH = _unstakePETH(autoCompAmount, minPETH, poolInfoIndex);
+        IERC20(PETH).approve(CURVE_PETH_POOL, pETH);
+
         uint256 ETH = ICurveMetaPool(CURVE_PETH_POOL).exchange(
             1,
             0,
-            _unstakePETH(autoCompAmount, minPETH, poolInfoIndex),
+            pETH,
             minETH
         );
 
