@@ -888,6 +888,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         l.cumulativeJPS += jpeg / l.totalSupply;
     }
 
+    /**
+     * @notice returns excess ETH left over after vault has invested
+     * @param account address making the claim
+     * @param tokenIds array of shard IDs to claim with
+     */
     function _claimExcessETH(address account, uint256[] memory tokenIds)
         internal
     {
@@ -916,6 +921,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         payable(account).sendValue(totalETH);
     }
 
+    /**
+     * @notice sends yield in the form of ETH + JPEG tokens to account
+     * @param account address making the yield claim
+     * @param tokenIds array of shard IDs to claim with
+     */
     function _claimYield(address account, uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
