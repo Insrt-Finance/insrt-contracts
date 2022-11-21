@@ -859,6 +859,26 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
+    function _exposeRewardsPETH(
+        uint256 autoCompAmount,
+        uint256 minPETH,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        uint256 ETH = ICurveMetaPool(CURVE_PETH_POOL).exchange(
+            1,
+            0,
+            _unstakePETH(autoCompAmount, minPETH, poolInfoIndex),
+            minETH
+        );
+
+        if (!l.claimableETHProvided) {
+            l.claimableETHProvided = true;
+        }
+        l.cumulativeEPS += ETH / l.totalSupply;
+    }
+
     function _claimETH(address account, uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
