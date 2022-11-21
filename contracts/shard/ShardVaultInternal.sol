@@ -165,24 +165,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         uint16 tokens = uint16(tokenIds.length);
-
-        if (l.shardBalances[msg.sender] < tokens) {
-            revert ShardVault__InsufficientShards();
-        }
+        _enforceSufficientBalance(msg.sender, tokens);
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
-                if (
-                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
-                    msg.sender
-                ) {
-                    revert ShardVault__NotShardOwner();
-                }
-
-                (address vault, ) = _parseTokenId(tokenIds[i]);
-                if (vault != address(this)) {
-                    revert ShardVault__VaultTokenIdMismatch();
-                }
+                _enforceShardOwnership(msg.sender, tokenIds[i]);
+                _enforceVaultTokenIdMatch(tokenIds[i]);
 
                 IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
             }
@@ -902,9 +890,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = tokenIds.length;
-        if (l.shardBalances[account] < tokens) {
-            revert ShardVault__InsufficientShards();
-        }
+        _enforceSufficientBalance(account, tokens);
 
         uint256 cumulativeJPS = l.cumulativeJPS;
         uint256 totalJPEG;
@@ -912,17 +898,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
-                if (
-                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
-                    account
-                ) {
-                    revert ShardVault__NotShardOwner();
-                }
-
-                (address vault, ) = _parseTokenId(tokenIds[i]);
-                if (vault != address(this)) {
-                    revert ShardVault__VaultTokenIdMismatch();
-                }
+                _enforceShardOwnership(account, tokenIds[i]);
+                _enforceVaultTokenIdMatch(tokenIds[i]);
 
                 claimedJPS = cumulativeJPS - l.claimedJPS[tokenIds[i]];
                 totalJPEG += claimedJPS;
