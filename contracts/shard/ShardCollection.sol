@@ -50,6 +50,27 @@ contract ShardCollection is
     /**
      * @inheritdoc IShardCollection
      */
+    function setBaseURI(string memory baseURI) external onlyOwner {
+        _setBaseURI(baseURI);
+    }
+
+    /**
+     * @inheritdoc IShardCollection
+     */
+    function setName(string memory name) external onlyOwner {
+        _setName(name);
+    }
+
+    /**
+     * @inheritdoc IShardCollection
+     */
+    function setSymbol(string memory symbol) external onlyOwner {
+        _setSymbol(symbol);
+    }
+
+    /**
+     * @inheritdoc IShardCollection
+     */
     function isWhitelisted(address vault) external view returns (bool) {
         return _isWhitelisted(vault);
     }
