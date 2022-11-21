@@ -994,7 +994,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         if (l.isYieldClaiming) {
             _claimYield(from, tokenIds);
-        } else {
+        }
+
+        if (!l.isYieldClaiming && l.isInvested) {
             _claimExcessETH(from, tokenIds);
         }
 
