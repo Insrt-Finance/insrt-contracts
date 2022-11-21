@@ -895,7 +895,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint256 tokens = tokenIds.length;
 
-        _enforceNotYieldClaiming();
+        _enforceNotYieldClaimingAndInvested();
         _enforceSufficientBalance(account, tokens);
 
         uint256 cumulativeEPS = l.cumulativeEPS;
@@ -1172,10 +1172,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice check to ensure yield claiming is not initialized
+     * @notice check to ensure yield claiming is not initialized and vault is invested
      */
-    function _enforceNotYieldClaiming() internal view {
-        if (ShardVaultStorage.layout().isYieldClaiming) {
+    function _enforceNotYieldClaimingAndInvested() internal view {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        if (!l.isYieldClaiming && l.isInvested) {
             revert ShardVault__ClaimingExcessETHForbidden();
         }
     }
