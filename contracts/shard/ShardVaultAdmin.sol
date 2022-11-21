@@ -277,4 +277,15 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     ) external onlyProtocolOwner {
         _listPunk(calls, punkId);
     }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function provideYieldPETH(
+        uint256 autoComp,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner {
+        _provideYieldPETH(autoComp, minETH, poolInfoIndex);
+    }
 }

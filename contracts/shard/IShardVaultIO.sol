@@ -29,4 +29,16 @@ interface IShardVaultIO {
         address to,
         uint256 tokenId
     ) external;
+
+    /**
+     * @notice sends yield in the form of ETH + JPEG tokens to account
+     * @param tokenIds array of shard IDs to claim with
+     */
+    function claimYield(uint256[] memory tokenIds) external;
+
+    /**
+     * @notice returns excess ETH left over after vault has invested
+     * @param tokenIds array of shard IDs to claim with
+     */
+    function claimExcessETH(uint256[] memory tokenIds) external;
 }

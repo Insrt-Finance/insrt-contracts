@@ -60,4 +60,18 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     ) external {
         _beforeShardTransfer(from, to, tokenId);
     }
+
+    /**
+     * @inheritdoc IShardVaultIO
+     */
+    function claimYield(uint256[] memory tokenIds) external {
+        _claimYield(msg.sender, tokenIds);
+    }
+
+    /**
+     * @inheritdoc IShardVaultIO
+     */
+    function claimExcessETH(uint256[] memory tokenIds) external {
+        _claimExcessETH(msg.sender, tokenIds);
+    }
 }

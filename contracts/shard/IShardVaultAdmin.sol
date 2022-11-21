@@ -254,4 +254,18 @@ interface IShardVaultAdmin {
         IMarketPlaceHelper.EncodedCall[] memory calls,
         uint256 punkId
     ) external;
+
+    /**
+     * @notice provides (makes available) yield in the form of ETH and JPEG tokens
+     * @dev unstakes some of the pETH position to convert to yield, and claims
+     * pending rewards in LP_FARM to receive JPEG
+     * @param autoComp amount of autoComp tokens to unstake
+     * @param minETH minimum ETH to receive after unstaking
+     * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     */
+    function provideYieldPETH(
+        uint256 autoComp,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    ) external;
 }
