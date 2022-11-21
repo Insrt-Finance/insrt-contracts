@@ -38,6 +38,7 @@ describe('ShardVaultProxy', () => {
 
   let deployer: any;
   let jpegdOwner: any;
+
   const id = 1;
   const shardValue = ethers.utils.parseEther('1.0');
   const maxShards = BigNumber.from('20');
@@ -67,6 +68,9 @@ describe('ShardVaultProxy', () => {
   const pUSDConversionBuffer = BigNumber.from('1000178');
   const pETHConversionBuffer = BigNumber.from('1000269');
   const BASIS = BigNumber.from('10000');
+
+  const shardCollectionAddress: string[] = [];
+  const marketplaceHelperAddress: string[] = [];
 
   interface FeeParamsStruct {
     saleFeeBP: BigNumber;
@@ -303,6 +307,9 @@ describe('ShardVaultProxy', () => {
       deployer,
     );
 
+    shardCollectionAddress.push(shardCollectionProxy.address);
+    marketplaceHelperAddress.push(marketplaceHelper.address);
+
     await shardCollectionInstance
       .connect(deployer)
       ['addToWhitelist(address)'](deployment);
@@ -361,6 +368,10 @@ describe('ShardVaultProxy', () => {
     async () => pethInstance,
     {
       getProtocolOwner: async () => deployer,
+      shardCollection: shardCollectionAddress,
+      marketplaceHelper: marketplaceHelperAddress,
+      maxSupply: maxShards,
+      shardValue: shardValue,
     },
   );
 });
