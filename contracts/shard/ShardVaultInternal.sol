@@ -850,22 +850,28 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
-    function _provideRewardsPETH(
+    /**
+     * @notice provides (makes available) yield in the form of ETH and JPEG tokens
+     * @dev unstakes some of the pETH position to convert to yield, and claims
+     * pending rewards in LP_FARM to receive JPEG
+     * @param autoComp amount of autoComp tokens to unstake
+     * @param minETH minimum ETH to receive after unstaking
+     * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     */
+    function _provideYieldPETH(
         uint256 autoComp,
-        uint256 minPETH,
         uint256 minETH,
         uint256 poolInfoIndex
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 pETH = _unstakePETH(autoComp, minPETH, poolInfoIndex);
-        IERC20(PETH).approve(CURVE_PETH_POOL, pETH);
-
-        uint256 ETH = ICurveMetaPool(CURVE_PETH_POOL).exchange(
-            1, //pETH index in curve pool
-            0, //ETH index in curve pool
-            pETH,
-            minETH
+        uint256 ETH = _unstake(
+            autoComp,
+            minETH,
+            poolInfoIndex,
+            PETH_CITADEL,
+            CURVE_PETH_POOL,
+            0 //ETH index in curve pool
         );
 
         uint256 jpeg = ILPFarming(LP_FARM).pendingReward(
