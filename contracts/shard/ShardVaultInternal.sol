@@ -31,6 +31,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable SHARD_COLLECTION;
     address internal immutable PUSD;
     address internal immutable PETH;
+    address internal immutable JPEG;
     address internal immutable PUNKS;
     address internal immutable PUSD_CITADEL;
     address internal immutable PETH_CITADEL;
@@ -871,8 +872,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         IERC20(PETH).approve(CURVE_PETH_POOL, pETH);
 
         uint256 ETH = ICurveMetaPool(CURVE_PETH_POOL).exchange(
-            1,
-            0,
+            1, //pETH index in curve pool
+            0, //ETH index in curve pool
             pETH,
             minETH
         );
@@ -881,6 +882,44 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             l.claimableETHProvided = true;
         }
         l.cumulativeEPS += ETH / l.totalSupply;
+    }
+
+    function _claimJPEG(address account, uint256[] memory tokenIds) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 tokens = tokenIds.length;
+        if (l.shardBalances[account] < tokens) {
+            revert ShardVault__InsufficientShards();
+        }
+
+        uint256 cumulativeJPS = l.cumulativeJPS;
+        uint256 totalJPEG;
+        uint256 claimedJPS;
+
+        unchecked {
+            for (uint256 i; i < tokens; ++i) {
+                if (
+                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                    account
+                ) {
+                    revert ShardVault__NotShardOwner();
+                }
+
+                (address vault, ) = _parseTokenId(tokenIds[i]);
+                if (vault != address(this)) {
+                    revert ShardVault__VaultTokenIdMismatch();
+                }
+
+                claimedJPS = cumulativeJPS - l.claimedJPS[tokenIds[i]];
+                totalJPEG += claimedJPS;
+                l.claimedJPS[tokenIds[i]] += claimedJPS;
+            }
+        }
+
+        uint256 fee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
+        l.accruedJPEG += fee;
+
+        IERC20(JPEG).transfer(account, totalJPEG - fee);
     }
 
     function _claimETH(address account, uint256[] memory tokenIds) internal {
