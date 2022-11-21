@@ -884,6 +884,18 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         l.cumulativeEPS += ETH / l.totalSupply;
     }
 
+    function _provideRewardsJPEG(uint256 poolInfoIndex) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 jpeg = ILPFarming(LP_FARM).pendingReward(
+            poolInfoIndex,
+            address(this)
+        );
+        ILPFarming(LP_FARM).claim(poolInfoIndex);
+
+        l.cumulativeJPS += jpeg / l.totalSupply;
+    }
+
     function _claimJPEG(address account, uint256[] memory tokenIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
