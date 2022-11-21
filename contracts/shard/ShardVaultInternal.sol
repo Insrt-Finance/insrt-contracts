@@ -938,9 +938,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = tokenIds.length;
-        if (l.shardBalances[account] < tokens) {
-            revert ShardVault__InsufficientShards();
-        }
+
+        _enforceSufficientBalance(account, tokens);
 
         uint256 cumulativeEPS = l.cumulativeEPS;
         uint256 totalETH;
@@ -948,17 +947,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
-                if (
-                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
-                    account
-                ) {
-                    revert ShardVault__NotShardOwner();
-                }
-
-                (address vault, ) = _parseTokenId(tokenIds[i]);
-                if (vault != address(this)) {
-                    revert ShardVault__VaultTokenIdMismatch();
-                }
+                _enforceShardOwnership(account, tokenIds[i]);
+                _enforceVaultTokenIdMatch(tokenIds[i]);
 
                 claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
                 totalETH += claimedEPS;
@@ -1130,6 +1120,45 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _marketplaceHelper() internal view returns (address) {
         return MARKETPLACE_HELPER;
+    }
+
+    /**
+     * @notice check to ensure account owns a given tokenId corresponding to a shard
+     * @param account address to check
+     * @param tokenId tokenId to check
+     */
+    function _enforceShardOwnership(address account, uint256 tokenId)
+        internal
+        view
+    {
+        if (IShardCollection(SHARD_COLLECTION).ownerOf(tokenId) != account) {
+            revert ShardVault__NotShardOwner();
+        }
+    }
+
+    /**
+     * @notice check to ensure tokenId corresponds to vault
+     * @param tokenId tokenId to check
+     */
+    function _enforceVaultTokenIdMatch(uint256 tokenId) internal view {
+        (address vault, ) = _parseTokenId(tokenId);
+        if (vault != address(this)) {
+            revert ShardVault__VaultTokenIdMismatch();
+        }
+    }
+
+    /**
+     * @notice check to ensure an account has a balance larger than amount
+     * @param account address to check
+     * @param amount amount to check
+     */
+    function _enforceSufficientBalance(address account, uint256 amount)
+        internal
+        view
+    {
+        if (ShardVaultStorage.layout().shardBalances[account] < amount) {
+            revert ShardVault__InsufficientShards();
+        }
     }
 
     /**
