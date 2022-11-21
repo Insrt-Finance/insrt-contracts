@@ -859,7 +859,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
-    function _exposeRewardsPETH(
+    function _provideRewardsPETH(
         uint256 autoCompAmount,
         uint256 minPETH,
         uint256 minETH,
