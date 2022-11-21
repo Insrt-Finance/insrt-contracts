@@ -10,5 +10,15 @@ import { IShardVaultAdmin } from './IShardVaultAdmin.sol';
  * @title complete ShardVault interface
  */
 interface IShardVault is IShardVaultIO, IShardVaultView, IShardVaultAdmin {
+    struct FeeParams {
+        uint16 saleFeeBP;
+        uint16 acquisitionFeeBP;
+        uint16 yieldFeeBP;
+    }
 
+    struct BufferParams {
+        uint256 conversionBuffer;
+        uint16 ltvBufferBP;
+        uint16 ltvDeviationBP;
+    }
 }

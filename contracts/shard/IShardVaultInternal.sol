@@ -84,4 +84,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when caller is not shard collection
      */
     error ShardVault__NotShardCollection();
+
+    /**
+     * @notice thrown when the actual downpayment amount is too small
+     */
+    error ShardVault__DownPaymentInsufficient();
 }

@@ -15,6 +15,7 @@ import {
   ILPFarming,
   IVault,
 } from '../../typechain-types/contracts/interfaces/jpegd';
+import { IVault__factory } from '../../typechain-types/factories/contracts/interfaces/jpegd';
 
 export interface ShardVaultAdminBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
@@ -147,7 +148,7 @@ export function describeBehaviorOfShardVaultAdmin(
       };
     });
 
-    describe('#purchasePunk(uint256)', () => {
+    describe('#purchasePunk((bytes,uint256,address)[],uint256)', () => {
       it('purchases punk from CryptoPunkMarket', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -846,6 +847,932 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
+              ),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+      });
+    });
+
+    describe('#repayLoanPUSD(uint256,uint256,uint256,uint256)', () => {
+      it('debt paid is approximately amount of debt reduction', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+        await instance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+        await instance
+          .connect(owner)
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await instance.connect(owner)['stakePUSD(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.One,
+        );
+
+        const oldDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+        const oldDebInterest = await jpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const paymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        const paidDebt = await instance
+          .connect(owner)
+          .callStatic['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
+            0,
+            1,
+            punkId,
+          );
+
+        let tx = await instance
+          .connect(owner)
+          ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
+            0,
+            1,
+            punkId,
+          );
+
+        await tx.wait();
+
+        const newDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        //debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        //debtInterest calculations have rounding errors as per JPEG'd function
+        //comments. Error boundary is chosen somewhat arbitrarily
+        expect(accruedDebtInterest.sub(debtDifference)).to.closeTo(
+          paidDebt,
+          paidDebt.div(BigNumber.from('100000000000')),
+        );
+      });
+
+      it('reduces debt owed at least by amount requested', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+        await instance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+        await instance
+          .connect(owner)
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await instance.connect(owner)['stakePUSD(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.One,
+        );
+
+        const oldDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+        const oldDebInterest = await jpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const paymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        await instance
+          .connect(owner)
+          ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
+            0,
+            1,
+            punkId,
+          );
+
+        const newDebt = await instance.callStatic['totalDebt(uint256)'](punkId);
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        //debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+        it('paidDebt is less than requested amount', async () => {
+          console.log('TODO');
+        });
+      });
+    });
+
+    describe('#repayLoanPETH(uint256,uint256,uint256,uint256)', () => {
+      it('debt paid is approximately amount of debt reduction', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await pethInstance.connect(owner)['stakePETH(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.Two,
+        );
+
+        const oldDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+        const oldDebInterest = await pethJpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const paymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        const paidDebt = await pethInstance
+          .connect(owner)
+          .callStatic['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
+            0,
+            2,
+            punkId,
+          );
+
+        let tx = await pethInstance
+          .connect(owner)
+          ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
+            0,
+            2,
+            punkId,
+          );
+
+        await tx.wait();
+
+        const newDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        ///debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        expect(accruedDebtInterest.sub(debtDifference)).to.closeTo(
+          paidDebt,
+          paidDebt.div(BigNumber.from('100000000000')),
+        );
+      });
+      it('reduces debt owed by at least amount requested', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        const { timestamp: borrowTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        await pethInstance.connect(owner)['stakePETH(uint256,uint256,uint256)'](
+          actualBorrow,
+          minCurveLP.mul(9996).div(10000), //curve fee is 0.04% (unsure)
+          ethers.constants.Two,
+        );
+
+        const oldDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+        const oldDebInterest = await pethJpegdVault.callStatic[
+          'getDebtInterest(uint256)'
+        ](punkId);
+
+        const paymentAmount = BigNumber.from('100000000000000000');
+
+        const duration = 100000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          borrowTimeStamp + duration,
+        ]);
+
+        await pethInstance
+          .connect(owner)
+          ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
+            0,
+            2,
+            punkId,
+          );
+
+        const newDebt = await pethInstance.callStatic['totalDebt(uint256)'](
+          punkId,
+        );
+
+        //remove one 'tick' since debt accrual occured right before read
+        const accruedDebtInterest = oldDebInterest
+          .mul(duration)
+          .sub(oldDebInterest);
+        ///debt increased
+        const debtDifference = newDebt.sub(oldDebt);
+
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance
+              .connect(nonOwner)
+              ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+        it('paidDebt is less than requested amount', async () => {
+          console.log('TODO');
+        });
+      });
+    });
+
+    describe('#unstakePUSD(uint256,uint256,uint256)', () => {
+      it('unstakes requested amount of autoComp shares from lpFarm and JPEG citadel', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await instance
+          .connect(owner)
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        const lpFarm = <ILPFarming>(
+          await ethers.getContractAt('ILPFarming', LP_FARM)
+        );
+
+        const shares = await instance
+          .connect(owner)
+          .callStatic['stakePUSD(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.One,
+          );
+
+        await instance
+          .connect(owner)
+          ['stakePUSD(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.One,
+          );
+
+        const oldAmount = (
+          await lpFarm.callStatic['userInfo(uint256,address)'](
+            ethers.constants.One,
+            instance.address,
+          )
+        ).amount;
+
+        const unstakeAmount = ethers.utils.parseEther('2');
+
+        await instance
+          .connect(owner)
+          ['unstakePUSD(uint256,uint256,uint256)'](unstakeAmount, 0, 1);
+
+        const newAmount = (
+          await lpFarm.callStatic['userInfo(uint256,address)'](
+            ethers.constants.One,
+            instance.address,
+          )
+        ).amount;
+
+        expect(oldAmount.sub(newAmount)).to.eq(unstakeAmount);
+      });
+      it('converts withdrawn shares to pUSD', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await jpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await instance
+          .connect(owner)
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePUSDPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePUSDPoolAddress)
+        );
+
+        const minCurveLP = await curvePUSDPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([actualBorrow, 0], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        const lpFarm = <ILPFarming>(
+          await ethers.getContractAt('ILPFarming', LP_FARM)
+        );
+
+        const shares = await instance
+          .connect(owner)
+          .callStatic['stakePUSD(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.One,
+          );
+
+        await instance
+          .connect(owner)
+          ['stakePUSD(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.One,
+          );
+
+        const unstakeAmount = ethers.utils.parseEther('2');
+
+        const pUSD = await instance
+          .connect(owner)
+          .callStatic['unstakePUSD(uint256,uint256,uint256)'](
+            unstakeAmount,
+            0,
+            1,
+          );
+
+        const pusdCitadel = IVault__factory.connect(PUSD_CITADEL, owner);
+
+        const calcpUSD = await curvePUSDPool.callStatic[
+          'calc_withdraw_one_coin(uint256,int128)'
+        ](
+          unstakeAmount
+            .mul(await pusdCitadel['exchangeRate()']())
+            .div(ethers.utils.parseEther('1')),
+          0,
+        );
+
+        expect(pUSD).to.eq(calcpUSD);
+      });
+    });
+
+    describe('#unstakePETH(uint256,uint256,uint256)', () => {
+      it('unstakes requested amount of autoComp shares from lpFarm and JPEG citadel', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([0, actualBorrow], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        const lpFarm = <ILPFarming>(
+          await ethers.getContractAt('ILPFarming', LP_FARM)
+        );
+
+        await pethInstance
+          .connect(owner)
+          ['stakePETH(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.Two,
+          );
+
+        const oldAmount = (
+          await lpFarm.callStatic['userInfo(uint256,address)'](
+            ethers.constants.Two,
+            pethInstance.address,
+          )
+        ).amount;
+
+        const unstakeAmount = ethers.utils.parseEther('2');
+
+        await pethInstance
+          .connect(owner)
+          ['unstakePETH(uint256,uint256,uint256)'](unstakeAmount, 0, 2);
+
+        const newAmount = (
+          await lpFarm.callStatic['userInfo(uint256,address)'](
+            ethers.constants.Two,
+            pethInstance.address,
+          )
+        ).amount;
+
+        expect(oldAmount.sub(newAmount)).to.eq(unstakeAmount);
+      });
+
+      it('converts withdrawn shares to pETH', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([0, actualBorrow], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        await pethInstance
+          .connect(owner)
+          ['stakePETH(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.Two,
+          );
+
+        const unstakeAmount = ethers.utils.parseEther('2');
+
+        const pethCitadel = IVault__factory.connect(PETH_CITADEL, owner);
+
+        const pETH = await pethInstance
+          .connect(owner)
+          .callStatic['unstakePETH(uint256,uint256,uint256)'](
+            unstakeAmount,
+            0,
+            2,
+          );
+
+        const calcPETH = await curvePETHPool.callStatic[
+          'calc_withdraw_one_coin(uint256,int128)'
+        ](
+          unstakeAmount
+            .mul(await pethCitadel['exchangeRate()']())
+            .div(ethers.utils.parseEther('1')),
+          ethers.constants.One,
+        );
+
+        expect(pETH).to.eq(calcPETH);
+      });
+    });
+
+    describe('#closePunkPosition(uint256,uint256,uint256,bool)', () => {
+      it('closes punk position', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([0, actualBorrow], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        const lpFarm = <ILPFarming>(
+          await ethers.getContractAt('ILPFarming', LP_FARM)
+        );
+
+        await (
+          await pethInstance
+            .connect(owner)
+            ['stakePETH(uint256,uint256,uint256)'](
+              actualBorrow,
+              minCurveLP.mul(curveRemainder).div(curveBasis),
+              ethers.constants.Two,
+            )
+        ).wait();
+
+        //provide pETH to pay back interest
+        await curvePETHPool
+          .connect(owner)
+          .exchange(0, 1, ethers.utils.parseEther('20'), 1, {
+            value: ethers.utils.parseEther('20'),
+          });
+
+        await pETH
+          .connect(owner)
+          ['transfer(address,uint256)'](
+            pethInstance.address,
+            ethers.utils.parseEther('10'),
+          );
+
+        await pethInstance
+          .connect(owner)
+          ['closePunkPosition(uint256,uint256,uint256,bool)'](
+            punkId,
+            0,
+            2,
+            false,
+          );
+
+        expect(
+          (await jpegdVault['positions(uint256)'](punkId)).debtPrincipal,
+        ).to.eq(ethers.constants.Zero);
+        expect(await pethInstance['totalDebt(uint256)'](punkId)).to.eq(
+          ethers.constants.Zero,
+        );
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance
+              .connect(nonOwner)
+              ['closePunkPosition(uint256,uint256,uint256,bool)'](
+                ethers.constants.Zero,
+                ethers.constants.Zero,
+                ethers.constants.Zero,
+                false,
+              ),
+          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+        });
+      });
+    });
+
+    describe('#listPunk((bytes,uint256,address)[])', () => {
+      it('lists a punk on cryptoPunkMarket', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        expect(
+          await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
+        ).to.eq(pethInstance.address);
+
+        const listPrice = ethers.utils.parseEther('100');
+        const listPunkCalls = [];
+
+        const encodedOfferPunkForSale =
+          cryptoPunkMarket.interface.encodeFunctionData(
+            'offerPunkForSale(uint256,uint256)',
+            [punkId, listPrice],
+          );
+
+        const encodedListCall = {
+          data: encodedOfferPunkForSale,
+          target: CRYPTO_PUNKS_MARKET,
+          value: ethers.constants.Zero,
+        };
+
+        listPunkCalls.push(encodedListCall);
+
+        await pethInstance
+          .connect(owner)
+          ['listPunk((bytes,uint256,address)[],uint256)'](
+            listPunkCalls,
+            punkId,
+          );
+
+        expect(
+          (await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId))
+            .minValue,
+        ).to.eq(listPrice);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance
+              .connect(nonOwner)
+              ['listPunk((bytes,uint256,address)[],uint256)'](
+                [
+                  {
+                    data: '0x',
+                    target: ethers.constants.AddressZero,
+                    value: ethers.constants.Zero,
+                  },
+                ],
+                ethers.constants.Zero,
               ),
           ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
         });

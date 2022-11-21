@@ -155,11 +155,33 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function unstakePUSD(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner returns (uint256 pUSD) {
+        pUSD = _unstakePUSD(amount, minPUSD, poolInfoIndex);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function setReservedShards(uint16 reservedShards)
         external
         onlyProtocolOwner
     {
         _setReservedShards(reservedShards);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function unstakePETH(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) external onlyProtocolOwner returns (uint256 pETH) {
+        pETH = _unstakePETH(amount, minPETH, poolInfoIndex);
     }
 
     /**
@@ -184,7 +206,73 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function closePunkPosition(
+        uint256 punkId,
+        uint256 minTokenAmount,
+        uint256 poolInfoIndex,
+        bool isPUSD
+    ) external onlyProtocolOwner {
+        _closePunkPosition(punkId, minTokenAmount, poolInfoIndex, isPUSD);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function setMaxUserShards(uint16 maxUserShards) external onlyProtocolOwner {
         _setMaxUserShards(maxUserShards);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function repayLoanPUSD(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external onlyProtocolOwner returns (uint256 paidDebt) {
+        paidDebt = _repayLoanPUSD(amount, minPUSD, poolInfoIndex, punkId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function repayLoanPETH(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external onlyProtocolOwner returns (uint256 paidDebt) {
+        paidDebt = _repayLoanPETH(amount, minPETH, poolInfoIndex, punkId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function directRepayLoanPUSD(uint256 amount, uint256 punkId)
+        external
+        onlyProtocolOwner
+    {
+        _directRepayLoan(PUSD, amount, punkId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function directRepayLoanPETH(uint256 amount, uint256 punkId)
+        external
+        onlyProtocolOwner
+    {
+        _directRepayLoan(PETH, amount, punkId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function listPunk(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) external onlyProtocolOwner {
+        _listPunk(calls, punkId);
     }
 }

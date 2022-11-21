@@ -8,6 +8,7 @@ library ShardVaultStorage {
     struct Layout {
         uint256 shardValue;
         uint256 accruedFees;
+        uint256 conversionBuffer;
         uint256 cumulativeEPS; //EPS = ETH per shard
         uint64 whitelistEndsAt;
         uint16 reservedShards;
@@ -18,8 +19,8 @@ library ShardVaultStorage {
         uint16 saleFeeBP;
         uint16 acquisitionFeeBP;
         uint16 yieldFeeBP;
-        uint16 bufferBP;
-        uint16 deviationBP;
+        uint16 ltvBufferBP;
+        uint16 ltvDeviationBP;
         address treasury;
         address jpegdVault;
         address jpegdVaultHelper;

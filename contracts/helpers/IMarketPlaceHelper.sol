@@ -35,13 +35,13 @@ interface IMarketPlaceHelper {
     error MarketPlaceHelper__FailedBidAcceptanceCall();
 
     /**
-     * @notice ERC721 purchasing call made to arbitrary marketplace
+     * @notice purchasing call made to arbitrary marketplace
      * @param calls array of EncodedCall structs containing information to execute the desired
      * number of low level calls
      * @param purchaseToken address of token used to transact - if address(0) ETH is used
      * @param price purchase price
      */
-    function purchaseERC721Asset(
+    function purchaseAsset(
         EncodedCall[] calldata calls,
         address purchaseToken,
         uint256 price
@@ -49,8 +49,7 @@ interface IMarketPlaceHelper {
 
     /**
      * @notice ERC721 listing call made to arbitrary marketplace
-     * @param data calldata required for listing call
-     * @param target address of target marketplace
+     * @param calls encoded calls needed to list ERC721 asset
      */
-    function listERC721Asset(bytes calldata data, address target) external;
+    function listAsset(EncodedCall[] memory calls) external;
 }
