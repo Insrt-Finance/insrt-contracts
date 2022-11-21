@@ -6,6 +6,7 @@ import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/I
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 
+import { IShardVault } from './IShardVault.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
@@ -21,11 +22,8 @@ contract ShardVaultProxy is Proxy {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        uint16 saleFeeBP,
-        uint16 acquisitionFeeBP,
-        uint16 yieldFeeBP,
-        uint16 bufferBP,
-        uint16 deviationBP
+        IShardVault.FeeParams memory feeParams,
+        IShardVault.BufferParams memory bufferParams
     ) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
 
@@ -38,11 +36,12 @@ contract ShardVaultProxy is Proxy {
         l.jpegdVaultHelper = jpegdVaultHelper;
         l.shardValue = shardValue;
         l.maxSupply = maxSupply;
-        l.saleFeeBP = saleFeeBP;
-        l.acquisitionFeeBP = acquisitionFeeBP;
-        l.yieldFeeBP = yieldFeeBP;
-        l.bufferBP = bufferBP;
-        l.deviationBP = deviationBP;
+        l.saleFeeBP = feeParams.saleFeeBP;
+        l.acquisitionFeeBP = feeParams.acquisitionFeeBP;
+        l.yieldFeeBP = feeParams.yieldFeeBP;
+        l.ltvBufferBP = bufferParams.ltvBufferBP;
+        l.ltvDeviationBP = bufferParams.ltvDeviationBP;
+        l.conversionBuffer = bufferParams.conversionBuffer;
     }
 
     /**

@@ -21,8 +21,8 @@ import {
   IMarketPlaceHelper,
   MarketPlaceHelper__factory,
   IMarketPlaceHelper__factory,
+  ShardVaultProxy,
 } from '../../typechain-types';
-
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
 import { BigNumber } from 'ethers';
 
@@ -62,9 +62,41 @@ describe('ShardVaultProxy', () => {
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
-  const bufferBP = BigNumber.from('500');
-  const deviationBP = BigNumber.from('200');
+  const ltvBufferBP = BigNumber.from('500');
+  const ltvDeviationBP = BigNumber.from('200');
+  const pUSDConversionBuffer = BigNumber.from('1000178');
+  const pETHConversionBuffer = BigNumber.from('1000269');
   const BASIS = BigNumber.from('10000');
+
+  interface FeeParamsStruct {
+    saleFeeBP: BigNumber;
+    acquisitionFeeBP: BigNumber;
+    yieldFeeBP: BigNumber;
+  }
+
+  interface BufferParamsStruct {
+    ltvBufferBP: BigNumber;
+    ltvDeviationBP: BigNumber;
+    conversionBuffer: BigNumber;
+  }
+
+  const feeParams: FeeParamsStruct = {
+    saleFeeBP: saleFeeBP,
+    acquisitionFeeBP: acquisitionFeeBP,
+    yieldFeeBP: yieldFeeBP,
+  };
+
+  const pUSDBufferParams: BufferParamsStruct = {
+    ltvBufferBP: ltvBufferBP,
+    ltvDeviationBP: ltvDeviationBP,
+    conversionBuffer: pUSDConversionBuffer,
+  };
+
+  const pETHBufferParams: BufferParamsStruct = {
+    ltvBufferBP: ltvBufferBP,
+    ltvDeviationBP: ltvDeviationBP,
+    conversionBuffer: pETHConversionBuffer,
+  };
 
   before(async () => {
     // TODO: must skip signers because they're not parameterized in SolidState spec
@@ -198,18 +230,15 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
+        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
         pusdPunkVaultHelper,
         shardValue,
         maxShards,
-        saleFeeBP,
-        acquisitionFeeBP,
-        yieldFeeBP,
-        bufferBP,
-        deviationBP,
+        feeParams,
+        pUSDBufferParams,
       );
 
     const { events } = await deployShardVaultTx.wait();
@@ -221,19 +250,17 @@ describe('ShardVaultProxy', () => {
 
     const deploySecondShardVaultTx = await core
       .connect(deployer)
+      .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
+        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         BAYC,
         baycVault,
         ethers.constants.AddressZero,
         shardValue,
         maxShards,
-        saleFeeBP,
-        acquisitionFeeBP,
-        yieldFeeBP,
-        bufferBP,
-        deviationBP,
+        feeParams,
+        pUSDBufferParams,
       );
 
     const rcpt = await deploySecondShardVaultTx.wait();
@@ -248,19 +275,17 @@ describe('ShardVaultProxy', () => {
 
     const deployPethShardVaultTx = await core
       .connect(deployer)
+      .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,uint16,uint16,uint16,uint16)'
+        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
         pethPunkVaultHelper,
         shardValue,
         maxShards,
-        saleFeeBP,
-        acquisitionFeeBP,
-        yieldFeeBP,
-        bufferBP,
-        deviationBP,
+        feeParams,
+        pETHBufferParams,
       );
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();

@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import { IShardVault } from '../shard/IShardVault.sol';
+
 /**
  * @title ShardVault Manager contract interface
  */
@@ -26,12 +28,9 @@ interface IShardVaultManager {
        non-ERC721/1155 compiant collections
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
-     * @param saleFeeBP sales fee basis points
-     * @param acquisitionFeeBP acquisition fee basis points
-     * @param yieldFeeBP yield fee basis points
-     * @param bufferBP LTV buffer basis points
-     * @param deviationBP LTV deviation basis points
-     * @return deployment address of ShardVaultProxy deployed
+     * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
+     * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
+     * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
      */
     function deployShardVault(
         address collection,
@@ -39,10 +38,7 @@ interface IShardVaultManager {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        uint16 saleFeeBP,
-        uint16 acquisitionFeeBP,
-        uint16 yieldFeeBP,
-        uint16 bufferBP,
-        uint16 deviationBP
+        IShardVault.FeeParams memory feeParams,
+        IShardVault.BufferParams memory bufferParams
     ) external returns (address deployment);
 }

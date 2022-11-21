@@ -8,14 +8,15 @@ library ShardVaultStorage {
     struct Layout {
         uint256 shardValue;
         uint256 accruedFees;
+        uint256 conversionBuffer;
         uint16 count;
         uint16 maxSupply;
         uint16 totalSupply;
         uint16 saleFeeBP;
         uint16 acquisitionFeeBP;
         uint16 yieldFeeBP;
-        uint16 bufferBP;
-        uint16 deviationBP;
+        uint16 ltvBufferBP;
+        uint16 ltvDeviationBP;
         address treasury;
         address jpegdVault;
         address jpegdVaultHelper;
