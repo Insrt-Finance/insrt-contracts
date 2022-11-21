@@ -851,14 +851,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     function _provideRewardsPETH(
-        uint256 autoCompAmount,
+        uint256 autoComp,
         uint256 minPETH,
         uint256 minETH,
         uint256 poolInfoIndex
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 pETH = _unstakePETH(autoCompAmount, minPETH, poolInfoIndex);
+        uint256 pETH = _unstakePETH(autoComp, minPETH, poolInfoIndex);
         IERC20(PETH).approve(CURVE_PETH_POOL, pETH);
 
         uint256 ETH = ICurveMetaPool(CURVE_PETH_POOL).exchange(
@@ -868,21 +868,17 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             minETH
         );
 
-        if (!l.isYieldClaiming) {
-            l.isYieldClaiming = true;
-        }
-        l.cumulativeEPS += ETH / l.totalSupply;
-    }
-
-    function _provideRewardsJPEG(uint256 poolInfoIndex) internal {
-        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
         uint256 jpeg = ILPFarming(LP_FARM).pendingReward(
             poolInfoIndex,
             address(this)
         );
         ILPFarming(LP_FARM).claim(poolInfoIndex);
 
+        if (!l.isYieldClaiming) {
+            l.isYieldClaiming = true;
+        }
+
+        l.cumulativeEPS += ETH / l.totalSupply;
         l.cumulativeJPS += jpeg / l.totalSupply;
     }
 
