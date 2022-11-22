@@ -232,4 +232,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function cumulativeEPS() external view returns (uint256 cumulativeEPS) {
         cumulativeEPS = _cumulativeEPS();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function isYieldClaiming() external view returns (bool isYieldClaiming) {
+        isYieldClaiming = _isYieldClaiming();
+    }
 }

@@ -20,6 +20,8 @@ import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
 import { IVault } from '../interfaces/jpegd/IVault.sol';
 import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
@@ -873,7 +875,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             poolInfoIndex,
             PETH_CITADEL,
             CURVE_PETH_POOL,
-            0 //ETH index in curve pool
+            int128(0) //ETH index in curve pool
         );
 
         providedJPEG = ILPFarming(LP_FARM).pendingReward(
@@ -1191,6 +1193,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _cumulativeEPS() internal view returns (uint256 cumulativeEPS) {
         cumulativeEPS = ShardVaultStorage.layout().cumulativeEPS;
+    }
+
+    /**
+     * @notice returns the yield claiming status of the vault
+     * @return isYieldClaiming the yield claiming status of the vault
+     */
+    function _isYieldClaiming() internal view returns (bool isYieldClaiming) {
+        isYieldClaiming = ShardVaultStorage.layout().isYieldClaiming;
     }
 
     /**

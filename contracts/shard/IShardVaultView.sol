@@ -195,4 +195,10 @@ interface IShardVaultView {
      * @return cumulativeEPS cumulative ETH per shard value
      */
     function cumulativeEPS() external view returns (uint256 cumulativeEPS);
+
+    /**
+     * @notice returns the yield claiming status of the vault
+     * @return isYieldClaiming the yield claiming status of the vault
+     */
+    function isYieldClaiming() external view returns (bool isYieldClaiming);
 }
