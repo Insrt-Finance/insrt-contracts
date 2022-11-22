@@ -223,13 +223,13 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      * @inheritdoc IShardVaultView
      */
     function cumulativeJPS() external view returns (uint256 cumulativeJPS) {
-        _cumulativeJPS();
+        cumulativeJPS = _cumulativeJPS();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
     function cumulativeEPS() external view returns (uint256 cumulativeEPS) {
-        _cumulativeEPS();
+        cumulativeEPS = _cumulativeEPS();
     }
 }
