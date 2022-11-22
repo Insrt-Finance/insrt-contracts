@@ -141,9 +141,17 @@ export function describeBehaviorOfShardVaultIO(
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
 
-        expect(await shardCollection.balanceOf(depositor.address)).to.eq(
-          depositAmount.div(ethers.utils.parseEther('1.0')),
+        const shards = depositAmount.div(
+          await instance.callStatic['shardValue()'](),
         );
+        expect(await shardCollection.balanceOf(depositor.address)).to.eq(
+          shards,
+        );
+        expect(
+          await instance.callStatic['shardBalances(address)'](
+            depositor.address,
+          ),
+        ).to.eq(shards);
       });
       it('increases total shard supply', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -151,9 +159,10 @@ export function describeBehaviorOfShardVaultIO(
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
 
-        expect(await instance.totalSupply()).to.eq(
-          depositAmount.div(ethers.utils.parseEther('1.0')),
+        const shards = depositAmount.div(
+          await instance.callStatic['shardValue()'](),
         );
+        expect(await instance.totalSupply()).to.eq(shards);
       });
       it('increases count', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -165,15 +174,18 @@ export function describeBehaviorOfShardVaultIO(
           depositAmount.div(ethers.utils.parseEther('1.0')),
         );
       });
-      it('increases userShards', async () => {
+      it('increases shardBalances', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
 
+        const shards = depositAmount.div(
+          await instance.callStatic['shardValue()'](),
+        );
         expect(
           await instance['shardBalances(address)'](depositor.address),
-        ).to.eq(depositAmount.div(ethers.utils.parseEther('1')));
+        ).to.eq(shards);
       });
       it('returns any excess ETH after MaxUserShards is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -332,9 +344,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await instance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
               punkPurchaseCallsPUSD,
               punkId,
+              true,
             );
 
           await expect(
@@ -523,9 +536,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await instance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
               punkPurchaseCallsPUSD,
               punkId,
+              true,
             );
 
           const withdrawTokens = 5;
