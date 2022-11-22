@@ -48,6 +48,7 @@ describe('ShardVaultProxy', () => {
   const BAYC = '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D';
   const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
   const PETH = '0x836A808d4828586A69364065A1e064609F5078c7';
+  const JPEG = '0xE80C0cd204D654CEbe8dd64A4857cAb6Be8345a3';
   const pusdCitadel = '0xF6Cbf5e56a8575797069c7A7FBED218aDF17e3b2';
   const pethCitadel = '0x56D1b6Ac326e152C9fAad749F1F4f9737a049d46';
   const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
@@ -129,7 +130,12 @@ describe('ShardVaultProxy', () => {
     ).deploy();
     const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
-    ).deploy('ShardVaultCollection', 'SVC', 'shards');
+    ).deploy(
+      'ShardVaultCollection',
+      'SVC',
+      'shards',
+      shardVaultDiamond.address,
+    );
 
     const shardCollectionFacetCuts = [
       await new ShardCollection__factory(deployer).deploy(),
@@ -173,6 +179,7 @@ describe('ShardVaultProxy', () => {
         curvePETHPool,
         DAWN_OF_INSRT,
         marketplaceHelper.address,
+        JPEG,
       ),
       await new ShardVaultView__factory(deployer).deploy(
         shardCollectionProxy.address,
@@ -186,6 +193,7 @@ describe('ShardVaultProxy', () => {
         curvePETHPool,
         DAWN_OF_INSRT,
         marketplaceHelper.address,
+        JPEG,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
         shardCollectionProxy.address,
@@ -199,6 +207,7 @@ describe('ShardVaultProxy', () => {
         curvePETHPool,
         DAWN_OF_INSRT,
         marketplaceHelper.address,
+        JPEG,
       ),
     ].map(function (f) {
       return {
@@ -235,7 +244,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
@@ -256,9 +265,8 @@ describe('ShardVaultProxy', () => {
 
     const deploySecondShardVaultTx = await core
       .connect(deployer)
-      .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         BAYC,
         baycVault,
@@ -282,9 +290,8 @@ describe('ShardVaultProxy', () => {
 
     const deployPethShardVaultTx = await core
       .connect(deployer)
-      .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
