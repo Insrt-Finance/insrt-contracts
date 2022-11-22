@@ -44,7 +44,7 @@ interface ICurveMetaPool {
         uint256 _burn_amount,
         int128 i,
         uint256 _min_received
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     /**
      * @notice Calculate addition or reduction in token supply from a deposit or withdrawal

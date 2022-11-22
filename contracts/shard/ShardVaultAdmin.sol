@@ -287,6 +287,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 poolInfoIndex
     )
         external
+        payable
         onlyProtocolOwner
         returns (uint256 providedETH, uint256 providedJPEG)
     {

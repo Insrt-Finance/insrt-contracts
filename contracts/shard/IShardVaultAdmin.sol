@@ -269,5 +269,5 @@ interface IShardVaultAdmin {
         uint256 autoComp,
         uint256 minETH,
         uint256 poolInfoIndex
-    ) external returns (uint256 providedETH, uint256 providedJPEG);
+    ) external payable returns (uint256 providedETH, uint256 providedJPEG);
 }
