@@ -262,10 +262,12 @@ interface IShardVaultAdmin {
      * @param autoComp amount of autoComp tokens to unstake
      * @param minETH minimum ETH to receive after unstaking
      * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     * @return providedETH total ETH provided as yield
+     * @return providedJPEG total JEPG provided as yield
      */
     function provideYieldPETH(
         uint256 autoComp,
         uint256 minETH,
         uint256 poolInfoIndex
-    ) external;
+    ) external returns (uint256 providedETH, uint256 providedJPEG);
 }

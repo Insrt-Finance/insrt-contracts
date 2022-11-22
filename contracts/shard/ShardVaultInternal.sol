@@ -857,15 +857,17 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param autoComp amount of autoComp tokens to unstake
      * @param minETH minimum ETH to receive after unstaking
      * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     * @return providedETH total ETH provided as yield
+     * @return providedJPEG total JEPG provided as yield
      */
     function _provideYieldPETH(
         uint256 autoComp,
         uint256 minETH,
         uint256 poolInfoIndex
-    ) internal {
+    ) internal returns (uint256 providedETH, uint256 providedJPEG) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 ETH = _unstake(
+        providedETH = _unstake(
             autoComp,
             minETH,
             poolInfoIndex,
@@ -874,7 +876,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             0 //ETH index in curve pool
         );
 
-        uint256 jpeg = ILPFarming(LP_FARM).pendingReward(
+        providedJPEG = ILPFarming(LP_FARM).pendingReward(
             poolInfoIndex,
             address(this)
         );
@@ -884,8 +886,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             l.isYieldClaiming = true;
         }
 
-        l.cumulativeEPS += ETH / l.totalSupply;
-        l.cumulativeJPS += jpeg / l.totalSupply;
+        l.cumulativeEPS += providedETH / l.totalSupply;
+        l.cumulativeJPS += providedJPEG / l.totalSupply;
     }
 
     /**
