@@ -128,6 +128,13 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function accruedJPEG() external view returns (uint256 jpeg) {
+        _accruedJPEG();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function queryAutoCompForPUSD(uint256 pUSD)
         external
         view
@@ -188,5 +195,41 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function marketplaceHelper() external view returns (address) {
         return _marketplaceHelper();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function claimedJPS(uint256 shardId)
+        external
+        view
+        returns (uint256 claimedJPS)
+    {
+        return _claimedJPS(shardId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function claimedEPS(uint256 shardId)
+        external
+        view
+        returns (uint256 claimedEPS)
+    {
+        return _claimedEPS(shardId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function cumulativeJPS() external view returns (uint256 cumulativeJPS) {
+        _cumulativeJPS();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function cumulativeEPS() external view returns (uint256 cumulativeEPS) {
+        _cumulativeEPS();
     }
 }

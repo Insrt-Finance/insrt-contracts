@@ -1049,6 +1049,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice returns sum of total jpeg due to yield fee accrued over the entire lifetime of the vault
+     * @dev accounts for jpeg withdrawals
+     * @return jpeg accrued jpeg
+     */
+    function _accruedJPEG() internal view returns (uint256 jpeg) {
+        jpeg = ShardVaultStorage.layout().accruedJPEG;
+    }
+
+    /**
      * @notice returns acquisition fee BP
      * @return acquisitionFeeBP basis points of acquisition fee
      */
@@ -1133,6 +1142,48 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _marketplaceHelper() internal view returns (address) {
         return MARKETPLACE_HELPER;
+    }
+
+    /**
+     * @notice returns the JPEG claimed by a given shard
+     * @param shardId id of shard to check
+     * @return claimedJPS claimed JPEG for given shard
+     */
+    function _claimedJPS(uint256 shardId)
+        internal
+        view
+        returns (uint256 claimedJPS)
+    {
+        claimedJPS = ShardVaultStorage.layout().claimedJPS[shardId];
+    }
+
+    /**
+     * @notice returns the ETH claimed by a given shard
+     * @param shardId id of shard to check
+     * @return claimedEPS claimed ETH for given shard
+     */
+    function _claimedEPS(uint256 shardId)
+        internal
+        view
+        returns (uint256 claimedEPS)
+    {
+        claimedEPS = ShardVaultStorage.layout().claimedEPS[shardId];
+    }
+
+    /**
+     * @notice returns the cumulative JPEG per shard value
+     * @return cumulativeJPS cumulative JPEG per shard value
+     */
+    function _cumulativeJPS() internal view returns (uint256 cumulativeJPS) {
+        cumulativeJPS = ShardVaultStorage.layout().cumulativeJPS;
+    }
+
+    /**
+     * @notice returns the cumulative ETH per shard value
+     * @return cumulativeEPS cumulative ETH per shard value
+     */
+    function _cumulativeEPS() internal view returns (uint256 cumulativeEPS) {
+        cumulativeEPS = ShardVaultStorage.layout().cumulativeEPS;
     }
 
     /**
