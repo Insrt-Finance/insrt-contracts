@@ -1006,7 +1006,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             --l.shardBalances[from];
         }
 
-        ++l.shardBalances[to];
+        if (to != address(0)) {
+            ++l.shardBalances[to];
+        }
     }
 
     /**
