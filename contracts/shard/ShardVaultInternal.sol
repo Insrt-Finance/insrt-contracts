@@ -992,17 +992,22 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         uint256[] memory tokenIds;
-        tokenIds[0] = tokenId;
+        uint256[] memory temp = new uint256[](1);
+        temp[0] = tokenId;
+        tokenIds = temp;
 
-        if (l.isYieldClaiming) {
-            _claimYield(from, tokenIds);
+        if (from != address(0)) {
+            if (l.isYieldClaiming) {
+                _claimYield(from, tokenIds);
+            }
+
+            if (!l.isYieldClaiming && l.isInvested) {
+                _claimExcessETH(from, tokenIds);
+            }
+
+            --l.shardBalances[from];
         }
 
-        if (!l.isYieldClaiming && l.isInvested) {
-            _claimExcessETH(from, tokenIds);
-        }
-
-        --l.shardBalances[from];
         ++l.shardBalances[to];
     }
 
