@@ -20,8 +20,6 @@ import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
 import { IVault } from '../interfaces/jpegd/IVault.sol';
 import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title Shard Vault internal functions
  * @dev inherited by all Shard Vault implementation contracts
@@ -139,7 +137,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply += shards;
-        l.shardBalances[msg.sender] += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -179,7 +176,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply -= tokens;
-        l.shardBalances[msg.sender] -= tokens;
 
         payable(msg.sender).sendValue(tokens * l.shardValue);
     }
