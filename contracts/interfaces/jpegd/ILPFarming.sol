@@ -41,19 +41,19 @@ interface ILPFarming {
      * @notice getter for the userInfo mapping in JPEGd LPFarming contract
      * @return UserInfo userInfo struct for user in JPEGd LPFarming pool with poolId
      */
-    function userInfo(uint256 poolId, address user)
-        external
-        view
-        returns (UserInfo memory);
+    function userInfo(
+        uint256 poolId,
+        address user
+    ) external view returns (UserInfo memory);
 
     /// @notice Frontend function used to calculate the amount of rewards `_user` can claim from the pool with id `_pid`
     /// @param _pid The pool id
     /// @param _user The address of the user
     /// @return The amount of rewards claimable from `_pid` by user `_user`
-    function pendingReward(uint256 _pid, address _user)
-        external
-        view
-        returns (uint256);
+    function pendingReward(
+        uint256 _pid,
+        address _user
+    ) external view returns (uint256);
 
     /// @notice Allows users to deposit `_amount` of LP tokens in the pool with id `_pid`. Non whitelisted contracts can't call this function
     /// @dev Emits a {Deposit} event

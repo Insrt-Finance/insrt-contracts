@@ -46,30 +46,27 @@ interface ICryptoPunkMarket {
      * @param punkIndex the index of the punk
      * @return offer currently active on the punk
      */
-    function punksOfferedForSale(uint256 punkIndex)
-        external
-        view
-        returns (Offer memory);
+    function punksOfferedForSale(
+        uint256 punkIndex
+    ) external view returns (Offer memory);
 
     /**
      * @notice public mapping(uint => address) punkIndexToAddress;
      * @param punkIndex index of the punk
      * @return address to which the punk belongs to (or is assigned to)
      */
-    function punkIndexToAddress(uint256 punkIndex)
-        external
-        view
-        returns (address);
+    function punkIndexToAddress(
+        uint256 punkIndex
+    ) external view returns (address);
 
     /**
      * @notice mapping(address => uint256) pendingWithdrawals mapping
      * @param withdrawer address to which withdrawal is owed
      * @return uint amount pending in ETH
      */
-    function pendingWithdrawals(address withdrawer)
-        external
-        view
-        returns (uint256);
+    function pendingWithdrawals(
+        address withdrawer
+    ) external view returns (uint256);
 
     /**
      * @notice purchase a punk
@@ -82,8 +79,10 @@ interface ICryptoPunkMarket {
      * @param punkIndex the index of the punk
      * @param minSalePriceInWei the minimum sale price of the punk in WEI
      */
-    function offerPunkForSale(uint256 punkIndex, uint256 minSalePriceInWei)
-        external;
+    function offerPunkForSale(
+        uint256 punkIndex,
+        uint256 minSalePriceInWei
+    ) external;
 
     /**
      * @notice closes punk to instance purchase
