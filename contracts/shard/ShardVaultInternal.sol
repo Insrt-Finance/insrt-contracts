@@ -1177,6 +1177,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice returns timestamp of whitelist end
+     * @return whitelistEndsAt timestamp of whitelist end
+     */
+    function _whitelistEndsAt() internal view returns (uint64 whitelistEndsAt) {
+        whitelistEndsAt = ShardVaultStorage.layout().whitelistEndsAt;
+    }
+
+    /**
      * @notice check to ensure account owns a given tokenId corresponding to a shard
      * @param account address to check
      * @param tokenId tokenId to check

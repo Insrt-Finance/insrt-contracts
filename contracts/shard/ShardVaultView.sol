@@ -202,4 +202,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function isYieldClaiming() external view returns (bool isYieldClaiming) {
         isYieldClaiming = _isYieldClaiming();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt) {
+        whitelistEndsAt = _whitelistEndsAt();
+    }
 }

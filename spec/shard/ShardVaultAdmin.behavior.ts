@@ -2573,5 +2573,55 @@ export function describeBehaviorOfShardVaultAdmin(
         });
       });
     });
+
+    describe('#setWhitelistEndsAt(uint64)', () => {
+      it('sets whitelistEndsAt value', async () => {
+        const whitelistEndsAt = BigNumber.from('123123123123123123');
+
+        await instance
+          .connect(owner)
+          ['setWhitelistEndsAt(uint64)'](whitelistEndsAt);
+
+        expect(whitelistEndsAt).to.eq(await instance['whitelistEndsAt()']());
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setWhitelistEndsAt(uint64)'](BigNumber.from('1000')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('#setReservedShards(uint16)', () => {
+      it('sets reservedShards value', async () => {
+        const reservedShards = BigNumber.from('123');
+
+        await instance
+          .connect(owner)
+          ['setReservedShards(uint16)'](reservedShards);
+
+        expect(reservedShards).to.eq(await instance['reservedShards()']());
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setReservedShards(uint16)'](BigNumber.from('1000')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
   });
 }
