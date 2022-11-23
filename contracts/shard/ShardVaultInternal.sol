@@ -43,31 +43,22 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
-        address shardCollection,
-        address pUSD,
-        address pETH,
-        address punkMarket,
-        address pusdCitadel,
-        address pethCitadel,
-        address lpFarm,
-        address curvePUSDPool,
-        address curvePETHPool,
-        address dawnOfInsrt,
-        address marketplaceHelper,
-        address jpeg
+        JPEGParams memory jpegParams,
+        AuxiliaryParams memory auxiliaryParams
     ) {
-        SHARD_COLLECTION = shardCollection;
-        PUNKS = punkMarket;
-        PUSD = pUSD;
-        PETH = pETH;
-        PUSD_CITADEL = pusdCitadel;
-        PETH_CITADEL = pethCitadel;
-        LP_FARM = lpFarm;
-        CURVE_PUSD_POOL = curvePUSDPool;
-        CURVE_PETH_POOL = curvePETHPool;
-        DAWN_OF_INSRT = dawnOfInsrt;
-        MARKETPLACE_HELPER = marketplaceHelper;
-        JPEG = jpeg;
+        PUSD = jpegParams.PUSD;
+        PETH = jpegParams.PETH;
+        PUSD_CITADEL = jpegParams.PUSD_CITADEL;
+        PETH_CITADEL = jpegParams.PETH_CITADEL;
+        LP_FARM = jpegParams.LP_FARM;
+        CURVE_PUSD_POOL = jpegParams.CURVE_PUSD_POOL;
+        CURVE_PETH_POOL = jpegParams.CURVE_PETH_POOL;
+        JPEG = jpegParams.JPEG;
+
+        SHARD_COLLECTION = auxiliaryParams.SHARD_COLLECTION;
+        PUNKS = auxiliaryParams.PUNKS;
+        DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
+        MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
     }
 
     modifier onlyProtocolOwner() {

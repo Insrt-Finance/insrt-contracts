@@ -194,4 +194,10 @@ interface IShardVaultView {
      * @return isYieldClaiming the yield claiming status of the vault
      */
     function isYieldClaiming() external view returns (bool isYieldClaiming);
+
+    /**
+     * @notice returns timestamp of whitelist end
+     * @return whitelistEndsAt timestamp of whitelist end
+     */
+    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt);
 }

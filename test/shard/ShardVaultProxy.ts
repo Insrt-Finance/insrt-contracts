@@ -86,6 +86,24 @@ describe('ShardVaultProxy', () => {
     conversionBuffer: BigNumber;
   }
 
+  interface JPEGParamsStruct {
+    PUSD: string;
+    PETH: string;
+    JPEG: string;
+    PUSD_CITADEL: string;
+    PETH_CITADEL: string;
+    CURVE_PUSD_POOL: string;
+    CURVE_PETH_POOL: string;
+    LP_FARM: string;
+  }
+
+  interface AuxilaryParamsStruct {
+    SHARD_COLLECTION: string;
+    PUNKS: string;
+    DAWN_OF_INSRT: string;
+    MARKETPLACE_HELPER: string;
+  }
+
   const feeParams: FeeParamsStruct = {
     saleFeeBP: saleFeeBP,
     acquisitionFeeBP: acquisitionFeeBP,
@@ -164,50 +182,38 @@ describe('ShardVaultProxy', () => {
       };
     });
 
+    const jpegParams: JPEGParamsStruct = {
+      PUSD: PUSD,
+      PETH: PETH,
+      JPEG: JPEG,
+      PUSD_CITADEL: pusdCitadel,
+      PETH_CITADEL: pethCitadel,
+      CURVE_PUSD_POOL: curvePUSDPool,
+      CURVE_PETH_POOL: curvePETHPool,
+      LP_FARM: lpFarm,
+    };
+
+    const auxiliaryPArams: AuxilaryParamsStruct = {
+      SHARD_COLLECTION: shardCollectionProxy.address,
+      PUNKS: CRYPTO_PUNKS_MARKET,
+      DAWN_OF_INSRT: DAWN_OF_INSRT,
+      MARKETPLACE_HELPER: marketplaceHelper.address,
+    };
+
     const shardVaultSelectors = new Set();
 
     const shardVaultFacetCuts = [
       await new ShardVaultIO__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        DAWN_OF_INSRT,
-        marketplaceHelper.address,
-        JPEG,
+        jpegParams,
+        auxiliaryPArams,
       ),
       await new ShardVaultView__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        DAWN_OF_INSRT,
-        marketplaceHelper.address,
-        JPEG,
+        jpegParams,
+        auxiliaryPArams,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        DAWN_OF_INSRT,
-        marketplaceHelper.address,
-        JPEG,
+        jpegParams,
+        auxiliaryPArams,
       ),
     ].map(function (f) {
       return {

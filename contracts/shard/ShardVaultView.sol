@@ -11,34 +11,9 @@ import { IShardVaultView } from './IShardVaultView.sol';
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     constructor(
-        address shardCollection,
-        address pUSD,
-        address pETH,
-        address punkMarket,
-        address pusdCitadel,
-        address pethCitadel,
-        address lpFarm,
-        address curvePUSDPool,
-        address curvePETHPool,
-        address booster,
-        address marketplaceHelper,
-        address jpeg
-    )
-        ShardVaultInternal(
-            shardCollection,
-            pUSD,
-            pETH,
-            punkMarket,
-            pusdCitadel,
-            pethCitadel,
-            lpFarm,
-            curvePUSDPool,
-            curvePETHPool,
-            booster,
-            marketplaceHelper,
-            jpeg
-        )
-    {}
+        JPEGParams memory jpegParams,
+        AuxiliaryParams memory auxiliaryParams
+    ) ShardVaultInternal(jpegParams, auxiliaryParams) {}
 
     /**
      * @inheritdoc IShardVaultView

@@ -5,6 +5,24 @@ pragma solidity ^0.8.0;
 import { IOwnableInternal } from '@solidstate/contracts/access/ownable/IOwnableInternal.sol';
 
 interface IShardVaultInternal is IOwnableInternal {
+    struct JPEGParams {
+        address PUSD;
+        address PETH;
+        address JPEG;
+        address PUSD_CITADEL;
+        address PETH_CITADEL;
+        address CURVE_PUSD_POOL;
+        address CURVE_PETH_POOL;
+        address LP_FARM;
+    }
+
+    struct AuxiliaryParams {
+        address SHARD_COLLECTION;
+        address PUNKS;
+        address DAWN_OF_INSRT;
+        address MARKETPLACE_HELPER;
+    }
+
     /**
      * @notice thrown when the deposit amount is not a multiple of shardSize
      */
