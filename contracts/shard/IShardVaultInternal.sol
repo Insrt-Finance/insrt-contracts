@@ -79,4 +79,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when user is attempting to deposit when already owning max shards
      */
     error ShardVault__MaxUserShards();
+
+    /**
+     * @notice thrown when the actual downpayment amount is too small
+     */
+    error ShardVault__DownPaymentInsufficient();
 }

@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { ShardVaultInternal } from './ShardVaultInternal.sol';
+import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { IShardVaultView } from './IShardVaultView.sol';
 
 /**
@@ -111,6 +112,13 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function totalDebt(uint256 tokenId) external view returns (uint256 debt) {
+        debt = _totalDebt(ShardVaultStorage.layout().jpegdVault, tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function accruedFees() external view returns (uint256 fees) {
         fees = _accruedFees();
     }
@@ -118,6 +126,22 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function queryAutoCompForPUSD(uint256 pUSD)
+        external
+        view
+        returns (uint256 autoComp)
+    {
+        autoComp = _queryAutoCompForPUSD(pUSD);
+    }
+
+    function queryAutoCompForPETH(uint256 pETH)
+        external
+        view
+        returns (uint256 autoComp)
+    {
+        autoComp = _queryAutoCompForPETH(pETH);
+    }
+
     function acquisitionFeeBP() external view returns (uint16 feeBP) {
         feeBP = _acquisitionFeeBP();
     }
@@ -155,5 +179,12 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function reservedShards() external view returns (uint16) {
         return _reservedShards();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function marketplaceHelper() external view returns (address) {
+        return _marketplaceHelper();
     }
 }

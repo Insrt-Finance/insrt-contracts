@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import { IShardVault } from '../shard/IShardVault.sol';
+
 /**
  * @title ShardVault Manager contract interface
  */
@@ -22,17 +24,13 @@ interface IShardVaultManager {
      * @notice deploys a ShardVaultProxy
      * @param collection the address of the NFT collection contract
      * @param jpegdVault the jpeg'd NFT vault corresponding to the collection
-     * @param jpegdVaultHelper the jpeg'd NFT Vault helper contract used for 
+     * @param jpegdVaultHelper the jpeg'd NFT Vault helper contract used for
        non-ERC721/1155 compiant collections
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
-     * @param saleFeeBP sales fee basis points
-     * @param acquisitionFeeBP acquisition fee basis points
-     * @param yieldFeeBP yield fee basis points
-     * @param bufferBP LTV buffer basis points
-     * @param deviationBP LTV deviation basis points
-     * @param maxUserShards maximum amount of shards allowed per user
-     * @return deployment address of ShardVaultProxy deployed
+     * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
+     * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
+     * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
      */
     function deployShardVault(
         address collection,
@@ -40,11 +38,7 @@ interface IShardVaultManager {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        uint16 saleFeeBP,
-        uint16 acquisitionFeeBP,
-        uint16 yieldFeeBP,
-        uint16 bufferBP,
-        uint16 deviationBP,
-        uint16 maxUserShards
+        IShardVault.FeeParams memory feeParams,
+        IShardVault.BufferParams memory bufferParams
     ) external returns (address deployment);
 }

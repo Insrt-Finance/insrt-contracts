@@ -334,9 +334,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             .punksOfferedForSale(punkId)
             .minValue;
 
-        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseERC721Asset{
-            value: price
-        }(calls, address(0), price);
+        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseAsset{ value: price }(
+            calls,
+            address(0),
+            price
+        );
 
         if (l.ownedTokenIds.length() == 0) {
             //first fee withdraw, so no account for previous
@@ -405,7 +407,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
 
         uint256 targetLTV = creditLimit -
-            (value * (l.bufferBP + l.deviationBP)) /
+            (value * (l.ltvBufferBP + l.ltvDeviationBP)) /
             BASIS_POINTS;
 
         if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
@@ -452,7 +454,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
-        //pETH is in position 0 in the curve meta pool
+        //pUSD is in position 0 in the curve meta pool
         shares = _stake(
             amount,
             minCurveLP,
@@ -499,7 +501,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256[2] memory amounts
     ) private returns (uint256 shares) {
         IERC20(token).approve(pool, amount);
-        //pETH is in position 1 in the curve meta pool
         uint256 curveLP = ICurveMetaPool(pool).add_liquidity(
             amounts,
             minCurveLP
@@ -514,33 +515,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
-    }
-
-    /**
-     * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
-     * @param calls  array of EncodedCall structs containing information to execute necessary low level
-     * calls to purchase a punk
-     * @param punkId id of punk
-     * @param minCurveLP minimum LP to receive from curve LP
-     * @param borrowAmount amount to borrow
-     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     * the pool to deposit into
-     * @param insure whether to insure
-     */
-    function _investPunk(
-        IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        uint256 borrowAmount,
-        uint256 minCurveLP,
-        uint256 poolInfoIndex,
-        bool insure
-    ) internal {
-        _purchasePunk(calls, punkId);
-        _stakePUSD(
-            _collateralizePunkPUSD(punkId, borrowAmount, insure),
-            minCurveLP,
-            poolInfoIndex
-        );
     }
 
     /**
@@ -568,6 +542,278 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _setYieldFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
+    }
+
+    /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPUSD minimum pUSD to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pUSD pUSD amount returned
+     */
+    function _unstakePUSD(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex
+    ) internal returns (uint256 pUSD) {
+        //pUSD is in position 0 in the curve meta pool
+        pUSD = _unstake(
+            amount,
+            minPUSD,
+            poolInfoIndex,
+            PUSD_CITADEL,
+            CURVE_PUSD_POOL,
+            0
+        );
+    }
+
+    /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPETH minimum pETH to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pETH pETH amount returned
+     */
+    function _unstakePETH(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) internal returns (uint256 pETH) {
+        //pETH is in position 1 in the curve meta pool
+        pETH = _unstake(
+            amount,
+            minPETH,
+            poolInfoIndex,
+            PETH_CITADEL,
+            CURVE_PETH_POOL,
+            1
+        );
+    }
+
+    function _unstake(
+        uint256 autoCompAmount,
+        uint256 minTokenAmount,
+        uint256 poolInfoIndex,
+        address citadel,
+        address pool,
+        int128 curveID
+    ) internal returns (uint256 tokenAmount) {
+        ILPFarming(LP_FARM).withdraw(poolInfoIndex, autoCompAmount);
+
+        uint256 curveLP = IVault(citadel).withdraw(
+            address(this),
+            IERC20(ILPFarming(LP_FARM).poolInfo(poolInfoIndex).lpToken)
+                .balanceOf(address(this))
+        );
+
+        tokenAmount = ICurveMetaPool(pool).remove_liquidity_one_coin(
+            curveLP,
+            curveID,
+            minTokenAmount
+        );
+    }
+
+    /**
+     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
+     * @param punkId id of punk position pertains to
+     * @param minTokenAmount minimum token (pETH/pUSD) to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param isPUSD indicates whether loan position is denominated in pUSD or pETH
+     */
+    function _closePunkPosition(
+        uint256 punkId,
+        uint256 minTokenAmount,
+        uint256 poolInfoIndex,
+        bool isPUSD
+    ) internal {
+        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        uint256 debt = _totalDebt(jpegdVault, punkId);
+        if (isPUSD) {
+            _unstakePUSD(
+                ILPFarming(LP_FARM)
+                    .userInfo(poolInfoIndex, address(this))
+                    .amount,
+                minTokenAmount,
+                poolInfoIndex
+            );
+            IERC20(PUSD).approve(jpegdVault, debt);
+        } else {
+            _unstakePETH(
+                ILPFarming(LP_FARM)
+                    .userInfo(poolInfoIndex, address(this))
+                    .amount,
+                minTokenAmount,
+                poolInfoIndex
+            );
+            IERC20(PETH).approve(jpegdVault, debt);
+        }
+        INFTVault(jpegdVault).repay(punkId, debt);
+        INFTVault(jpegdVault).closePosition(punkId);
+    }
+
+    /**
+     * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
+     * @param calls encoded call array for listing the punk
+     * @param punkId id of punk to list
+     */
+    function _listPunk(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) internal {
+        ICryptoPunkMarket(PUNKS).transferPunk(MARKETPLACE_HELPER, punkId);
+        IMarketPlaceHelper(MARKETPLACE_HELPER).listAsset(calls);
+    }
+
+    /**
+     * @notice makes a debt payment for a collateralized NFT in jpeg'd
+     * @param amount amount of pUSD intended to be repaid
+     * @param minPUSD minimum pUSD to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function _repayLoanPUSD(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) internal returns (uint256 paidDebt) {
+        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+
+        uint256 autoComp = _queryAutoCompForPUSD(amount);
+        paidDebt = _unstakePUSD(autoComp, minPUSD, poolInfoIndex);
+
+        if (amount > paidDebt) {
+            revert ShardVault__DownPaymentInsufficient();
+        }
+
+        IERC20(PUSD).approve(jpegdVault, paidDebt);
+        INFTVault(jpegdVault).repay(punkId, paidDebt);
+    }
+
+    /**
+     * @notice makes a debt payment for a collateralized NFT in jpeg'd
+     * @param amount amount of pETH intended to be repaid
+     * @param minPETH minimum pETH to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function _repayLoanPETH(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) internal returns (uint256 paidDebt) {
+        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+
+        uint256 autoComp = _queryAutoCompForPETH(amount);
+        paidDebt = _unstakePETH(autoComp, minPETH, poolInfoIndex);
+
+        if (amount > paidDebt) {
+            revert ShardVault__DownPaymentInsufficient();
+        }
+
+        IERC20(PETH).approve(jpegdVault, paidDebt);
+        INFTVault(jpegdVault).repay(punkId, paidDebt);
+    }
+
+    /**
+     * @notice makes loan repayment without unstaking
+     * @param token payment token
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function _directRepayLoan(
+        address token,
+        uint256 amount,
+        uint256 punkId
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        IERC20(token).approve(l.jpegdVault, amount);
+        INFTVault(l.jpegdVault).repay(punkId, amount);
+    }
+
+    /**
+     * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
+     * to result in a given amount of pUSD
+     * @param pUSD desired pUSD amount
+     * @return autoComp required AutoComp LP shares
+     */
+    function _queryAutoCompForPUSD(uint256 pUSD)
+        internal
+        view
+        returns (uint256 autoComp)
+    {
+        //note: does not account for fees, not meant for precise calculations.
+        //      this is alright because it acts as a small 'buffer' to the amount
+        //      necessary for the downpayment to impact the debt as intended
+        uint256 curveLP = ICurveMetaPool(CURVE_PUSD_POOL).calc_token_amount(
+            [pUSD, 0],
+            false
+        );
+
+        //note: accounts for fees; ball-parks
+        uint256 curveLPAccountingFee = (curveLP *
+            ShardVaultStorage.layout().conversionBuffer) / (BASIS_POINTS * 100);
+
+        autoComp =
+            (curveLPAccountingFee * 10**IVault(PUSD_CITADEL).decimals()) /
+            IVault(PUSD_CITADEL).exchangeRate();
+    }
+
+    /**
+     * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
+     * to result in a given amount of pETH
+     * @param pETH desired pETH amount
+     * @return autoComp required AutoComp LP shares
+     */
+    function _queryAutoCompForPETH(uint256 pETH)
+        internal
+        view
+        returns (uint256 autoComp)
+    {
+        //note: does not account for fees, not meant for precise calculations.
+        //      this is alright because it acts as a small 'buffer' to the amount
+        //      necessary for the downpayment to impact the debt as intended
+        uint256 curveLP = ICurveMetaPool(CURVE_PETH_POOL).calc_token_amount(
+            [0, pETH],
+            false
+        );
+
+        //note: accounts for fees; ball-parks     //conversion_buffer
+        uint256 curveLPAccountingFee = (curveLP *
+            ShardVaultStorage.layout().conversionBuffer) / (100 * BASIS_POINTS);
+
+        autoComp =
+            (curveLPAccountingFee * 10**IVault(PETH_CITADEL).decimals()) /
+            IVault(PETH_CITADEL).exchangeRate();
+    }
+
+    /**
+     * @notice withdraws any proceeds generated from punk sales
+     * @param punkId the index of the punk proceeds were generated by
+     */
+    function _withdrawPunkProceeds(uint256 punkId) internal {
+        ICryptoPunkMarket(PUNKS).withdraw();
+        ShardVaultStorage.layout().ownedTokenIds.remove(punkId);
+    }
+
+    /**
+     * @notice returns total debt owed to jpeg'd vault for a given token
+     * @param jpegdVault address of jpeg'd NFT vault
+     * @param tokenId id of token position pertains to
+     * @return debt total debt owed
+     */
+    function _totalDebt(address jpegdVault, uint256 tokenId)
+        internal
+        view
+        returns (uint256 debt)
+    {
+        debt =
+            INFTVault(jpegdVault).getDebtInterest(tokenId) +
+            INFTVault(jpegdVault).positions(tokenId).debtPrincipal;
     }
 
     /**
@@ -699,6 +945,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         if (IERC721(DAWN_OF_INSRT).balanceOf(account) == 0) {
             revert ShardVault__NotWhitelisted();
         }
+    }
+
+    /**
+     * @notice returns address of market place helper
+     * @return MARKETPLACE_HELPER address
+     */
+    function _marketplaceHelper() internal view returns (address) {
+        return MARKETPLACE_HELPER;
     }
 
     /**

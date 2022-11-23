@@ -77,26 +77,6 @@ interface IShardVaultAdmin {
     ) external returns (uint256 shares);
 
     /**
-     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve & JPEG'd
-     * @param calls  array of EncodedCall structs containing information to execute necessary low level
-     * calls to purchase a punk
-     * @param punkId id of punk
-     * @param borrowAmount amount to be borrowed
-     * @param minCurveLP minimum LP to be accepted as return from curve staking
-     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     * the pool to deposit into
-     * @param insure whether to insure position
-     */
-    function investPunk(
-        IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        uint256 borrowAmount,
-        uint256 minCurveLP,
-        uint256 poolInfoIndex,
-        bool insure
-    ) external;
-
-    /**
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
@@ -155,4 +135,97 @@ interface IShardVaultAdmin {
      * @param maxUserShards new maxUserShards value
      */
     function setMaxUserShards(uint16 maxUserShards) external;
+
+    /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPUSD minimum pUSD to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pUSD pUSD amount returned
+     */
+    function unstakePUSD(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex
+    ) external returns (uint256 pUSD);
+
+    /**
+     * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
+     * @param amount amount of shares of auto-compounder to burn
+     * @param minPETH minimum pETH to receive from curve pool
+     * @param poolInfoIndex the index of the JPEG'd LPFarming pool
+     * @return pETH pETH amount returned
+     */
+    function unstakePETH(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) external returns (uint256 pETH);
+
+    /**
+     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
+     * @param punkId id of punk position pertains to
+     * @param minTokenAmount minimum token (pETH/pUSD) to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param isPUSD indicates whether loan position is denominated in pUSD or pETH
+     */
+    function closePunkPosition(
+        uint256 punkId,
+        uint256 minTokenAmount,
+        uint256 poolInfoIndex,
+        bool isPUSD
+    ) external;
+
+    /**
+     * @notice makes a debt payment to a loan position
+     * @param minPUSD minimum pUSD to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function repayLoanPUSD(
+        uint256 amount,
+        uint256 minPUSD,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external returns (uint256 paidDebt);
+
+    /**
+     * @notice makes a debt payment for a collateralized NFT in jpeg'd
+     * @param amount amount of pETH intended to be repaid
+     * @param minPETH minimum pETH to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param punkId id of punk position pertains to
+     * @return paidDebt amount of debt repaid
+     */
+    function repayLoanPETH(
+        uint256 amount,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 punkId
+    ) external returns (uint256 paidDebt);
+
+    /**
+     * @notice makes loan repayment in PUSD without unstaking
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function directRepayLoanPUSD(uint256 amount, uint256 punkId) external;
+
+    /**
+     * @notice makes loan repayment in PETH without unstaking
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function directRepayLoanPETH(uint256 amount, uint256 punkId) external;
+
+    /**
+     * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract
+     * @param calls encoded call array for listing the punk
+     * @param punkId id of punk to list
+     */
+    function listPunk(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) external;
 }
