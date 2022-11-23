@@ -24,7 +24,6 @@ import {
   IMarketPlaceHelper__factory,
   ShardVaultProxy,
 } from '../../typechain-types';
-
 import { describeBehaviorOfShardVaultProxy } from '../../spec/shard/ShardVaultProxy.behavior';
 import { BigNumber } from 'ethers';
 
@@ -40,6 +39,7 @@ describe('ShardVaultProxy', () => {
 
   let deployer: any;
   let jpegdOwner: any;
+
   const id = 1;
   const shardValue = ethers.utils.parseEther('1.0');
   const maxShards = BigNumber.from('20');
@@ -71,19 +71,34 @@ describe('ShardVaultProxy', () => {
   const pETHConversionBuffer = BigNumber.from('1000269');
   const BASIS = BigNumber.from('10000');
 
-  const feeParams: ShardVaultProxy.FeeParamsStruct = {
+  const shardCollectionAddress: string[] = [];
+  const marketplaceHelperAddress: string[] = [];
+
+  interface FeeParamsStruct {
+    saleFeeBP: BigNumber;
+    acquisitionFeeBP: BigNumber;
+    yieldFeeBP: BigNumber;
+  }
+
+  interface BufferParamsStruct {
+    ltvBufferBP: BigNumber;
+    ltvDeviationBP: BigNumber;
+    conversionBuffer: BigNumber;
+  }
+
+  const feeParams: FeeParamsStruct = {
     saleFeeBP: saleFeeBP,
     acquisitionFeeBP: acquisitionFeeBP,
     yieldFeeBP: yieldFeeBP,
   };
 
-  const pUSDBufferParams: ShardVaultProxy.BufferParamsStruct = {
+  const pUSDBufferParams: BufferParamsStruct = {
     ltvBufferBP: ltvBufferBP,
     ltvDeviationBP: ltvDeviationBP,
     conversionBuffer: pUSDConversionBuffer,
   };
 
-  const pETHBufferParams: ShardVaultProxy.BufferParamsStruct = {
+  const pETHBufferParams: BufferParamsStruct = {
     ltvBufferBP: ltvBufferBP,
     ltvDeviationBP: ltvDeviationBP,
     conversionBuffer: pETHConversionBuffer,
@@ -310,6 +325,9 @@ describe('ShardVaultProxy', () => {
       deployer,
     );
 
+    shardCollectionAddress.push(shardCollectionProxy.address);
+    marketplaceHelperAddress.push(marketplaceHelper.address);
+
     await shardCollectionInstance
       .connect(deployer)
       ['addToWhitelist(address)'](deployment);
@@ -368,6 +386,10 @@ describe('ShardVaultProxy', () => {
     async () => pethInstance,
     {
       getProtocolOwner: async () => deployer,
+      shardCollection: shardCollectionAddress,
+      marketplaceHelper: marketplaceHelperAddress,
+      maxSupply: maxShards,
+      shardValue: shardValue,
     },
   );
 });

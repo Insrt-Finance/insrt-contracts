@@ -21,7 +21,7 @@ interface ICurveMetaPool {
         int128 j,
         uint256 _dx,
         uint256 _min_dy
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     /**
      * @notice Deposit coins into the pool
