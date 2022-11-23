@@ -1238,7 +1238,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _enforceNotYieldClaimingAndInvested() internal view {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        if (!l.isYieldClaiming && l.isInvested) {
+        if (l.isYieldClaiming || !l.isInvested) {
             revert ShardVault__ClaimingExcessETHForbidden();
         }
     }
