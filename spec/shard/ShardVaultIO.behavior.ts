@@ -4,6 +4,7 @@ import {
   IMarketPlaceHelper,
   IShardCollection,
   IShardVault,
+  IShardVaultInternal__factory,
   ShardCollection,
   ShardCollection__factory,
 } from '../../typechain-types';
@@ -293,7 +294,7 @@ export function describeBehaviorOfShardVaultIO(
         it('deposits are not enabled', async () => {
           await expect(
             instance.connect(depositor)['deposit()']({ value: depositAmount }),
-          ).to.be.revertedWith('ShardVault__NotEnabled()');
+          ).to.be.revertedWithCustomError(instance, 'ShardVault__NotEnabled');
         });
 
         it('depositor already holds maximum allowed shards', async () => {
@@ -303,7 +304,10 @@ export function describeBehaviorOfShardVaultIO(
             ['deposit()']({ value: depositAmount });
           await expect(
             instance.connect(depositor)['deposit()']({ value: depositAmount }),
-          ).to.be.revertedWith('ShardVault__MaxUserShards()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__MaxUserShards',
+          );
         });
 
         it('msg value is not a multiple of shard value', async () => {
@@ -313,7 +317,10 @@ export function describeBehaviorOfShardVaultIO(
             instance
               .connect(depositor)
               ['deposit()']({ value: invalidDepositAmount }),
-          ).to.be.revertedWith('ShardVault__InvalidDepositAmount()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__InvalidDepositAmount',
+          );
         });
 
         it('attempted deposit after maxSupply has been reached', async () => {
@@ -329,7 +336,10 @@ export function describeBehaviorOfShardVaultIO(
             ['deposit()']({ value: depositAmount.mul(ethers.constants.Two) });
           await expect(
             instance.connect(depositor)['deposit()']({ value: depositAmount }),
-          ).to.be.revertedWith('ShardVault__DepositForbidden()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__DepositForbidden',
+          );
         });
 
         it('shard vault has invested', async () => {
@@ -352,7 +362,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             instance.connect(depositor)['deposit()']({ value: depositAmount }),
-          ).to.be.revertedWith('ShardVault__DepositForbidden()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__DepositForbidden',
+          );
         });
 
         it('during whitelist, depositor does not hold DAWN_OF_INSRT NFT', async () => {
@@ -373,7 +386,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             instance.connect(thirdDepositor).deposit({ value: depositAmount }),
-          ).to.be.revertedWith('ShardVault__NotWhitelisted()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotWhitelisted',
+          );
         });
 
         it('during whitelist, attempted deposit after whitelistShards have been reached', async () => {
@@ -396,7 +412,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             instance.connect(depositor).deposit({ value: depositAmount }),
-          ).to.be.revertedWith('ShardVault__DepositForbidden()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__DepositForbidden',
+          );
         });
       });
     });
@@ -460,7 +479,10 @@ export function describeBehaviorOfShardVaultIO(
         it('caller does not have enough shards', async () => {
           await expect(
             instance.connect(depositor).withdraw([ethers.constants.Zero]),
-          ).to.be.revertedWith('ShardVault__InsufficientShards()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__InsufficientShards',
+          );
         });
         it('caller is not shard owner', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -481,7 +503,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
-          ).to.be.revertedWith('ShardVault__NotShardOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotShardOwner',
+          );
         });
         it('owned shards correspond to different vault', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -503,7 +528,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             secondInstance.connect(depositor)['withdraw(uint256[])'](tokens),
-          ).to.be.revertedWith('ShardVault__VaultTokenIdMismatch()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__VaultTokenIdMismatch',
+          );
         });
         it('vault is full', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -524,7 +552,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             instance.connect(depositor)['withdraw(uint256[])'](tokens),
-          ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__WithdrawalForbidden',
+          );
         });
         it('vault is invested', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
@@ -552,7 +583,10 @@ export function describeBehaviorOfShardVaultIO(
 
           await expect(
             instance.connect(depositor)['withdraw(uint256[])'](tokens),
-          ).to.be.revertedWith('ShardVault__WithdrawalForbidden()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__WithdrawalForbidden',
+          );
         });
       });
     });
