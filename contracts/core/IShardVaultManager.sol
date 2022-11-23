@@ -24,7 +24,7 @@ interface IShardVaultManager {
      * @notice deploys a ShardVaultProxy
      * @param collection the address of the NFT collection contract
      * @param jpegdVault the jpeg'd NFT vault corresponding to the collection
-     * @param jpegdVaultHelper the jpeg'd NFT Vault helper contract used for 
+     * @param jpegdVaultHelper the jpeg'd NFT Vault helper contract used for
        non-ERC721/1155 compiant collections
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
@@ -32,7 +32,6 @@ interface IShardVaultManager {
      * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
      * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
      * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
-     * @return deployment address of ShardVaultProxy deployed
      */
     function deployShardVault(
         address collection,
