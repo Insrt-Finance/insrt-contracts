@@ -28,7 +28,13 @@ export function describeBehaviorOfShardVaultProxy(
   skips?: string[],
 ) {
   describe('::ShardVaultProxy', () => {
-    describeBehaviorOfShardVaultIO(deploy, secondDeploy, args, skips);
+    describeBehaviorOfShardVaultIO(
+      deploy,
+      secondDeploy,
+      pethDeploy,
+      args,
+      skips,
+    );
     describeBehaviorOfShardVaultView(deploy, pethDeploy, args, skips);
     describeBehaviorOfShardVaultAdmin(
       deploy,
