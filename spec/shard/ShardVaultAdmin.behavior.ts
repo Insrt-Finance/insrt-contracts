@@ -314,7 +314,29 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       it('increases cumulativeEPS if isFinalPurchase is true', async () => {
-        console.log('TODO');
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+            true,
+          );
+        const leftOverETH = await ethers.provider.getBalance(instance.address);
+        const fees = await instance.callStatic['accruedFees()']();
+
+        const cumulativeEPS = leftOverETH
+          .sub(fees)
+          .div(await instance.callStatic['totalSupply()']());
+
+        expect(cumulativeEPS).to.eq(
+          await instance.callStatic['cumulativeEPS()'](),
+        );
       });
 
       describe('reverts if', () => {
