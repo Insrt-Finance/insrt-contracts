@@ -152,43 +152,43 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice burn held shards before NFT acquisition and withdraw corresponding ETH
-     * @param tokenIds list of ids of shards to burn
+     * @param shardIds list of ids of shards to burn
      */
-    function _withdraw(uint256[] memory tokenIds) internal {
+    function _withdraw(uint256[] memory shardIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         if (l.isInvested || l.totalSupply == l.maxSupply) {
             revert ShardVault__WithdrawalForbidden();
         }
 
-        uint16 tokens = uint16(tokenIds.length);
+        uint16 shards = uint16(shardIds.length);
 
-        if (l.shardBalances[msg.sender] < tokens) {
+        if (l.shardBalances[msg.sender] < shards) {
             revert ShardVault__InsufficientShards();
         }
 
         unchecked {
-            for (uint256 i; i < tokens; ++i) {
+            for (uint256 i; i < shards; ++i) {
                 if (
-                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                    IShardCollection(SHARD_COLLECTION).ownerOf(shardIds[i]) !=
                     msg.sender
                 ) {
                     revert ShardVault__NotShardOwner();
                 }
 
-                (address vault, ) = _parseTokenId(tokenIds[i]);
+                (address vault, ) = _parseTokenId(shardIds[i]);
                 if (vault != address(this)) {
                     revert ShardVault__VaultTokenIdMismatch();
                 }
 
-                IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+                IShardCollection(SHARD_COLLECTION).burn(shardIds[i]);
             }
         }
 
-        l.totalSupply -= tokens;
-        l.shardBalances[msg.sender] -= tokens;
+        l.totalSupply -= shards;
+        l.shardBalances[msg.sender] -= shards;
 
-        payable(msg.sender).sendValue(tokens * l.shardValue);
+        payable(msg.sender).sendValue(shards * l.shardValue);
     }
 
     /**
