@@ -121,20 +121,18 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setWhitelistEndsAt(uint64 whitelistEndsAt)
-        external
-        onlyProtocolOwner
-    {
+    function setWhitelistEndsAt(
+        uint64 whitelistEndsAt
+    ) external onlyProtocolOwner {
         _setWhitelistEndsAt(whitelistEndsAt);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setReservedShards(uint16 reservedShards)
-        external
-        onlyProtocolOwner
-    {
+    function setReservedShards(
+        uint16 reservedShards
+    ) external onlyProtocolOwner {
         _setReservedShards(reservedShards);
     }
 
@@ -225,20 +223,20 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function directRepayLoanPUSD(uint256 amount, uint256 punkId)
-        external
-        onlyProtocolOwner
-    {
+    function directRepayLoanPUSD(
+        uint256 amount,
+        uint256 punkId
+    ) external onlyProtocolOwner {
         _directRepayLoan(PUSD, amount, punkId);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function directRepayLoanPETH(uint256 amount, uint256 punkId)
-        external
-        onlyProtocolOwner
-    {
+    function directRepayLoanPETH(
+        uint256 amount,
+        uint256 punkId
+    ) external onlyProtocolOwner {
         _directRepayLoan(PETH, amount, punkId);
     }
 

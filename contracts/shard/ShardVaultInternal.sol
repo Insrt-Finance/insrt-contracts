@@ -258,11 +258,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param account address owning shards
      * @return shardBalance shards owned by account
      */
-    function _shardBalances(address account)
-        internal
-        view
-        returns (uint16 shardBalance)
-    {
+    function _shardBalances(
+        address account
+    ) internal view returns (uint16 shardBalance) {
         shardBalance = ShardVaultStorage.layout().shardBalances[account];
     }
 
@@ -291,11 +289,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param internalId the internal ID
      * @return tokenId the formatted tokenId
      */
-    function _formatTokenId(uint96 internalId)
-        internal
-        view
-        returns (uint256 tokenId)
-    {
+    function _formatTokenId(
+        uint96 internalId
+    ) internal view returns (uint256 tokenId) {
         tokenId = ((uint256(uint160(address(this))) << 96) | internalId);
     }
 
@@ -305,11 +301,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @return vault seeded vault address
      * @return internalId internal ID
      */
-    function _parseTokenId(uint256 tokenId)
-        internal
-        pure
-        returns (address vault, uint96 internalId)
-    {
+    function _parseTokenId(
+        uint256 tokenId
+    ) internal pure returns (address vault, uint96 internalId) {
         vault = address(uint160(tokenId >> 96));
         internalId = uint96(tokenId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
     }
@@ -741,11 +735,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param pUSD desired pUSD amount
      * @return autoComp required AutoComp LP shares
      */
-    function _queryAutoCompForPUSD(uint256 pUSD)
-        internal
-        view
-        returns (uint256 autoComp)
-    {
+    function _queryAutoCompForPUSD(
+        uint256 pUSD
+    ) internal view returns (uint256 autoComp) {
         //note: does not account for fees, not meant for precise calculations.
         //      this is alright because it acts as a small 'buffer' to the amount
         //      necessary for the downpayment to impact the debt as intended
@@ -759,7 +751,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             ShardVaultStorage.layout().conversionBuffer) / (BASIS_POINTS * 100);
 
         autoComp =
-            (curveLPAccountingFee * 10**IVault(PUSD_CITADEL).decimals()) /
+            (curveLPAccountingFee * 10 ** IVault(PUSD_CITADEL).decimals()) /
             IVault(PUSD_CITADEL).exchangeRate();
     }
 
@@ -769,11 +761,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param pETH desired pETH amount
      * @return autoComp required AutoComp LP shares
      */
-    function _queryAutoCompForPETH(uint256 pETH)
-        internal
-        view
-        returns (uint256 autoComp)
-    {
+    function _queryAutoCompForPETH(
+        uint256 pETH
+    ) internal view returns (uint256 autoComp) {
         //note: does not account for fees, not meant for precise calculations.
         //      this is alright because it acts as a small 'buffer' to the amount
         //      necessary for the downpayment to impact the debt as intended
@@ -787,7 +777,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             ShardVaultStorage.layout().conversionBuffer) / (100 * BASIS_POINTS);
 
         autoComp =
-            (curveLPAccountingFee * 10**IVault(PETH_CITADEL).decimals()) /
+            (curveLPAccountingFee * 10 ** IVault(PETH_CITADEL).decimals()) /
             IVault(PETH_CITADEL).exchangeRate();
     }
 
@@ -806,11 +796,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param tokenId id of token position pertains to
      * @return debt total debt owed
      */
-    function _totalDebt(address jpegdVault, uint256 tokenId)
-        internal
-        view
-        returns (uint256 debt)
-    {
+    function _totalDebt(
+        address jpegdVault,
+        uint256 tokenId
+    ) internal view returns (uint256 debt) {
         debt =
             INFTVault(jpegdVault).getDebtInterest(tokenId) +
             INFTVault(jpegdVault).positions(tokenId).debtPrincipal;
@@ -901,11 +890,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param account address to calculate for
      * @return shards the amount of shards the account may mint
      */
-    function _userRemainingShards(address account)
-        internal
-        view
-        returns (uint256 shards)
-    {
+    function _userRemainingShards(
+        address account
+    ) internal view returns (uint256 shards) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         if (l.maxUserShards > l.shardBalances[account]) {
             shards = l.maxUserShards - l.shardBalances[account];

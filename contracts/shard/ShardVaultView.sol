@@ -76,22 +76,18 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function formatTokenId(uint96 internalId)
-        external
-        view
-        returns (uint256 tokenId)
-    {
+    function formatTokenId(
+        uint96 internalId
+    ) external view returns (uint256 tokenId) {
         tokenId = _formatTokenId(internalId);
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function parseTokenId(uint256 tokenId)
-        external
-        pure
-        returns (address vault, uint96 internalId)
-    {
+    function parseTokenId(
+        uint256 tokenId
+    ) external pure returns (address vault, uint96 internalId) {
         (vault, internalId) = _parseTokenId(tokenId);
     }
 
@@ -126,19 +122,15 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function queryAutoCompForPUSD(uint256 pUSD)
-        external
-        view
-        returns (uint256 autoComp)
-    {
+    function queryAutoCompForPUSD(
+        uint256 pUSD
+    ) external view returns (uint256 autoComp) {
         autoComp = _queryAutoCompForPUSD(pUSD);
     }
 
-    function queryAutoCompForPETH(uint256 pETH)
-        external
-        view
-        returns (uint256 autoComp)
-    {
+    function queryAutoCompForPETH(
+        uint256 pETH
+    ) external view returns (uint256 autoComp) {
         autoComp = _queryAutoCompForPETH(pETH);
     }
 

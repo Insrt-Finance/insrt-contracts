@@ -60,6 +60,7 @@ describe('ShardVaultProxy', () => {
   const pethPunkVaultHelper = '0x2bE665ee27096344B8f015b1952D3dFDb4Db4691';
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
+  const maxShardsPerUser = BigNumber.from('10');
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
@@ -234,13 +235,14 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
         pusdPunkVaultHelper,
         shardValue,
         maxShards,
+        maxShardsPerUser,
         feeParams,
         pUSDBufferParams,
       );
@@ -256,13 +258,14 @@ describe('ShardVaultProxy', () => {
       .connect(deployer)
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         BAYC,
         baycVault,
         ethers.constants.AddressZero,
         shardValue,
         maxShards,
+        maxShardsPerUser,
         feeParams,
         pUSDBufferParams,
       );
@@ -281,13 +284,14 @@ describe('ShardVaultProxy', () => {
       .connect(deployer)
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
         pethPunkVaultHelper,
         shardValue,
         maxShards,
+        maxShardsPerUser,
         feeParams,
         pETHBufferParams,
       );

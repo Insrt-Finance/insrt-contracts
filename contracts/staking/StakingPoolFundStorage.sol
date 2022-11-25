@@ -30,11 +30,10 @@ library StakingPoolFundStorage {
         l.productTokenToPool[productToken] = pool;
     }
 
-    function getStakingPool(Layout storage l, address productToken)
-        external
-        view
-        returns (address)
-    {
+    function getStakingPool(
+        Layout storage l,
+        address productToken
+    ) external view returns (address) {
         return l.productTokenToPool[productToken];
     }
 }

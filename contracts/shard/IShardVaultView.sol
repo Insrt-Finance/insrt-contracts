@@ -42,10 +42,9 @@ interface IShardVaultView {
      * @param internalId the internal ID
      * @return tokenId the formatted tokenId
      */
-    function formatTokenId(uint96 internalId)
-        external
-        view
-        returns (uint256 tokenId);
+    function formatTokenId(
+        uint96 internalId
+    ) external view returns (uint256 tokenId);
 
     /**
      * @notice parses a tokenId to extract seeded vault address and internalId
@@ -53,10 +52,9 @@ interface IShardVaultView {
      * @return vault seeded vault address
      * @return internalId internal ID
      */
-    function parseTokenId(uint256 tokenId)
-        external
-        pure
-        returns (address vault, uint96 internalId);
+    function parseTokenId(
+        uint256 tokenId
+    ) external pure returns (address vault, uint96 internalId);
 
     /**
      * @notice return isInvested flag state
@@ -86,10 +84,9 @@ interface IShardVaultView {
      * @param pUSD desired pUSD amount
      * @return autoComp required AutoComp LP shares
      */
-    function queryAutoCompForPUSD(uint256 pUSD)
-        external
-        view
-        returns (uint256 autoComp);
+    function queryAutoCompForPUSD(
+        uint256 pUSD
+    ) external view returns (uint256 autoComp);
 
     /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
@@ -97,10 +94,9 @@ interface IShardVaultView {
      * @param pETH desired pETH amount
      * @return autoComp required AutoComp LP shares
      */
-    function queryAutoCompForPETH(uint256 pETH)
-        external
-        view
-        returns (uint256 autoComp);
+    function queryAutoCompForPETH(
+        uint256 pETH
+    ) external view returns (uint256 autoComp);
 
     /**
      * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault
@@ -140,10 +136,9 @@ interface IShardVaultView {
      * @param account address owning shards
      * @return shards quantity of shards
      */
-    function shardBalances(address account)
-        external
-        view
-        returns (uint16 shards);
+    function shardBalances(
+        address account
+    ) external view returns (uint16 shards);
 
     /**
      * @notice return amount of shards reserved for whitelist
