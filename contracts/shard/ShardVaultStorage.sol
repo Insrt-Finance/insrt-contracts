@@ -8,10 +8,10 @@ library ShardVaultStorage {
     struct Layout {
         uint256 shardValue;
         uint256 accruedFees;
+        uint256 conversionBuffer;
         uint64 whitelistEndsAt;
         uint16 reservedShards;
         uint16 maxUserShards;
-        uint256 conversionBuffer;
         uint16 count;
         uint16 maxSupply;
         uint16 totalSupply;
