@@ -287,7 +287,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 punkPurchaseCallsPUSD,
                 punkId,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('collection is not punks', async () => {
           await expect(
@@ -297,7 +300,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 punkPurchaseCallsPUSD,
                 punkId,
               ),
-          ).to.be.revertedWith('ShardVault__CollectionNotPunks()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__CollectionNotPunks',
+          );
         });
       });
     });
@@ -460,7 +466,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 requestedBorrow,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__TargetLTVReached()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__TargetLTVReached',
+          );
         });
 
         it('called by non-owner', async () => {
@@ -472,7 +481,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -640,7 +652,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 requestedBorrow,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__TargetLTVReached()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__TargetLTVReached',
+          );
         });
 
         it('called by non-owner', async () => {
@@ -652,7 +667,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -743,7 +761,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -834,7 +855,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1032,7 +1056,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('paidDebt is less than requested amount', async () => {
           console.log('TODO');
@@ -1241,7 +1268,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('paidDebt is less than requested amount', async () => {
           console.log('TODO');
@@ -1302,7 +1332,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1359,7 +1392,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1808,7 +1844,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.Zero,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1875,7 +1914,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ],
                 ethers.constants.Zero,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1895,14 +1937,20 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setAcquisitionFee(uint16)'](ethers.constants.Two),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('value exceeds BASIS_POINTS', async () => {
           await expect(
             instance
               .connect(owner)
               ['setAcquisitionFee(uint16)'](BigNumber.from('10001')),
-          ).to.be.revertedWith('ShardVault__BasisExceeded()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__BasisExceeded',
+          );
         });
       });
     });
@@ -1922,14 +1970,20 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setSaleFee(uint16)'](ethers.constants.Two),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('value exceeds BASIS_POINTS', async () => {
           await expect(
             instance
               .connect(owner)
               ['setSaleFee(uint16)'](BigNumber.from('10001')),
-          ).to.be.revertedWith('ShardVault__BasisExceeded()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__BasisExceeded',
+          );
         });
       });
     });
@@ -1948,14 +2002,20 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setYieldFee(uint16)'](ethers.constants.Two),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('value exceeds BASIS_POINTS', async () => {
           await expect(
             instance
               .connect(owner)
               ['setYieldFee(uint16)'](BigNumber.from('10001')),
-          ).to.be.revertedWith('ShardVault__BasisExceeded()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__BasisExceeded',
+          );
         });
       });
     });
@@ -1974,7 +2034,10 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setMaxSupply(uint16)'](ethers.constants.Two),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
