@@ -64,4 +64,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when the actual downpayment amount is too small
      */
     error ShardVault__DownPaymentInsufficient();
+
+    /**
+     * @notice thrown when the vault is meant to handle PUSD but is called a PETH function or vice versa
+     */
+    error ShardVault__CallTypeProhibited();
 }

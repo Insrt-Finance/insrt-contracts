@@ -290,8 +290,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pUSD) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        _enforceIsPUSDVault(l.isPUSDVault, true);
+        address jpegdVault = l.jpegdVault;
         uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
 
         pUSD = _collateralizePunk(
@@ -309,8 +311,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pETH) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        _enforceIsPUSDVault(l.isPUSDVault, false);
+        address jpegdVault = l.jpegdVault;
         uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
 
         pETH = _collateralizePunk(
@@ -385,6 +389,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
+        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, true);
         //pUSD is in position 0 in the curve meta pool
         shares = _stake(
             amount,
@@ -410,6 +415,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
+        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, false);
         //pETH is in position 1 in the curve meta pool
         shares = _stake(
             amount,
@@ -487,6 +493,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minPUSD,
         uint256 poolInfoIndex
     ) internal returns (uint256 pUSD) {
+        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, true);
         //pUSD is in position 0 in the curve meta pool
         pUSD = _unstake(
             amount,
@@ -510,6 +517,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minPETH,
         uint256 poolInfoIndex
     ) internal returns (uint256 pETH) {
+        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, false);
+
         //pETH is in position 1 in the curve meta pool
         pETH = _unstake(
             amount,
@@ -609,7 +618,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        _enforceIsPUSDVault(l.isPUSDVault, true);
+        address jpegdVault = l.jpegdVault;
 
         uint256 autoComp = _queryAutoCompForPUSD(amount);
         paidDebt = _unstakePUSD(autoComp, minPUSD, poolInfoIndex);
@@ -636,7 +648,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        _enforceIsPUSDVault(l.isPUSDVault, false);
+        address jpegdVault = l.jpegdVault;
 
         uint256 autoComp = _queryAutoCompForPETH(amount);
         paidDebt = _unstakePETH(autoComp, minPETH, poolInfoIndex);
@@ -800,5 +815,17 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _enforceBasis(uint16 value) internal pure {
         if (value > 10000) revert ShardVault__BasisExceeded();
+    }
+
+    /**
+     * @notice enforces that the type of the vault matches the type of the call
+     * @param isPUSDVault indicates whether the vault is meant to handle PUSD
+     * @param isPUSDCall indicates whether the call related to PUSD
+     */
+    function _enforceIsPUSDVault(
+        bool isPUSDVault,
+        bool isPUSDCall
+    ) internal pure {
+        if (isPUSDVault != isPUSDCall) revert ShardVault__CallTypeProhibited();
     }
 }

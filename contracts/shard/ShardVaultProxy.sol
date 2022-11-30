@@ -22,6 +22,7 @@ contract ShardVaultProxy is Proxy {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
+        bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
         IShardVault.BufferParams memory bufferParams
     ) {
@@ -36,6 +37,7 @@ contract ShardVaultProxy is Proxy {
         l.jpegdVaultHelper = jpegdVaultHelper;
         l.shardValue = shardValue;
         l.maxSupply = maxSupply;
+        l.isPUSDVault = isPUSDVault;
         l.saleFeeBP = feeParams.saleFeeBP;
         l.acquisitionFeeBP = feeParams.acquisitionFeeBP;
         l.yieldFeeBP = feeParams.yieldFeeBP;
