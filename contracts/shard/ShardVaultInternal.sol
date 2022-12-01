@@ -97,7 +97,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         uint16 maxSupply = l.maxSupply;
-        uint16 balance = l.shardBalances[msg.sender];
+        uint16 balance = l.userShards[msg.sender];
         uint16 maxUserShards = l.maxUserShards;
 
         if (balance == maxUserShards) {
@@ -134,7 +134,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply += shards;
-        l.shardBalances[msg.sender] += shards;
+        l.userShards[msg.sender] += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -163,7 +163,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint16 shards = uint16(shardIds.length);
 
-        if (l.shardBalances[msg.sender] < shards) {
+        if (l.userShards[msg.sender] < shards) {
             revert ShardVault__InsufficientShards();
         }
 
@@ -186,7 +186,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply -= shards;
-        l.shardBalances[msg.sender] -= shards;
+        l.userShards[msg.sender] -= shards;
 
         payable(msg.sender).sendValue(shards * l.shardValue);
     }
@@ -256,12 +256,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice return vault shards owned by an account
      * @param account address owning shards
-     * @return shardBalance shards owned by account
+     * @return userShards shards owned by account
      */
-    function _shardBalances(
+    function _userShards(
         address account
-    ) internal view returns (uint16 shardBalance) {
-        shardBalance = ShardVaultStorage.layout().shardBalances[account];
+    ) internal view returns (uint16 userShards) {
+        userShards = ShardVaultStorage.layout().userShards[account];
     }
 
     /**
@@ -894,8 +894,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address account
     ) internal view returns (uint256 shards) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        if (l.maxUserShards > l.shardBalances[account]) {
-            shards = l.maxUserShards - l.shardBalances[account];
+        if (l.maxUserShards > l.userShards[account]) {
+            shards = l.maxUserShards - l.userShards[account];
         }
     }
 

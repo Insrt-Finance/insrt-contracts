@@ -171,9 +171,9 @@ export function describeBehaviorOfShardVaultIO(
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
 
-        expect(
-          await instance['shardBalances(address)'](depositor.address),
-        ).to.eq(depositAmount.div(ethers.utils.parseEther('1')));
+        expect(await instance['userShards(address)'](depositor.address)).to.eq(
+          depositAmount.div(ethers.utils.parseEther('1')),
+        );
       });
       it('returns any excess ETH after MaxUserShards is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
