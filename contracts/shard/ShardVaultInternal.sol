@@ -22,7 +22,7 @@ import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
 /**
  * @title Shard Vault internal functions
- * @dev inherited by all Shard Vault implementation contracts
+ * @notice inherited by all Shard Vault implementation contracts
  */
 abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     using AddressUtils for address payable;
@@ -228,8 +228,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice return minted token count
-     * @dev does not reduce when tokens are burnt
+     * @notice return minted token count; does not reduce when tokens are burnt
      * @return count minted token count
      */
     function _count() internal view returns (uint16 count) {
@@ -237,8 +236,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice return isInvested flag state
-     * @dev indicates whether last asset purchase has been made
+     * @notice return isInvested flag state; indicates whether last asset purchase has been made
      * @return isInvested isInvested flag
      */
     function _isInvested() internal view returns (bool isInvested) {
@@ -344,8 +342,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice borrows pUSD in exchange for collaterlizing a punk
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
+     * @notice borrows pUSD in exchange for collaterlizing a punk; insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param insure whether to insure
      * @return pUSD the amount of pUSD received for the collateralized punk
@@ -839,9 +836,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice return the maximum shards a user is allowed to mint
-     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
-     * said user may not deposit more
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
      * @param maxUserShards new maxUserShards value
      */
     function _setMaxUserShards(uint16 maxUserShards) internal {
@@ -849,8 +845,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault
-     * @dev accounts for fee withdrawals
+     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault; accounts for fee withdrawals
      * @return fees accrued fees
      */
     function _accruedFees() internal view returns (uint256 fees) {
@@ -900,8 +895,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice returns how many remaining reservations for shards are left
-     * @dev returns 0 if whitelist period has elapsed
+     * @notice returns how many remaining reservations for shards are left; returns 0 if whitelist period has elapsed
      * @return shards the amount of remaining shard reservations
      */
     function _remainingShardReservations()
