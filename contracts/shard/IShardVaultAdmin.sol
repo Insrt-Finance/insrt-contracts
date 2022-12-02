@@ -21,11 +21,11 @@ interface IShardVaultAdmin {
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pUSD borrowed pUSD
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPUSD(
         uint256 punkId,
@@ -34,12 +34,12 @@ interface IShardVaultAdmin {
     ) external returns (uint256 pUSD);
 
     /**
-     * @notice borrows pETH by collateralizing a punk on JPEG'd
+     * @notice borrows pETH by collateralizing a punk on JPEG'
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pETH borrowed pETH
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPETH(
         uint256 punkId,
@@ -99,6 +99,41 @@ interface IShardVaultAdmin {
      * @param maxSupply the maxSupply of shards
      */
     function setMaxSupply(uint16 maxSupply) external;
+
+    /**
+     * @notice sets the whitelistEndsAt timestamp
+     * @param whitelistEndsAt timestamp of whitelist end
+     */
+    function setWhitelistEndsAt(uint64 whitelistEndsAt) external;
+
+    /**
+     * @notice sets the maximum amount of shard to be minted during whitelist
+     * @param reservedShards reserved shard amount
+     */
+    function setReservedShards(uint16 reservedShards) external;
+
+    /**
+     * @notice sets the isEnabled flag, allowing or prohibiting deposits
+     * @param isEnabled boolean value
+     */
+    function setIsEnabled(bool isEnabled) external;
+
+    /**
+     * @notice sets the whitelist deadline and allows deposits
+     * @param whitelistEndsAt whitelist deadline timestamp
+     * @param reservedShards whitelist shard amount
+     */
+    function initiateWhitelistAndDeposits(
+        uint64 whitelistEndsAt,
+        uint16 reservedShards
+    ) external;
+
+    /**
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
+     * @param maxUserShards new maxUserShards value
+     */
+    function setMaxUserShards(uint16 maxUserShards) external;
 
     /**
      * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
