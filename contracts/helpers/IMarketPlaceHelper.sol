@@ -56,6 +56,9 @@ interface IMarketPlaceHelper {
     /**
      * @notice accept bid call made to arbitrary marketplace
      * @param calls encoded calls needed to accept bid
+     * @return receivedETH eth received as a result of executing encoded calls
      */
-    function acceptAssetBid(EncodedCall[] memory calls) external payable;
+    function acceptAssetBid(
+        EncodedCall[] memory calls
+    ) external payable returns (uint256 receivedETH);
 }

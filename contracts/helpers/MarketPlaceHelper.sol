@@ -65,7 +65,9 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
     /**
      * @inheritdoc IMarketPlaceHelper
      */
-    function acceptAssetBid(EncodedCall[] memory calls) external payable {
+    function acceptAssetBid(
+        EncodedCall[] memory calls
+    ) external payable returns (uint256 receivedETH) {
         uint256 oldBalance = address(this).balance;
 
         for (uint256 i; i < calls.length; ) {
@@ -81,8 +83,10 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         }
 
         uint256 newBalance = address(this).balance;
-        if (newBalance - oldBalance != 0) {
-            payable(msg.sender).sendValue(newBalance - oldBalance);
+        receivedETH = newBalance - oldBalance;
+
+        if (receivedETH != 0) {
+            payable(msg.sender).sendValue(receivedETH);
         }
     }
 }
