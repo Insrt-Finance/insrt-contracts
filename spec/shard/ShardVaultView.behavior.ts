@@ -243,9 +243,10 @@ export function describeBehaviorOfShardVaultView(
 
       await pethInstance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
           punkPurchaseCallsPETH,
           punkId,
+          true,
         );
 
       const requestedBorrow = (
@@ -317,9 +318,10 @@ export function describeBehaviorOfShardVaultView(
 
       await pethInstance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
           punkPurchaseCallsPETH,
           punkId,
+          true,
         );
 
       const requestedBorrow = (
@@ -396,9 +398,10 @@ export function describeBehaviorOfShardVaultView(
 
       await instance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
           punkPurchaseCallsPUSD,
           punkId,
+          true,
         );
 
       const requestedBorrow = (
@@ -469,9 +472,10 @@ export function describeBehaviorOfShardVaultView(
 
       await instance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
           punkPurchaseCallsPUSD,
           punkId,
+          true,
         );
 
       const requestedBorrow = (

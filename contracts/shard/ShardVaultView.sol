@@ -11,32 +11,9 @@ import { IShardVaultView } from './IShardVaultView.sol';
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     constructor(
-        address shardCollection,
-        address pUSD,
-        address pETH,
-        address punkMarket,
-        address pusdCitadel,
-        address pethCitadel,
-        address lpFarm,
-        address curvePUSDPool,
-        address curvePETHPool,
-        address booster,
-        address marketplaceHelper
-    )
-        ShardVaultInternal(
-            shardCollection,
-            pUSD,
-            pETH,
-            punkMarket,
-            pusdCitadel,
-            pethCitadel,
-            lpFarm,
-            curvePUSDPool,
-            curvePETHPool,
-            booster,
-            marketplaceHelper
-        )
-    {}
+        JPEGParams memory jpegParams,
+        AuxiliaryParams memory auxiliaryParams
+    ) ShardVaultInternal(jpegParams, auxiliaryParams) {}
 
     /**
      * @inheritdoc IShardVaultView
@@ -122,6 +99,13 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function accruedJPEG() external view returns (uint256 jpeg) {
+        jpeg = _accruedJPEG();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function queryAutoCompForPUSD(
         uint256 pUSD
     ) external view returns (uint256 autoComp) {
@@ -178,5 +162,51 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function marketplaceHelper() external view returns (address) {
         return _marketplaceHelper();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function claimedJPS(
+        uint256 shardId
+    ) external view returns (uint256 claimedJPS) {
+        claimedJPS = _claimedJPS(shardId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function claimedEPS(
+        uint256 shardId
+    ) external view returns (uint256 claimedEPS) {
+        claimedEPS = _claimedEPS(shardId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function cumulativeJPS() external view returns (uint256 cumulativeJPS) {
+        cumulativeJPS = _cumulativeJPS();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function cumulativeEPS() external view returns (uint256 cumulativeEPS) {
+        cumulativeEPS = _cumulativeEPS();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function isYieldClaiming() external view returns (bool isYieldClaiming) {
+        isYieldClaiming = _isYieldClaiming();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt) {
+        whitelistEndsAt = _whitelistEndsAt();
     }
 }

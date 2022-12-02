@@ -31,6 +31,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable SHARD_COLLECTION;
     address internal immutable PUSD;
     address internal immutable PETH;
+    address internal immutable JPEG;
     address internal immutable PUNKS;
     address internal immutable PUSD_CITADEL;
     address internal immutable PETH_CITADEL;
@@ -42,29 +43,22 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
-        address shardCollection,
-        address pUSD,
-        address pETH,
-        address punkMarket,
-        address pusdCitadel,
-        address pethCitadel,
-        address lpFarm,
-        address curvePUSDPool,
-        address curvePETHPool,
-        address dawnOfInsrt,
-        address marketplaceHelper
+        JPEGParams memory jpegParams,
+        AuxiliaryParams memory auxiliaryParams
     ) {
-        SHARD_COLLECTION = shardCollection;
-        PUNKS = punkMarket;
-        PUSD = pUSD;
-        PETH = pETH;
-        PUSD_CITADEL = pusdCitadel;
-        PETH_CITADEL = pethCitadel;
-        LP_FARM = lpFarm;
-        CURVE_PUSD_POOL = curvePUSDPool;
-        CURVE_PETH_POOL = curvePETHPool;
-        DAWN_OF_INSRT = dawnOfInsrt;
-        MARKETPLACE_HELPER = marketplaceHelper;
+        PUSD = jpegParams.PUSD;
+        PETH = jpegParams.PETH;
+        PUSD_CITADEL = jpegParams.PUSD_CITADEL;
+        PETH_CITADEL = jpegParams.PETH_CITADEL;
+        LP_FARM = jpegParams.LP_FARM;
+        CURVE_PUSD_POOL = jpegParams.CURVE_PUSD_POOL;
+        CURVE_PETH_POOL = jpegParams.CURVE_PETH_POOL;
+        JPEG = jpegParams.JPEG;
+
+        SHARD_COLLECTION = auxiliaryParams.SHARD_COLLECTION;
+        PUNKS = auxiliaryParams.PUNKS;
+        DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
+        MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
     }
 
     modifier onlyProtocolOwner() {
@@ -134,7 +128,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         l.totalSupply += shards;
-        l.userShards[msg.sender] += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -162,24 +155,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
 
         uint16 shards = uint16(shardIds.length);
-
-        if (l.userShards[msg.sender] < shards) {
-            revert ShardVault__InsufficientShards();
-        }
+        _enforceSufficientBalance(msg.sender, shards);
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
-                if (
-                    IShardCollection(SHARD_COLLECTION).ownerOf(shardIds[i]) !=
-                    msg.sender
-                ) {
-                    revert ShardVault__NotShardOwner();
-                }
-
-                (address vault, ) = _parseTokenId(shardIds[i]);
-                if (vault != address(this)) {
-                    revert ShardVault__VaultTokenIdMismatch();
-                }
+                _enforceShardOwnership(msg.sender, shardIds[i]);
+                _enforceVaultTokenIdMatch(shardIds[i]);
 
                 IShardCollection(SHARD_COLLECTION).burn(shardIds[i]);
             }
@@ -314,7 +295,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId
+        uint256 punkId,
+        bool isFinalPurchase
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -333,12 +315,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         if (l.ownedTokenIds.length() == 0) {
-            //first fee withdraw, so no account for previous
-            //fee accruals need to be considered
-            l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
             l.isInvested = true;
         }
+        l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
         l.ownedTokenIds.add(punkId);
+
+        if (isFinalPurchase) {
+            l.cumulativeEPS +=
+                (address(this).balance - l.accruedFees) /
+                _totalSupply();
+        }
     }
 
     /**
@@ -507,6 +493,36 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         );
 
         ILPFarming(LP_FARM).deposit(poolInfoIndex, shares);
+    }
+
+    /**
+     * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
+     * @param punkId id of punk
+     * @param minCurveLP minimum LP to receive from curve LP
+     * @param borrowAmount amount to borrow
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     * the pool to deposit into
+     * @param insure whether to insure
+     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
+     * any excess ETH for claiming
+     */
+    function _investPunk(
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
+        uint256 punkId,
+        uint256 borrowAmount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex,
+        bool insure,
+        bool isFinalPurchase
+    ) internal {
+        _purchasePunk(calls, punkId, isFinalPurchase);
+        _stakePUSD(
+            _collateralizePunkPUSD(punkId, borrowAmount, insure),
+            minCurveLP,
+            poolInfoIndex
+        );
     }
 
     /**
@@ -841,6 +857,170 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice provides (makes available) yield in the form of ETH and JPEG tokens
+     * @dev unstakes some of the pETH position to convert to yield, and claims
+     * pending rewards in LP_FARM to receive JPEG
+     * @param autoComp amount of autoComp tokens to unstake
+     * @param minETH minimum ETH to receive after unstaking
+     * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     * @return providedETH total ETH provided as yield
+     * @return providedJPEG total JEPG provided as yield
+     */
+    function _provideYieldPETH(
+        uint256 autoComp,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    ) internal returns (uint256 providedETH, uint256 providedJPEG) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        providedETH = _unstake(
+            autoComp,
+            minETH,
+            poolInfoIndex,
+            PETH_CITADEL,
+            CURVE_PETH_POOL,
+            int128(0) //ETH index in curve pool
+        );
+
+        providedJPEG = ILPFarming(LP_FARM).pendingReward(
+            poolInfoIndex,
+            address(this)
+        );
+        ILPFarming(LP_FARM).claim(poolInfoIndex);
+
+        if (!l.isYieldClaiming) {
+            l.isYieldClaiming = true;
+        }
+
+        l.cumulativeEPS += providedETH / l.totalSupply;
+        l.cumulativeJPS += providedJPEG / l.totalSupply;
+    }
+
+    /**
+     * @notice returns excess ETH left over after vault has invested
+     * @param account address making the claim
+     * @param tokenIds array of shard IDs to claim with
+     */
+    function _claimExcessETH(
+        address account,
+        uint256[] memory tokenIds
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 tokens = tokenIds.length;
+
+        _enforceNotYieldClaimingAndInvested();
+        _enforceSufficientBalance(account, tokens);
+
+        uint256 cumulativeEPS = l.cumulativeEPS;
+        uint256 totalETH;
+        uint256 claimedEPS;
+
+        unchecked {
+            for (uint256 i; i < tokens; ++i) {
+                _enforceShardOwnership(account, tokenIds[i]);
+                _enforceVaultTokenIdMatch(tokenIds[i]);
+
+                claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
+                totalETH += claimedEPS;
+                l.claimedEPS[tokenIds[i]] += claimedEPS;
+            }
+        }
+
+        payable(account).sendValue(totalETH);
+    }
+
+    /**
+     * @notice sends yield in the form of ETH + JPEG tokens to account
+     * @param account address making the yield claim
+     * @param tokenIds array of shard IDs to claim with
+     */
+    function _claimYield(address account, uint256[] memory tokenIds) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 tokens = tokenIds.length;
+
+        _enforceYieldClaiming();
+        _enforceSufficientBalance(account, tokens);
+
+        //parameters for ETH claiming
+        uint256 cumulativeEPS = l.cumulativeEPS;
+        uint256 totalETH;
+        uint256 claimedEPS;
+        //parameters for JPEG claiming
+        uint256 cumulativeJPS = l.cumulativeJPS;
+        uint256 totalJPEG;
+        uint256 claimedJPS;
+
+        unchecked {
+            for (uint256 i; i < tokens; ++i) {
+                _enforceShardOwnership(account, tokenIds[i]);
+                _enforceVaultTokenIdMatch(tokenIds[i]);
+
+                //account for claimable ETH
+                claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
+                totalETH += claimedEPS;
+                l.claimedEPS[tokenIds[i]] += claimedEPS;
+
+                //account for claimable JPEG
+                claimedJPS = cumulativeJPS - l.claimedJPS[tokenIds[i]];
+                totalJPEG += claimedJPS;
+                l.claimedJPS[tokenIds[i]] += claimedJPS;
+            }
+        }
+
+        //apply fees
+        uint256 ETHfee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
+        l.accruedFees += ETHfee;
+
+        uint256 jpegFee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
+        l.accruedJPEG += jpegFee;
+
+        //transfer yield
+        IERC20(JPEG).transfer(account, totalJPEG - jpegFee);
+        payable(account).sendValue(totalETH - ETHfee);
+    }
+
+    /**
+     * @notice before shard transfer hook
+     * @dev only SHARD_COLLECTION proxy may call - purpose is to maintain correct balances
+     * @param from address transferring
+     * @param to address receiving
+     */
+    function _beforeShardTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (msg.sender != SHARD_COLLECTION) {
+            revert ShardVault__NotShardCollection();
+        }
+
+        uint256[] memory tokenIds;
+        uint256[] memory temp = new uint256[](1);
+        temp[0] = tokenId;
+        tokenIds = temp;
+
+        if (from != address(0)) {
+            if (l.isYieldClaiming) {
+                _claimYield(from, tokenIds);
+            }
+
+            if (!l.isYieldClaiming && l.isInvested) {
+                _claimExcessETH(from, tokenIds);
+            }
+
+            --l.userShards[from];
+        }
+
+        if (to != address(0)) {
+            ++l.userShards[to];
+        }
+    }
+
+    /**
      * @notice sets the whitelistEndsAt timestamp
      * @param whitelistEndsAt timestamp of whitelist end
      */
@@ -880,6 +1060,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _accruedFees() internal view returns (uint256 fees) {
         fees = ShardVaultStorage.layout().accruedFees;
+    }
+
+    /**
+     * @notice returns sum of total jpeg due to yield fee accrued over the entire lifetime of the vault
+     * @dev accounts for jpeg withdrawals
+     * @return jpeg accrued jpeg
+     */
+    function _accruedJPEG() internal view returns (uint256 jpeg) {
+        jpeg = ShardVaultStorage.layout().accruedJPEG;
     }
 
     /**
@@ -964,6 +1153,118 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _marketplaceHelper() internal view returns (address) {
         return MARKETPLACE_HELPER;
+    }
+
+    /**
+     * @notice returns the JPEG claimed by a given shard
+     * @param shardId id of shard to check
+     * @return claimedJPS claimed JPEG for given shard
+     */
+    function _claimedJPS(
+        uint256 shardId
+    ) internal view returns (uint256 claimedJPS) {
+        claimedJPS = ShardVaultStorage.layout().claimedJPS[shardId];
+    }
+
+    /**
+     * @notice returns the ETH claimed by a given shard
+     * @param shardId id of shard to check
+     * @return claimedEPS claimed ETH for given shard
+     */
+    function _claimedEPS(
+        uint256 shardId
+    ) internal view returns (uint256 claimedEPS) {
+        claimedEPS = ShardVaultStorage.layout().claimedEPS[shardId];
+    }
+
+    /**
+     * @notice returns the cumulative JPEG per shard value
+     * @return cumulativeJPS cumulative JPEG per shard value
+     */
+    function _cumulativeJPS() internal view returns (uint256 cumulativeJPS) {
+        cumulativeJPS = ShardVaultStorage.layout().cumulativeJPS;
+    }
+
+    /**
+     * @notice returns the cumulative ETH per shard value
+     * @return cumulativeEPS cumulative ETH per shard value
+     */
+    function _cumulativeEPS() internal view returns (uint256 cumulativeEPS) {
+        cumulativeEPS = ShardVaultStorage.layout().cumulativeEPS;
+    }
+
+    /**
+     * @notice returns the yield claiming status of the vault
+     * @return isYieldClaiming the yield claiming status of the vault
+     */
+    function _isYieldClaiming() internal view returns (bool isYieldClaiming) {
+        isYieldClaiming = ShardVaultStorage.layout().isYieldClaiming;
+    }
+
+    /**
+     * @notice returns timestamp of whitelist end
+     * @return whitelistEndsAt timestamp of whitelist end
+     */
+    function _whitelistEndsAt() internal view returns (uint64 whitelistEndsAt) {
+        whitelistEndsAt = ShardVaultStorage.layout().whitelistEndsAt;
+    }
+
+    /**
+     * @notice check to ensure account owns a given tokenId corresponding to a shard
+     * @param account address to check
+     * @param tokenId tokenId to check
+     */
+    function _enforceShardOwnership(
+        address account,
+        uint256 tokenId
+    ) internal view {
+        if (IShardCollection(SHARD_COLLECTION).ownerOf(tokenId) != account) {
+            revert ShardVault__NotShardOwner();
+        }
+    }
+
+    /**
+     * @notice check to ensure tokenId corresponds to vault
+     * @param tokenId tokenId to check
+     */
+    function _enforceVaultTokenIdMatch(uint256 tokenId) internal view {
+        (address vault, ) = _parseTokenId(tokenId);
+        if (vault != address(this)) {
+            revert ShardVault__VaultTokenIdMismatch();
+        }
+    }
+
+    /**
+     * @notice check to ensure an account has a balance larger than amount
+     * @param account address to check
+     * @param amount amount to check
+     */
+    function _enforceSufficientBalance(
+        address account,
+        uint256 amount
+    ) internal view {
+        if (ShardVaultStorage.layout().userShards[account] < amount) {
+            revert ShardVault__InsufficientShards();
+        }
+    }
+
+    /**
+     * @notice check to ensure yield claiming is initialized
+     */
+    function _enforceYieldClaiming() internal view {
+        if (!ShardVaultStorage.layout().isYieldClaiming) {
+            revert ShardVault__YieldClaimingForbidden();
+        }
+    }
+
+    /**
+     * @notice check to ensure yield claiming is not initialized and vault is invested
+     */
+    function _enforceNotYieldClaimingAndInvested() internal view {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        if (l.isYieldClaiming || !l.isInvested) {
+            revert ShardVault__ClaimingExcessETHForbidden();
+        }
     }
 
     /**

@@ -104,6 +104,13 @@ interface IShardVaultView {
     function accruedFees() external view returns (uint256 fees);
 
     /**
+     * @notice returns sum of total jpeg due to yield fee accrued over the entire lifetime of the vault
+     * @dev accounts for jpeg withdrawals
+     * @return jpeg accrued jpeg
+     */
+    function accruedJPEG() external view returns (uint256 jpeg);
+
+    /**
      * @notice returns acquisition fee BP
      * @return feeBP basis points of acquisition fee
      */
@@ -146,4 +153,46 @@ interface IShardVaultView {
      * @return MARKETPLACE_HELPER address
      */
     function marketplaceHelper() external view returns (address);
+
+    /**
+     * @notice returns the JPEG claimed by a given shard
+     * @param shardId id of shard to check
+     * @return claimedJPS claimed JPEG for given shard
+     */
+    function claimedJPS(
+        uint256 shardId
+    ) external view returns (uint256 claimedJPS);
+
+    /**
+     * @notice returns the ETH claimed by a given shard
+     * @param shardId id of shard to check
+     * @return claimedEPS claimed ETH for given shard
+     */
+    function claimedEPS(
+        uint256 shardId
+    ) external view returns (uint256 claimedEPS);
+
+    /**
+     * @notice returns the cumulative JPEG per shard value
+     * @return cumulativeJPS cumulative JPEG per shard value
+     */
+    function cumulativeJPS() external view returns (uint256 cumulativeJPS);
+
+    /**
+     * @notice returns the cumulative ETH per shard value
+     * @return cumulativeEPS cumulative ETH per shard value
+     */
+    function cumulativeEPS() external view returns (uint256 cumulativeEPS);
+
+    /**
+     * @notice returns the yield claiming status of the vault
+     * @return isYieldClaiming the yield claiming status of the vault
+     */
+    function isYieldClaiming() external view returns (bool isYieldClaiming);
+
+    /**
+     * @notice returns timestamp of whitelist end
+     * @return whitelistEndsAt timestamp of whitelist end
+     */
+    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt);
 }

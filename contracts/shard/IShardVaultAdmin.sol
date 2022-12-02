@@ -13,10 +13,13 @@ interface IShardVaultAdmin {
      * @param calls  array of EncodedCall structs containing information to execute necessary low level
      * calls to purchase a punk
      * @param punkId id of punk
+     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
+     * any excess ETH for claiming
      */
     function purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId
+        uint256 punkId,
+        bool isFinalPurchase
     ) external payable;
 
     /**
@@ -75,6 +78,29 @@ interface IShardVaultAdmin {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) external returns (uint256 shares);
+
+    /**
+     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve & JPEG'd
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
+     * @param punkId id of punk
+     * @param borrowAmount amount to be borrowed
+     * @param minCurveLP minimum LP to be accepted as return from curve staking
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     * the pool to deposit into
+     * @param insure whether to insure position
+     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
+     * any excess ETH for claiming
+     */
+    function investPunk(
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
+        uint256 punkId,
+        uint256 borrowAmount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex,
+        bool insure,
+        bool isFinalPurchase
+    ) external;
 
     /**
      * @notice sets the acquisition fee BP
@@ -227,4 +253,20 @@ interface IShardVaultAdmin {
         IMarketPlaceHelper.EncodedCall[] memory calls,
         uint256 punkId
     ) external;
+
+    /**
+     * @notice provides (makes available) yield in the form of ETH and JPEG tokens
+     * @dev unstakes some of the pETH position to convert to yield, and claims
+     * pending rewards in LP_FARM to receive JPEG
+     * @param autoComp amount of autoComp tokens to unstake
+     * @param minETH minimum ETH to receive after unstaking
+     * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     * @return providedETH total ETH provided as yield
+     * @return providedJPEG total JEPG provided as yield
+     */
+    function provideYieldPETH(
+        uint256 autoComp,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    ) external payable returns (uint256 providedETH, uint256 providedJPEG);
 }

@@ -2,16 +2,21 @@
 
 pragma solidity ^0.8.0;
 
+import { ERC721MetadataStorage } from '@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol';
 import { ERC721BaseInternal } from '@solidstate/contracts/token/ERC721/base/ERC721BaseInternal.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardCollectionInternal } from './IShardCollectionInternal.sol';
+import { IShardVault } from './IShardVault.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
 
 /**
  * @title Internal logic for ShardCollection
  */
-contract ShardCollectionInternal is IShardCollectionInternal {
+contract ShardCollectionInternal is
+    ERC721BaseInternal,
+    IShardCollectionInternal
+{
     modifier onlyVault() {
         _onlyVault(msg.sender);
         _;
@@ -52,5 +57,40 @@ contract ShardCollectionInternal is IShardCollectionInternal {
      */
     function _isWhitelisted(address vault) internal view returns (bool) {
         return ShardCollectionStorage.layout().whitelist[vault];
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
+        (address shardVault, ) = IShardVault(
+            ShardCollectionStorage.layout().shardVaultDiamond
+        ).parseTokenId(tokenId);
+        IShardVault(shardVault).beforeShardTransfer(from, to, tokenId);
+    }
+
+    /**
+     * @notice sets base URI for shard collection
+     * @param baseURI base URI string
+     */
+    function _setBaseURI(string memory baseURI) internal {
+        ERC721MetadataStorage.layout().baseURI = baseURI;
+    }
+
+    /**
+     * @notice sets name for shard collection
+     * @param name name string
+     */
+    function _setName(string memory name) internal {
+        ERC721MetadataStorage.layout().name = name;
+    }
+
+    /**
+     * @notice sets symbol for shard collection
+     * @param symbol symbol string
+     */
+    function _setSymbol(string memory symbol) internal {
+        ERC721MetadataStorage.layout().symbol = symbol;
     }
 }
