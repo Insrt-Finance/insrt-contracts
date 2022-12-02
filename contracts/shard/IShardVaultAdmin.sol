@@ -21,11 +21,11 @@ interface IShardVaultAdmin {
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pUSD borrowed pUSD
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPUSD(
         uint256 punkId,
@@ -34,12 +34,12 @@ interface IShardVaultAdmin {
     ) external returns (uint256 pUSD);
 
     /**
-     * @notice borrows pETH by collateralizing a punk on JPEG'd
+     * @notice borrows pETH by collateralizing a punk on JPEG'
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pETH borrowed pETH
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPETH(
         uint256 punkId,
@@ -101,6 +101,41 @@ interface IShardVaultAdmin {
     function setMaxSupply(uint16 maxSupply) external;
 
     /**
+     * @notice sets the whitelistEndsAt timestamp
+     * @param whitelistEndsAt timestamp of whitelist end
+     */
+    function setWhitelistEndsAt(uint64 whitelistEndsAt) external;
+
+    /**
+     * @notice sets the maximum amount of shard to be minted during whitelist
+     * @param reservedShards reserved shard amount
+     */
+    function setReservedShards(uint16 reservedShards) external;
+
+    /**
+     * @notice sets the isEnabled flag, allowing or prohibiting deposits
+     * @param isEnabled boolean value
+     */
+    function setIsEnabled(bool isEnabled) external;
+
+    /**
+     * @notice sets the whitelist deadline and allows deposits
+     * @param whitelistEndsAt whitelist deadline timestamp
+     * @param reservedShards whitelist shard amount
+     */
+    function initiateWhitelistAndDeposits(
+        uint64 whitelistEndsAt,
+        uint16 reservedShards
+    ) external;
+
+    /**
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
+     * @param maxUserShards new maxUserShards value
+     */
+    function setMaxUserShards(uint16 maxUserShards) external;
+
+    /**
      * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
      * @param amount amount of shares of auto-compounder to burn
      * @param minPUSD minimum pUSD to receive from curve pool
@@ -141,13 +176,13 @@ interface IShardVaultAdmin {
     ) external;
 
     /**
-     * @notice makes a downpayment to a loan position
+     * @notice makes a debt payment to a loan position
      * @param minPUSD minimum pUSD to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function downPaymentPUSD(
+    function repayLoanPUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex,
@@ -155,19 +190,33 @@ interface IShardVaultAdmin {
     ) external returns (uint256 paidDebt);
 
     /**
-     * @notice makes a downpayment for a collateralized NFT in jpeg'd
+     * @notice makes a debt payment for a collateralized NFT in jpeg'd
      * @param amount amount of pETH intended to be repaid
      * @param minPETH minimum pETH to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
      * @param punkId id of punk position pertains to
      * @return paidDebt amount of debt repaid
      */
-    function downPaymentPETH(
+    function repayLoanPETH(
         uint256 amount,
         uint256 minPETH,
         uint256 poolInfoIndex,
         uint256 punkId
     ) external returns (uint256 paidDebt);
+
+    /**
+     * @notice makes loan repayment in PUSD without unstaking
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function directRepayLoanPUSD(uint256 amount, uint256 punkId) external;
+
+    /**
+     * @notice makes loan repayment in PETH without unstaking
+     * @param amount payment amount
+     * @param punkId id of punk
+     */
+    function directRepayLoanPETH(uint256 amount, uint256 punkId) external;
 
     /**
      * @notice lists a punk on CryptoPunk market place using MarketPlaceHelper contract

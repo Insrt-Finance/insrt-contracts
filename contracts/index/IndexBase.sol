@@ -70,7 +70,9 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     /**
      * @inheritdoc IndexInternal
      */
-    function _convertToAssets(uint256 shareAmount)
+    function _convertToAssets(
+        uint256 shareAmount
+    )
         internal
         view
         override(ERC4626BaseInternal, IndexInternal)
@@ -82,7 +84,9 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     /**
      * @inheritdoc IndexInternal
      */
-    function _convertToShares(uint256 assetAmount)
+    function _convertToShares(
+        uint256 assetAmount
+    )
         internal
         view
         override(ERC4626BaseInternal, IndexInternal)
@@ -94,7 +98,9 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     /**
      * @inheritdoc IndexInternal
      */
-    function _previewMint(uint256 shareAmount)
+    function _previewMint(
+        uint256 shareAmount
+    )
         internal
         view
         override(ERC4626BaseInternal, IndexInternal)
@@ -106,7 +112,9 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     /**
      * @inheritdoc IndexInternal
      */
-    function _previewWithdraw(uint256 assetAmount)
+    function _previewWithdraw(
+        uint256 assetAmount
+    )
         internal
         view
         override(ERC4626BaseInternal, IndexInternal)
@@ -118,7 +126,9 @@ contract IndexBase is SolidStateERC4626, IndexInternal, IIndexBase {
     /**
      * @inheritdoc IndexInternal
      */
-    function _previewRedeem(uint256 shareAmount)
+    function _previewRedeem(
+        uint256 shareAmount
+    )
         internal
         view
         override(ERC4626BaseInternal, IndexInternal)

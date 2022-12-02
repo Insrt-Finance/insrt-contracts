@@ -91,6 +91,19 @@ export function describeBehaviorOfShardVaultAdmin(
       [depositor, nonOwner] = await ethers.getSigners();
       owner = await args.getProtocolOwner();
 
+      await instance.connect(owner)['setIsEnabled(bool)'](true);
+      await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
+      await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
+
+      await instance
+        .connect(owner)
+        ['setMaxUserShards(uint16)'](BigNumber.from('110'));
+      await secondInstance
+        .connect(owner)
+        ['setMaxUserShards(uint16)'](BigNumber.from('110'));
+      await pethInstance
+        .connect(owner)
+        ['setMaxUserShards(uint16)'](BigNumber.from('110'));
       let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
         'buyPunk',
         [punkId],
@@ -155,6 +168,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       it('collects acquisition fee if first purchase', async () => {
+        await instance.connect(owner).setMaxUserShards(BigNumber.from('200'));
         await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await instance
           .connect(depositor)
@@ -287,7 +301,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 punkPurchaseCallsPUSD,
                 punkId,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('collection is not punks', async () => {
           await expect(
@@ -297,7 +314,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 punkPurchaseCallsPUSD,
                 punkId,
               ),
-          ).to.be.revertedWith('ShardVault__CollectionNotPunks()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__CollectionNotPunks',
+          );
         });
       });
     });
@@ -460,7 +480,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 requestedBorrow,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__TargetLTVReached()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__TargetLTVReached',
+          );
         });
 
         it('called by non-owner', async () => {
@@ -472,7 +495,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -640,7 +666,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 requestedBorrow,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__TargetLTVReached()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__TargetLTVReached',
+          );
         });
 
         it('called by non-owner', async () => {
@@ -652,7 +681,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -743,7 +775,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -834,12 +869,15 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
 
-    describe('#downPayment(uint256,uint256,uint256,uint256)', () => {
+    describe('#repayLoanPUSD(uint256,uint256,uint256,uint256)', () => {
       it('debt paid is approximately amount of debt reduction', async () => {
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -895,7 +933,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -904,8 +942,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const paidDebt = await instance
           .connect(owner)
-          .callStatic['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          .callStatic['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             1,
             punkId,
@@ -913,8 +951,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         let tx = await instance
           .connect(owner)
-          ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             1,
             punkId,
@@ -993,7 +1031,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -1002,8 +1040,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await instance
           .connect(owner)
-          ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             1,
             punkId,
@@ -1018,9 +1056,7 @@ export function describeBehaviorOfShardVaultAdmin(
         //debt increased
         const debtDifference = newDebt.sub(oldDebt);
 
-        expect(accruedDebtInterest.sub(debtDifference)).to.gt(
-          downPaymentAmount,
-        );
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
       });
 
       describe('reverts if', () => {
@@ -1028,13 +1064,16 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['downPaymentPUSD(uint256,uint256,uint256,uint256)'](
+              ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('paidDebt is less than requested amount', async () => {
           console.log('TODO');
@@ -1042,7 +1081,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#downPaymentPETH(uint256,uint256,uint256,uint256)', () => {
+    describe('#repayLoanPETH(uint256,uint256,uint256,uint256)', () => {
       it('debt paid is approximately amount of debt reduction', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
@@ -1102,7 +1141,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -1111,8 +1150,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const paidDebt = await pethInstance
           .connect(owner)
-          .callStatic['downPaymentPETH(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          .callStatic['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             2,
             punkId,
@@ -1120,8 +1159,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         let tx = await pethInstance
           .connect(owner)
-          ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             2,
             punkId,
@@ -1203,7 +1242,7 @@ export function describeBehaviorOfShardVaultAdmin(
           'getDebtInterest(uint256)'
         ](punkId);
 
-        const downPaymentAmount = BigNumber.from('100000000000000000');
+        const paymentAmount = BigNumber.from('100000000000000000');
 
         const duration = 100000;
         await hre.network.provider.send('evm_setNextBlockTimestamp', [
@@ -1212,8 +1251,8 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
-            downPaymentAmount,
+          ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+            paymentAmount,
             0,
             2,
             punkId,
@@ -1230,25 +1269,147 @@ export function describeBehaviorOfShardVaultAdmin(
         ///debt increased
         const debtDifference = newDebt.sub(oldDebt);
 
-        expect(accruedDebtInterest.sub(debtDifference)).to.gt(
-          downPaymentAmount,
-        );
+        expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
       });
       describe('reverts if', () => {
         it('called by non-owner', async () => {
           await expect(
             pethInstance
               .connect(nonOwner)
-              ['downPaymentPETH(uint256,uint256,uint256,uint256)'](
+              ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
                 ethers.constants.One,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
         it('paidDebt is less than requested amount', async () => {
           console.log('TODO');
+        });
+      });
+    });
+
+    describe('directRepayLoanPUSD(uint256 amount, uint256 punkId)', () => {
+      it('uses vault PUSD to pay back debt, without unstaking', async () => {
+        await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await instance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await instance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPUSD,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        await instance
+          .connect(owner)
+          ['collateralizePunkPUSD(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const paybackAmount = ethers.utils.parseEther('2');
+
+        await expect(() =>
+          instance
+            .connect(owner)
+            ['directRepayLoanPUSD(uint256,uint256)'](
+              ethers.utils.parseEther('2'),
+              punkId,
+            ),
+        ).changeTokenBalance(
+          pUSD,
+          instance,
+          paybackAmount.mul(ethers.constants.NegativeOne),
+        );
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['directRepayLoanPUSD(uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('directRepayLoanPETH(uint256 amount, uint256 punkId)', () => {
+      it('uses vault PETH to pay back debt, without unstaking', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const paybackAmount = ethers.utils.parseEther('2');
+
+        await expect(() =>
+          pethInstance
+            .connect(owner)
+            ['directRepayLoanPETH(uint256,uint256)'](
+              ethers.utils.parseEther('2'),
+              punkId,
+            ),
+        ).changeTokenBalance(
+          pETH,
+          pethInstance,
+          paybackAmount.mul(ethers.constants.NegativeOne),
+        );
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance
+              .connect(nonOwner)
+              ['directRepayLoanPETH(uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1697,7 +1858,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.Zero,
                 false,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -1737,11 +1901,6 @@ export function describeBehaviorOfShardVaultAdmin(
 
         listPunkCalls.push(encodedListCall);
 
-        console.log(pethInstance.address);
-        console.log(await pethInstance['marketplaceHelper()']());
-        console.log(
-          await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
-        );
         await pethInstance
           .connect(owner)
           ['listPunk((bytes,uint256,address)[],uint256)'](
@@ -1769,7 +1928,130 @@ export function describeBehaviorOfShardVaultAdmin(
                 ],
                 ethers.constants.Zero,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('#setAcquisitionFee(uint16)', () => {
+      it('sets acquisition fee value', async () => {
+        const feeValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setAcquisitionFee(uint16)'](feeValue);
+
+        expect(await instance['acquisitionFeeBP()']()).to.eq(feeValue);
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setAcquisitionFee(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+        it('value exceeds BASIS_POINTS', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['setAcquisitionFee(uint16)'](BigNumber.from('10001')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__BasisExceeded',
+          );
+        });
+      });
+    });
+
+    describe('#setSaleFee(uint16)', () => {
+      it('sets sale fee value', async () => {
+        const feeValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setSaleFee(uint16)'](feeValue);
+
+        expect(await instance['saleFeeBP()']()).to.eq(feeValue);
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setSaleFee(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+        it('value exceeds BASIS_POINTS', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['setSaleFee(uint16)'](BigNumber.from('10001')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__BasisExceeded',
+          );
+        });
+      });
+    });
+
+    describe('#setYieldFee(uint16)', () => {
+      it('sets yield fee value', async () => {
+        const feeValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setYieldFee(uint16)'](feeValue);
+
+        expect(await instance['yieldFeeBP()']()).to.eq(feeValue);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setYieldFee(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+        it('value exceeds BASIS_POINTS', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['setYieldFee(uint16)'](BigNumber.from('10001')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__BasisExceeded',
+          );
+        });
+      });
+    });
+
+    describe('#setMaxSupply(uint16)', () => {
+      it('sets maxSupply value', async () => {
+        const newValue = BigNumber.from('1234');
+
+        await instance.connect(owner)['setMaxSupply(uint16)'](newValue);
+
+        expect(await instance['maxSupply()']()).to.eq(newValue);
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setMaxSupply(uint16)'](ethers.constants.Two),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });

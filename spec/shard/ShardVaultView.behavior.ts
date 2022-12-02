@@ -15,6 +15,10 @@ import { expect } from 'chai';
 
 export interface ShardVaultViewBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
+  shardCollection: string[];
+  marketplaceHelper: string[];
+  maxSupply: BigNumber;
+  shardValue: BigNumber;
 }
 
 export function formatTokenId(
@@ -120,19 +124,69 @@ export function describeBehaviorOfShardVaultView(
   });
 
   describe('#totalSupply()', () => {
-    it('TODO');
+    it('returns totalSupply value', async () => {
+      expect(await instance['totalSupply()']()).to.eq(0);
+    });
   });
 
   describe('#maxSupply()', () => {
-    it('TODO');
+    it('returns maxSupply value', async () => {
+      expect(await instance['maxSupply()']()).to.eq(args.maxSupply);
+    });
+  });
+
+  describe('#shardValue()', () => {
+    it('returns shardValue amount', async () => {
+      expect(await instance['shardValue()']()).to.eq(args.shardValue);
+    });
   });
 
   describe('#shardCollection()', () => {
-    it('TODO');
+    it('returns SHARD_COLLECTION address', async () => {
+      expect(await instance['shardCollection()']()).to.eq(
+        args.shardCollection[0],
+      );
+    });
   });
 
   describe('#count()', () => {
-    it('TODO');
+    it('returns count value', async () => {
+      expect(await instance['count()']()).to.eq(0);
+    });
+  });
+
+  describe('#isInvested()', () => {
+    it('returns isInvested value', async () => {
+      expect(await instance['isInvested()']()).to.eq(false);
+    });
+  });
+
+  describe('#accruedFees()', () => {
+    it('returns accruedFees amount', async () => {
+      expect(await instance['accruedFees()']()).to.eq(ethers.constants.Zero);
+    });
+  });
+
+  describe('#marketplaceHelper()', () => {
+    it('returns marketplaceHelper address', async () => {
+      expect(await instance['marketplaceHelper()']()).to.eq(
+        args.marketplaceHelper[0],
+      );
+    });
+  });
+
+  describe('#ownedTokenIds()', () => {
+    it('returns ownedTokenIds array', async () => {
+      expect(await instance['ownedTokenIds()']()).to.deep.eq([]);
+    });
+  });
+
+  describe('#totalDebt(uint256)', () => {
+    it('returns totalDebt amount', async () => {
+      expect(await instance['totalDebt(uint256)'](ethers.constants.One)).to.eq(
+        ethers.constants.Zero,
+      );
+    });
   });
 
   describe('#formatTokenId(uint96)', () => {
@@ -180,7 +234,9 @@ export function describeBehaviorOfShardVaultView(
   });
   describe('#queryAutoCompForPETH(uint256)', () => {
     it('returns autocomp amount resulting in at least amount of PETH requested after unstaking', async () => {
+      await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
       await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+      await pethInstance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await pethInstance
         .connect(depositor)
         .deposit({ value: ethers.utils.parseEther('100') });
@@ -252,7 +308,9 @@ export function describeBehaviorOfShardVaultView(
       }
     });
     it('returns autocomp amount resulting in at most 1/1000000000 surplus of PETH requested after unstaking', async () => {
+      await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
       await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+      await pethInstance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await pethInstance
         .connect(depositor)
         .deposit({ value: ethers.utils.parseEther('100') });
@@ -329,7 +387,9 @@ export function describeBehaviorOfShardVaultView(
   });
   describe('#queryAutoCompforPUSD(uint256)', async () => {
     it('returns autoComp amount resulting in at least amount of PUSD requested after unstaking', async () => {
+      await instance.connect(owner)['setIsEnabled(bool)'](true);
       await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+      await instance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await instance
         .connect(depositor)
         .deposit({ value: ethers.utils.parseEther('100') });
@@ -400,7 +460,9 @@ export function describeBehaviorOfShardVaultView(
       }
     });
     it('returns amout resulting in at most 1/1000000 surplus of PUSD requested after unstaking', async () => {
+      await instance.connect(owner)['setIsEnabled(bool)'](true);
       await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
+      await instance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await instance
         .connect(depositor)
         .deposit({ value: ethers.utils.parseEther('100') });

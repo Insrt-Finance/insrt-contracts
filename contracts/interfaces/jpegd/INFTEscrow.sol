@@ -13,8 +13,8 @@ interface INFTEscrow {
     /// @param _idx The index of the NFT owner by `_owner`
     /// @return salt The salt that's going to be used to deploy the {FlashEscrow} instance
     /// @return predictedAddress The address where the {FlashEscrow} instance relative to `_owner` and `_idx` will be deployed to
-    function precompute(address _owner, uint256 _idx)
-        external
-        view
-        returns (bytes32 salt, address predictedAddress);
+    function precompute(
+        address _owner,
+        uint256 _idx
+    ) external view returns (bytes32 salt, address predictedAddress);
 }
