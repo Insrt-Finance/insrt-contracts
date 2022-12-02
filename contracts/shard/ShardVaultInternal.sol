@@ -538,7 +538,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         address treasury = l.treasury;
         if (treasury == address(0)) {
-            revert ShardVault__TreasuryNotSet();
+            revert ShardVault__TreasuryIsZeroAddress();
         }
 
         feesETH = l.accruedFees;

@@ -121,5 +121,5 @@ interface IShardVaultInternal is IOwnableInternal {
     /**
      * @notice thrown when attempting to withdraw fees with treasury address == address(0)
      */
-    error ShardVault__TreasuryNotSet();
+    error ShardVault__TreasuryIsZeroAddress();
 }
