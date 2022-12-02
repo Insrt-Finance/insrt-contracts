@@ -527,6 +527,39 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice withdraws JPEG and ETH accrued fees
+     * @return feesETH total ETH fees withdrawn
+     * @return feesJPEG total JPEG fees withdrawn
+     */
+    function _withdrawFees()
+        internal
+        returns (uint256 feesETH, uint256 feesJPEG)
+    {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        address treasury = l.treasury;
+        if (treasury == address(0)) {
+            revert ShardVault__TreasuryNotSet();
+        }
+
+        feesETH = l.accruedFees;
+        feesJPEG = l.accruedJPEG;
+
+        l.accruedFees -= feesETH;
+        l.accruedJPEG -= feesJPEG;
+
+        IERC20(JPEG).transfer(treasury, feesJPEG);
+        payable(treasury).sendValue(feesETH);
+    }
+
+    /**
+     * @notice sets the treasury address
+     * @param treasury address to set as treasury
+     */
+    function _setTreasury(address treasury) internal {
+        ShardVaultStorage.layout().treasury = treasury;
+    }
+
+    /**
      * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
