@@ -22,7 +22,7 @@ import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
 /**
  * @title Shard Vault internal functions
- * @notice inherited by all Shard Vault implementation contracts
+ * @dev inherited by all Shard Vault implementation contracts
  */
 abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     using AddressUtils for address payable;
@@ -342,7 +342,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice borrows pUSD in exchange for collaterlizing a punk; insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
+     * @notice borrows pUSD in exchange for collaterlizing a punk
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param insure whether to insure
      * @return pUSD the amount of pUSD received for the collateralized punk

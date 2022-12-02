@@ -20,7 +20,8 @@ interface IShardVaultAdmin {
     ) external payable;
 
     /**
-     * @notice borrows pUSD by collateralizing a punk on JPEG'd ; insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
+     * @notice borrows pUSD by collateralizing a punk on JPEG'd
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
@@ -33,7 +34,8 @@ interface IShardVaultAdmin {
     ) external returns (uint256 pUSD);
 
     /**
-     * @notice borrows pETH by collateralizing a punk on JPEG'd; insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
+     * @notice borrows pETH by collateralizing a punk on JPEG'
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
