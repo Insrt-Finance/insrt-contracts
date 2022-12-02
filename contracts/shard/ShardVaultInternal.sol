@@ -1218,6 +1218,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice returns treasury address
+     * @return treasury address of treasury
+     */
+    function _treasury() internal view returns (address treasury) {
+        treasury = ShardVaultStorage.layout().treasury;
+    }
+
+    /**
      * @notice check to ensure account owns a given tokenId corresponding to a shard
      * @param account address to check
      * @param tokenId tokenId to check
