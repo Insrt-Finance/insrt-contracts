@@ -14,6 +14,7 @@ import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
+import { IDawnOfInsrt } from '../interfaces/insrt/IDawnOfInsrt.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -41,6 +42,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
+    uint256 internal constant TIER0_DISCOUNT = 1000;
+    uint256 internal constant TIER1_DISCOUNT = 2500;
+    uint256 internal constant TIER2_DISCOUNT = 4000;
+    uint256 internal constant TIER3_DISCOUNT = 6000;
+    uint256 internal constant TIER4_DISCOUNT = 8000;
 
     constructor(
         JPEGParams memory jpegParams,
@@ -906,8 +912,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param account address making the yield claim
      * @param tokenIds array of shard IDs to claim with
+     * @param tokenIdDOI Dawn of INSRT token ID used to apply yieldFeeBP discount
      */
-    function _claimYield(address account, uint256[] memory tokenIds) internal {
+    function _claimYield(
+        address account,
+        uint256[] memory tokenIds,
+        uint256 tokenIdDOI
+    ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = tokenIds.length;
@@ -941,11 +952,18 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             }
         }
 
+        uint16 yieldFeeBP;
+        if (tokenIdDOI == type(uint256).max) {
+            yieldFeeBP = l.yieldFeeBP;
+        } else {
+            yieldFeeBP = _yieldFeeBPForAccountToken(account, tokenIdDOI);
+        }
+
         //apply fees
-        uint256 ETHfee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
+        uint256 ETHfee = (totalETH * yieldFeeBP) / BASIS_POINTS;
         l.accruedFees += ETHfee;
 
-        uint256 jpegFee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
+        uint256 jpegFee = (totalJPEG * yieldFeeBP) / BASIS_POINTS;
         l.accruedJPEG += jpegFee;
 
         //transfer yield
@@ -1248,5 +1266,44 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _enforceBasis(uint16 value) internal pure {
         if (value > 10000) revert ShardVault__BasisExceeded();
+    }
+
+    function _yieldFeeBPForAccountToken(
+        address account,
+        uint256 tokenId,
+        uint16 normalYieldFeeBP
+    ) internal view returns (uint16 yieldFeeBP) {
+        if (account != IERC721(DAWN_OF_INSRT).ownerOf(tokenId)) {
+            revert ShardVault__NotDawnOfInsrtTokenOwner();
+        }
+        uint8 tier = IDawnOfInsrt(DAWN_OF_INSRT).tokenTier(tokenId);
+
+        //add check in claim for tokenID == uint256.max
+        if (tier == 0) {
+            yieldFeeBP = uint16(
+                normalYieldFeeBP -
+                    ((normalYieldFeeBP * TIER0_DISCOUNT) / BASIS_POINTS)
+            );
+        } else if (tier == 1) {
+            yieldFeeBP = uint16(
+                normalYieldFeeBP -
+                    ((normalYieldFeeBP * TIER1_DISCOUNT) / BASIS_POINTS)
+            );
+        } else if (tier == 2) {
+            yieldFeeBP = uint16(
+                normalYieldFeeBP -
+                    ((normalYieldFeeBP * TIER2_DISCOUNT) / BASIS_POINTS)
+            );
+        } else if (tier == 3) {
+            yieldFeeBP = uint16(
+                normalYieldFeeBP -
+                    ((normalYieldFeeBP * TIER3_DISCOUNT) / BASIS_POINTS)
+            );
+        } else {
+            yieldFeeBP = uint16(
+                normalYieldFeeBP -
+                    ((normalYieldFeeBP * TIER4_DISCOUNT) / BASIS_POINTS)
+            );
+        }
     }
 }

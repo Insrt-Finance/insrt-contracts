@@ -117,4 +117,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to claim excess ETH after yield claiming is initialized
      */
     error ShardVault__ClaimingExcessETHForbidden();
+
+    /**
+     * @notice thrown when attempting to reduce yield fee whilst not owning DawnOfInsrt token used to reduce yield fee
+     */
+    error ShardVault__NotDawnOfInsrtTokenOwner();
 }
