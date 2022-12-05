@@ -811,7 +811,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         uint256 saleFee = (proceeds * l.saleFeeBP) / BASIS_POINTS;
         l.accruedFees += saleFee;
-        //note: increase EPS!!!!!!
+        l.cumulativeEPS += (proceeds - saleFee) / l.totalSupply;
         l.ownedTokenIds.remove(punkId);
     }
 
