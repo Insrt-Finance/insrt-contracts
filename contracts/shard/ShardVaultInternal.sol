@@ -42,11 +42,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
-    uint256 internal constant TIER0_DISCOUNT = 1000;
-    uint256 internal constant TIER1_DISCOUNT = 2500;
-    uint256 internal constant TIER2_DISCOUNT = 4000;
-    uint256 internal constant TIER3_DISCOUNT = 6000;
-    uint256 internal constant TIER4_DISCOUNT = 8000;
+    uint256 internal constant TIER0_FEE_COEFFICIENT = 9000;
+    uint256 internal constant TIER1_FEE_COEFFICIENT = 7500;
+    uint256 internal constant TIER2_FEE_COEFFICIENT = 6000;
+    uint256 internal constant TIER3_FEE_COEFFICIENT = 4000;
+    uint256 internal constant TIER4_FEE_COEFFICIENT = 2000;
 
     constructor(
         JPEGParams memory jpegParams,
@@ -952,12 +952,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             }
         }
 
-        uint16 yieldFeeBP;
-        if (tokenIdDOI == type(uint256).max) {
-            yieldFeeBP = l.yieldFeeBP;
-        } else {
-            yieldFeeBP = _yieldFeeBPForAccountToken(account, tokenIdDOI);
-        }
+        uint16 yieldFeeBP = _discountYieldFeeBP(
+            account,
+            tokenIdDOI,
+            l.yieldFeeBP
+        );
 
         //apply fees
         uint256 ETHfee = (totalETH * yieldFeeBP) / BASIS_POINTS;
@@ -995,7 +994,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         if (from != address(0)) {
             if (l.isYieldClaiming) {
-                _claimYield(from, tokenIds);
+                _claimYield(from, tokenIds, type(uint256).max);
             }
 
             if (!l.isYieldClaiming && l.isInvested) {
@@ -1268,42 +1267,45 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         if (value > 10000) revert ShardVault__BasisExceeded();
     }
 
-    function _yieldFeeBPForAccountToken(
+    function _discountYieldFeeBP(
         address account,
         uint256 tokenId,
-        uint16 normalYieldFeeBP
+        uint16 undiscountedYieldFeeBP
     ) internal view returns (uint16 yieldFeeBP) {
-        if (account != IERC721(DAWN_OF_INSRT).ownerOf(tokenId)) {
-            revert ShardVault__NotDawnOfInsrtTokenOwner();
-        }
-        uint8 tier = IDawnOfInsrt(DAWN_OF_INSRT).tokenTier(tokenId);
-
-        //add check in claim for tokenID == uint256.max
-        if (tier == 0) {
-            yieldFeeBP = uint16(
-                normalYieldFeeBP -
-                    ((normalYieldFeeBP * TIER0_DISCOUNT) / BASIS_POINTS)
-            );
-        } else if (tier == 1) {
-            yieldFeeBP = uint16(
-                normalYieldFeeBP -
-                    ((normalYieldFeeBP * TIER1_DISCOUNT) / BASIS_POINTS)
-            );
-        } else if (tier == 2) {
-            yieldFeeBP = uint16(
-                normalYieldFeeBP -
-                    ((normalYieldFeeBP * TIER2_DISCOUNT) / BASIS_POINTS)
-            );
-        } else if (tier == 3) {
-            yieldFeeBP = uint16(
-                normalYieldFeeBP -
-                    ((normalYieldFeeBP * TIER3_DISCOUNT) / BASIS_POINTS)
-            );
+        if (tokenId == type(uint256).max) {
+            yieldFeeBP = undiscountedYieldFeeBP;
         } else {
-            yieldFeeBP = uint16(
-                normalYieldFeeBP -
-                    ((normalYieldFeeBP * TIER4_DISCOUNT) / BASIS_POINTS)
-            );
+            if (account != IERC721(DAWN_OF_INSRT).ownerOf(tokenId)) {
+                revert ShardVault__NotDawnOfInsrtTokenOwner();
+            }
+            uint8 tier = IDawnOfInsrt(DAWN_OF_INSRT).tokenTier(tokenId);
+
+            if (tier == 0) {
+                yieldFeeBP = uint16(
+                    ((undiscountedYieldFeeBP * TIER0_FEE_COEFFICIENT) /
+                        BASIS_POINTS)
+                );
+            } else if (tier == 1) {
+                yieldFeeBP = uint16(
+                    ((undiscountedYieldFeeBP * TIER1_FEE_COEFFICIENT) /
+                        BASIS_POINTS)
+                );
+            } else if (tier == 2) {
+                yieldFeeBP = uint16(
+                    ((undiscountedYieldFeeBP * TIER2_FEE_COEFFICIENT) /
+                        BASIS_POINTS)
+                );
+            } else if (tier == 3) {
+                yieldFeeBP = uint16(
+                    ((undiscountedYieldFeeBP * TIER3_FEE_COEFFICIENT) /
+                        BASIS_POINTS)
+                );
+            } else {
+                yieldFeeBP = uint16(
+                    ((undiscountedYieldFeeBP * TIER4_FEE_COEFFICIENT) /
+                        BASIS_POINTS)
+                );
+            }
         }
     }
 }
