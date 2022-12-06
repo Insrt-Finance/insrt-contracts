@@ -190,16 +190,14 @@ interface IShardVaultAdmin {
 
     /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
-     * @param punkId id of punk position pertains to
-     * @param minTokenAmount minimum token (pETH/pUSD) to receive from curveLP
+     * @param punkId punkId pertinent to position
+     * @param minPETH minimum pETH to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
-     * @param isPUSD indicates whether loan position is denominated in pUSD or pETH
      */
-    function closePunkPosition(
+    function closePunkPositionPETH(
         uint256 punkId,
-        uint256 minTokenAmount,
-        uint256 poolInfoIndex,
-        bool isPUSD
+        uint256 minPETH,
+        uint256 poolInfoIndex
     ) external;
 
     /**

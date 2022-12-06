@@ -624,40 +624,69 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
-     * @param punkId id of punk position pertains to
+     * @param punkId punkId pertinent to position
+     * @param minPETH minimum pETH to receive from curveLP
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     */
+    function _closePunkPositionPETH(
+        uint256 punkId,
+        uint256 minPETH,
+        uint256 poolInfoIndex
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 eth = _closePunkPosition(
+            punkId,
+            minPETH,
+            poolInfoIndex,
+            l.jpegdVault,
+            PETH,
+            PETH_CITADEL,
+            CURVE_PETH_POOL,
+            int128(0)
+        );
+
+        l.cumulativeEPS = eth / l.totalSupply;
+    }
+
+    /**
+     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
+     * @param punkId punkId pertinent to position
      * @param minTokenAmount minimum token (pETH/pUSD) to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
-     * @param isPUSD indicates whether loan position is denominated in pUSD or pETH
+     * @param jpegdVault address of jpeg'd NFT Vault
+     * @param token address of PETH or PUSD
+     * @param citadel address of jpeg citadel
+     * @param pool address of Curve pool
+     * @param curveID curve pool index of token to receive
+     * @return surplus amount of PETH/PUSD left over after paying outstanding debt
      */
     function _closePunkPosition(
         uint256 punkId,
         uint256 minTokenAmount,
         uint256 poolInfoIndex,
-        bool isPUSD
-    ) internal {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        address jpegdVault,
+        address token,
+        address citadel,
+        address pool,
+        int128 curveID
+    ) internal returns (uint256 surplus) {
         uint256 debt = _totalDebt(jpegdVault, punkId);
-        if (isPUSD) {
-            _unstakePUSD(
-                ILPFarming(LP_FARM)
-                    .userInfo(poolInfoIndex, address(this))
-                    .amount,
-                minTokenAmount,
-                poolInfoIndex
-            );
-            IERC20(PUSD).approve(jpegdVault, debt);
-        } else {
-            _unstakePETH(
-                ILPFarming(LP_FARM)
-                    .userInfo(poolInfoIndex, address(this))
-                    .amount,
-                minTokenAmount,
-                poolInfoIndex
-            );
-            IERC20(PETH).approve(jpegdVault, debt);
-        }
+
+        uint256 tokenAmount = _unstake(
+            ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
+            minTokenAmount,
+            poolInfoIndex,
+            citadel,
+            pool,
+            curveID
+        );
+
+        IERC20(token).approve(jpegdVault, debt);
         INFTVault(jpegdVault).repay(punkId, debt);
         INFTVault(jpegdVault).closePosition(punkId);
+
+        surplus = tokenAmount - debt;
     }
 
     /**
