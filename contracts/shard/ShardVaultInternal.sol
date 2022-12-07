@@ -41,6 +41,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
+    uint256 internal constant CURVE_BASIS = 10000000000;
+    uint256 internal constant CURVE_FEE = 4000000;
 
     constructor(
         JPEGParams memory jpegParams,
@@ -684,7 +686,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 debt = _totalDebt(jpegdVault, punkId);
 
         uint256 tokenAmount = _unstake(
-            ILPFarming(LP_FARM).userInfo(poolInfoIndex, address(this)).amount,
+            _queryAutoCompForPETH(debt),
             minTokenAmount,
             poolInfoIndex,
             citadel,
@@ -800,9 +802,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             false
         );
 
-        //note: accounts for fees; ball-parks
-        uint256 curveLPAccountingFee = (curveLP *
-            ShardVaultStorage.layout().conversionBuffer) / (BASIS_POINTS * 100);
+        //note: accounts for fees;
+        uint256 curveLPAccountingFee = (curveLP * CURVE_BASIS) /
+            (CURVE_BASIS - CURVE_FEE);
 
         autoComp =
             (curveLPAccountingFee * 10 ** IVault(PUSD_CITADEL).decimals()) /
@@ -826,9 +828,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             false
         );
 
-        //note: accounts for fees; ball-parks     //conversion_buffer
-        uint256 curveLPAccountingFee = (curveLP *
-            ShardVaultStorage.layout().conversionBuffer) / (100 * BASIS_POINTS);
+        // //note: accounts for fees;
+        uint256 curveLPAccountingFee = (curveLP * CURVE_BASIS) /
+            (CURVE_BASIS - CURVE_FEE);
 
         autoComp =
             (curveLPAccountingFee * 10 ** IVault(PETH_CITADEL).decimals()) /
