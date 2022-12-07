@@ -77,4 +77,17 @@ interface ICurveMetaPool {
      * @return LP token virtual price normalized to 1e18
      */
     function get_virtual_price() external view returns (uint256);
+
+    /**
+     * @notice Get the amount received (“dy”) when swapping between two underlying assets within the pool.
+     * @param i Index value of the token to send.
+     * @param j Index value of the token to receive.
+     * @param dx: The amount of i being exchanged.
+     * @return amount of j received
+     */
+    function get_dy(
+        int128 i,
+        int128 j,
+        uint256 dx
+    ) external view returns (uint256);
 }

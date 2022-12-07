@@ -625,17 +625,19 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
      * @param punkId punkId pertinent to position
-     * @param minPETH minimum pETH to receive from curveLP
+     * @param minPETH minimum pETH to receive from curveLP after unstake
      * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param minETH minimum amount of ETH to receive from curveLP after exchange
      */
     function _closePunkPositionPETH(
         uint256 punkId,
         uint256 minPETH,
-        uint256 poolInfoIndex
+        uint256 poolInfoIndex,
+        uint256 minETH
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 eth = _closePunkPosition(
+        uint256 peth = _closePunkPosition(
             punkId,
             minPETH,
             poolInfoIndex,
@@ -643,10 +645,18 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             PETH,
             PETH_CITADEL,
             CURVE_PETH_POOL,
-            int128(0)
+            int128(1)
         );
 
-        l.cumulativeEPS = eth / l.totalSupply;
+        IERC20(PETH).approve(CURVE_PETH_POOL, peth);
+        uint256 eth = ICurveMetaPool(CURVE_PETH_POOL).exchange(
+            int128(1),
+            int128(0),
+            peth,
+            minETH
+        );
+
+        l.cumulativeEPS += eth / l.totalSupply;
     }
 
     /**

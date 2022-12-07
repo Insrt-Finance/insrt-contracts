@@ -184,9 +184,10 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function closePunkPositionPETH(
         uint256 punkId,
         uint256 minTokenAmount,
-        uint256 poolInfoIndex
+        uint256 poolInfoIndex,
+        uint256 minETH
     ) external onlyProtocolOwner {
-        _closePunkPositionPETH(punkId, minTokenAmount, poolInfoIndex);
+        _closePunkPositionPETH(punkId, minTokenAmount, poolInfoIndex, minETH);
     }
 
     /**
