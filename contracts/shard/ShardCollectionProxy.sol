@@ -14,17 +14,13 @@ contract ShardCollectionProxy is SolidStateDiamond {
     constructor(
         string memory name,
         string memory symbol,
-        string memory baseURI,
-        address shardVaultDiamond
+        string memory baseURI
     ) {
         ERC721MetadataStorage.Layout
             storage metadataStorage = ERC721MetadataStorage.layout();
-        ShardCollectionStorage.Layout
-            storage shardStorage = ShardCollectionStorage.layout();
 
         metadataStorage.name = name;
         metadataStorage.symbol = symbol;
         metadataStorage.baseURI = baseURI;
-        shardStorage.shardVaultDiamond = shardVaultDiamond;
     }
 }

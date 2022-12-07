@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 library ShardCollectionStorage {
     struct Layout {
-        address shardVaultDiamond;
         mapping(address => bool) whitelist;
     }
 
