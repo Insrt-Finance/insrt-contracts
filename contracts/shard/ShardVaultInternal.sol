@@ -828,9 +828,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice provides (makes available) yield in the form of ETH and JPEG tokens
-     * @dev unstakes some of the pETH position to convert to yield, and claims
-     * pending rewards in LP_FARM to receive JPEG
+     * @notice provides yield in the form of ETH and JPEG tokens, by unstaking part of the pETH position to convert to yield,
+     * and claiming pending rewards in LP_FARM to receive JPEG and increasing EPS/JPS respectively
      * @param autoComp amount of autoComp tokens to unstake
      * @param minETH minimum ETH to receive after unstaking
      * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
@@ -953,12 +952,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice before shard transfer hook
-     * @dev only SHARD_COLLECTION proxy may call - purpose is to maintain correct balances
+     * @notice claim yield/excess ETH upon shard transfer
+     * @dev only SHARD_COLLECTION proxy may call
      * @param from address transferring
      * @param to address receiving
+     * @param tokenId id of shard being transferred
      */
-    function _beforeShardTransfer(
+    function _implicitClaim(
         address from,
         address to,
         uint256 tokenId

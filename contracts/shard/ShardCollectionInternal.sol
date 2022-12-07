@@ -67,7 +67,7 @@ contract ShardCollectionInternal is
         (address shardVault, ) = IShardVault(
             ShardCollectionStorage.layout().shardVaultDiamond
         ).parseTokenId(tokenId);
-        IShardVault(shardVault).beforeShardTransfer(from, to, tokenId);
+        IShardVault(shardVault).implicitClaim(from, to, tokenId);
     }
 
     /**

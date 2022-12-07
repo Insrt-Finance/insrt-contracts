@@ -28,12 +28,8 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     /**
      * @inheritdoc IShardVaultIO
      */
-    function beforeShardTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external {
-        _beforeShardTransfer(from, to, tokenId);
+    function implicitClaim(address from, address to, uint256 tokenId) external {
+        _implicitClaim(from, to, tokenId);
     }
 
     /**

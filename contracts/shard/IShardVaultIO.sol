@@ -18,17 +18,13 @@ interface IShardVaultIO {
     function withdraw(uint256[] memory shardIds) external payable;
 
     /**
-     * @notice before shard transfer hook
-     * @dev only SHARD_COLLECTION proxy may call - purpose is to maintain correct balances
+     * @notice claim yield/excess ETH upon shard transfer
+     * @dev only SHARD_COLLECTION proxy may call
      * @param from address transferring
      * @param to address receiving
-     * @param tokenId id of shard
+     * @param tokenId id of shard being transferred
      */
-    function beforeShardTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external;
+    function implicitClaim(address from, address to, uint256 tokenId) external;
 
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
