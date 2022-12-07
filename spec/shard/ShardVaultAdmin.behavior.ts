@@ -1922,7 +1922,19 @@ export function describeBehaviorOfShardVaultAdmin(
 
         await pethInstance
           .connect(owner)
-          ['closePunkPositionPETH(uint256,uint256,uint256)'](punkId, 0, 2);
+          ['directRepayLoanPETH(uint256,uint256)'](
+            ethers.utils.parseEther('10'),
+            punkId,
+          );
+
+        await pethInstance
+          .connect(owner)
+          ['closePunkPositionPETH(uint256,uint256,uint256,uint256)'](
+            punkId,
+            0,
+            2,
+            0,
+          );
 
         expect(
           (await jpegdVault['positions(uint256)'](punkId)).debtPrincipal,
@@ -2009,37 +2021,48 @@ export function describeBehaviorOfShardVaultAdmin(
         await pethInstance
           .connect(owner)
           ['directRepayLoanPETH(uint256,uint256)'](
-            punkId,
             ethers.utils.parseEther('10'),
+            punkId,
           );
 
         const debt = await pethInstance.callStatic['totalDebt(uint256)'](
           punkId,
         );
-        const owedPETH = await pethInstance
+        const expectedPETH = await pethInstance
           .connect(owner)
           .callStatic['unstakePETH(uint256,uint256,uint256)'](
-            (
-              await lpFarm['userInfo(uint256,address)'](2, pethInstance.address)
-            ).amount,
+            await pethInstance['queryAutoCompForPETH(uint256)'](debt),
             0,
             2,
           );
 
-        const expectedEPS = owedPETH
-          .sub(debt)
-          .div(
-            BigNumber.from(await pethInstance['totalSupply()']()).toString(),
-          );
+        const revertId = await hre.network.provider.send('evm_snapshot');
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('1000'));
+
+        const surplusPETH = expectedPETH.sub(debt);
 
         const oldEPS = await pethInstance.callStatic['cumulativeEPS()']();
 
+        const expectedEPS = (
+          await curvePETHPool.callStatic['get_dy(int128,int128,uint256)'](
+            1,
+            0,
+            surplusPETH,
+          )
+        ).div(await pethInstance['totalSupply()']());
+
+        await hre.network.provider.send('evm_revert', [revertId]);
+
         await pethInstance
           .connect(owner)
-          ['closePunkPositionPETH(uint256,uint256,uint256)'](punkId, 0, 2);
+          ['closePunkPositionPETH(uint256,uint256,uint256,uint256)'](
+            punkId,
+            0,
+            2,
+            0,
+          );
 
         const newEPS = await pethInstance.callStatic['cumulativeEPS()']();
-
         expect(newEPS.sub(oldEPS)).to.eq(expectedEPS);
       });
 
@@ -2048,7 +2071,8 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             pethInstance
               .connect(nonOwner)
-              ['closePunkPosition(uint256,uint256,uint256)'](
+              ['closePunkPositionPETH(uint256,uint256,uint256,uint256)'](
+                ethers.constants.Zero,
                 ethers.constants.Zero,
                 ethers.constants.Zero,
                 ethers.constants.Zero,

@@ -380,6 +380,8 @@ export function describeBehaviorOfShardVaultView(
           .connect(owner)
           .callStatic['unstakePETH(uint256,uint256,uint256)'](autoComp, 0, 2);
 
+        console.log(pETH);
+        console.log(pETHAmounts[i]);
         expect(pETH.sub(pETHAmounts[i])).to.gte(ethers.constants.Zero);
         expect(pETHAmounts[i].sub(pETH)).to.lte(
           pETHAmounts[i].div(BigNumber.from('1000000000')),
@@ -462,7 +464,7 @@ export function describeBehaviorOfShardVaultView(
         expect(pUSD).to.gte(pUSDAmounts[i]);
       }
     });
-    it('returns amout resulting in at most 1/1000000 surplus of PUSD requested after unstaking', async () => {
+    it('returns amout resulting in at most 1/1000 surplus of PUSD requested after unstaking', async () => {
       await instance.connect(owner)['setIsEnabled(bool)'](true);
       await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
       await instance.connect(owner).setMaxUserShards(BigNumber.from('100'));
@@ -532,10 +534,12 @@ export function describeBehaviorOfShardVaultView(
         const pUSD = await instance
           .connect(owner)
           .callStatic['unstakePUSD(uint256,uint256,uint256)'](autoComp, 0, 1);
-
+        console.log(pUSD);
+        console.log(pUSDAmounts[i]);
+        console.log(i);
         expect(pUSD.sub(pUSDAmounts[i])).to.gte(ethers.constants.Zero);
         expect(pUSD.sub(pUSDAmounts[i])).to.lte(
-          pUSDAmounts[i].div(BigNumber.from('1000000')),
+          pUSDAmounts[i].div(BigNumber.from('1000')),
         );
       }
     });
