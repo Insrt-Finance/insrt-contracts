@@ -112,6 +112,9 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         autoComp = _queryAutoCompForPUSD(pUSD);
     }
 
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function queryAutoCompForPETH(
         uint256 pETH
     ) external view returns (uint256 autoComp) {
@@ -146,8 +149,8 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function shardBalances(address account) external view returns (uint16) {
-        return _shardBalances(account);
+    function userShards(address account) external view returns (uint16) {
+        return _userShards(account);
     }
 
     /**

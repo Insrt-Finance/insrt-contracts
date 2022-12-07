@@ -33,7 +33,7 @@ library ShardVaultStorage {
         bool isEnabled;
         bool isYieldClaiming;
         EnumerableSet.UintSet ownedTokenIds;
-        mapping(address => uint16) shardBalances;
+        mapping(address => uint16) userShards;
         mapping(uint256 => uint256) claimedEPS; //EPS = ETH per shard
         mapping(uint256 => uint256) claimedJPS; //JPS = JPEG per shard
     }

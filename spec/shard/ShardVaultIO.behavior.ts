@@ -188,7 +188,7 @@ export function describeBehaviorOfShardVaultIO(
           [depositAmount, depositAmount.mul(ethers.constants.NegativeOne)],
         );
       });
-      it('mints tokens from ShardCollection to depositor', async () => {
+      it('mints shards from ShardCollection to depositor', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
@@ -201,9 +201,7 @@ export function describeBehaviorOfShardVaultIO(
           shards,
         );
         expect(
-          await instance.callStatic['shardBalances(address)'](
-            depositor.address,
-          ),
+          await instance.callStatic['userShards(address)'](depositor.address),
         ).to.eq(shards);
       });
       it('increases total shard supply', async () => {
@@ -227,7 +225,7 @@ export function describeBehaviorOfShardVaultIO(
           depositAmount.div(ethers.utils.parseEther('1.0')),
         );
       });
-      it('increases shardBalances', async () => {
+      it('increases userShards', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
@@ -236,10 +234,11 @@ export function describeBehaviorOfShardVaultIO(
         const shards = depositAmount.div(
           await instance.callStatic['shardValue()'](),
         );
-        expect(
-          await instance['shardBalances(address)'](depositor.address),
-        ).to.eq(shards);
+        expect(await instance['userShards(address)'](depositor.address)).to.eq(
+          shards,
+        );
       });
+
       it('returns any excess ETH after MaxUserShards is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         const depositOneAmount = ethers.utils.parseEther('5');
@@ -271,6 +270,7 @@ export function describeBehaviorOfShardVaultIO(
           [change, change.mul(ethers.constants.NegativeOne)],
         );
       });
+
       it('returns any excess ETH after maxSupply is reached, if depositor has not reached MaxUserShards', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         const depositOneAmount = ethers.utils.parseEther('5');
@@ -475,41 +475,41 @@ export function describeBehaviorOfShardVaultIO(
     describe('#withdraw(uint256[])', () => {
       const depositAmount = ethers.utils.parseEther('10');
 
-      it('returns ETH analogous to tokens burnt', async () => {
+      it('returns ETH analogous to shards burnt', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
-        const withdrawTokens = 5;
-        const tokens = [];
-        for (let i = 0; i < withdrawTokens; i++) {
-          tokens.push(
+        const withdrawShards = 5;
+        const shards = [];
+        for (let i = 0; i < withdrawShards; i++) {
+          shards.push(
             await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
           );
         }
 
         expect(() =>
-          instance.connect(depositor)['withdraw(uint256[])'](tokens),
+          instance.connect(depositor)['withdraw(uint256[])'](shards),
         ).to.changeEtherBalances(
           [instance, depositor],
           [
             ethers.utils
-              .parseEther(withdrawTokens.toString())
+              .parseEther(withdrawShards.toString())
               .mul(ethers.constants.NegativeOne),
-            ethers.utils.parseEther(withdrawTokens.toString()),
+            ethers.utils.parseEther(withdrawShards.toString()),
           ],
         );
       });
 
-      it('decreases total supply by tokens burnt', async () => {
+      it('decreases total supply by shards burnt', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
-        const withdrawTokens = 5;
-        const tokens = [];
-        for (let i = 0; i < withdrawTokens; i++) {
-          tokens.push(
+        const withdrawShards = 5;
+        const shards = [];
+        for (let i = 0; i < withdrawShards; i++) {
+          shards.push(
             await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
           );
         }
@@ -518,11 +518,11 @@ export function describeBehaviorOfShardVaultIO(
           depositAmount.div(ethers.utils.parseEther('1.0')),
         );
 
-        await instance.connect(depositor)['withdraw(uint256[])'](tokens);
+        await instance.connect(depositor)['withdraw(uint256[])'](shards);
 
         expect(await instance.totalSupply()).to.eq(
           depositAmount
-            .sub(ethers.utils.parseEther(withdrawTokens.toString()))
+            .sub(ethers.utils.parseEther(withdrawShards.toString()))
             .div(ethers.utils.parseEther('1.0')),
         );
       });
@@ -545,16 +545,16 @@ export function describeBehaviorOfShardVaultIO(
             .connect(secondDepositor)
             ['deposit()']({ value: depositAmount.div(ethers.constants.Two) });
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
+            instance.connect(secondDepositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotShardOwner',
@@ -570,16 +570,16 @@ export function describeBehaviorOfShardVaultIO(
             .connect(depositor)
             ['deposit()']({ value: depositAmount });
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            secondInstance.connect(depositor)['withdraw(uint256[])'](tokens),
+            secondInstance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__VaultTokenIdMismatch',
@@ -594,16 +594,16 @@ export function describeBehaviorOfShardVaultIO(
             .connect(secondDepositor)
             ['deposit()']({ value: depositAmount });
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+            instance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__WithdrawalForbidden',
@@ -625,16 +625,16 @@ export function describeBehaviorOfShardVaultIO(
               true,
             );
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+            instance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__WithdrawalForbidden',

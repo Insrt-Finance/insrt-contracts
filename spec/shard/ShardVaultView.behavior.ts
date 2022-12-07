@@ -235,8 +235,8 @@ export function describeBehaviorOfShardVaultView(
   describe('#queryAutoCompForPETH(uint256)', () => {
     it('returns autocomp amount resulting in at least amount of PETH requested after unstaking', async () => {
       await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
-      await pethInstance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+      await pethInstance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await pethInstance
         .connect(depositor)
         .deposit({ value: ethers.utils.parseEther('100') });
@@ -310,8 +310,8 @@ export function describeBehaviorOfShardVaultView(
     });
     it('returns autocomp amount resulting in at most 1/1000000000 surplus of PETH requested after unstaking', async () => {
       await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
-      await pethInstance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+      await pethInstance.connect(owner).setMaxUserShards(BigNumber.from('100'));
       await pethInstance
         .connect(depositor)
         .deposit({ value: ethers.utils.parseEther('100') });

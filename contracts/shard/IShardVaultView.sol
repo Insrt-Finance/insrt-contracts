@@ -31,8 +31,7 @@ interface IShardVaultView {
     function shardCollection() external view returns (address shardCollection);
 
     /**
-     * @notice return minted token count
-     * @dev does not reduce when tokens are burnt
+     * @notice return minted token count; does not reduce when tokens are burnt
      * @return count minted token count
      */
     function count() external view returns (uint16 count);
@@ -99,8 +98,7 @@ interface IShardVaultView {
     ) external view returns (uint256 autoComp);
 
     /**
-     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault
-     * @dev accounts for fee withdrawals
+     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault; accounts for fee withdrawals
      * @return fees accrued fees
      */
     function accruedFees() external view returns (uint256 fees);
@@ -131,9 +129,8 @@ interface IShardVaultView {
     function yieldFeeBP() external view returns (uint16 feeBP);
 
     /**
-     * @notice return the maximum shards a user is allowed to mint
-     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
-     * said user may not deposit more
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
      * @return maxShards maxShardsPerUser value
      */
     function maxUserShards() external view returns (uint16 maxShards);
@@ -143,9 +140,7 @@ interface IShardVaultView {
      * @param account address owning shards
      * @return shards quantity of shards
      */
-    function shardBalances(
-        address account
-    ) external view returns (uint16 shards);
+    function userShards(address account) external view returns (uint16 shards);
 
     /**
      * @notice return amount of shards reserved for whitelist
