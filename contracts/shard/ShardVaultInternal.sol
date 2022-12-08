@@ -159,10 +159,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
-                _enforceShardOwnership(msg.sender, shardIds[i]);
-                _enforceVaultTokenIdMatch(shardIds[i]);
+                uint256 shardId = shardIds[i];
+                _enforceShardOwnership(msg.sender, shardId);
+                _enforceVaultTokenIdMatch(shardId);
 
-                IShardCollection(SHARD_COLLECTION).burn(shardIds[i]);
+                IShardCollection(SHARD_COLLECTION).burn(shardId);
             }
         }
 
