@@ -13,13 +13,10 @@ interface IShardVaultAdmin {
      * @param calls  array of EncodedCall structs containing information to execute necessary low level
      * calls to purchase a punk
      * @param punkId id of punk
-     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
-     * any excess ETH for claiming
      */
     function purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        bool isFinalPurchase
+        uint256 punkId
     ) external payable;
 
     /**
@@ -89,8 +86,6 @@ interface IShardVaultAdmin {
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
      * the pool to deposit into
      * @param insure whether to insure position
-     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
-     * any excess ETH for claiming
      */
     function investPunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
@@ -98,8 +93,7 @@ interface IShardVaultAdmin {
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
-        bool insure,
-        bool isFinalPurchase
+        bool insure
     ) external;
 
     /**
@@ -269,4 +263,9 @@ interface IShardVaultAdmin {
         uint256 minETH,
         uint256 poolInfoIndex
     ) external payable returns (uint256 providedETH, uint256 providedJPEG);
+
+    /**
+     * @notice makes the any ETH besides the vault accrued fees claimable
+     */
+    function makeUnusedETHClaimable() external;
 }

@@ -296,8 +296,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        bool isFinalPurchase
+        uint256 punkId
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -320,12 +319,16 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         }
         l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
         l.ownedTokenIds.add(punkId);
+    }
 
-        if (isFinalPurchase) {
-            l.cumulativeETHPerShard +=
-                (address(this).balance - l.accruedFees) /
-                _totalSupply();
-        }
+    /**
+     * @notice makes the any ETH besides the vault accrued fees claimable
+     */
+    function _makeUnusedETHClaimable() internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        l.cumulativeETHPerShard +=
+            (address(this).balance - l.accruedFees) /
+            l.totalSupply;
     }
 
     /**
@@ -506,8 +509,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
      * the pool to deposit into
      * @param insure whether to insure
-     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
-     * any excess ETH for claiming
      */
     function _investPunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
@@ -515,10 +516,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
-        bool insure,
-        bool isFinalPurchase
+        bool insure
     ) internal {
-        _purchasePunk(calls, punkId, isFinalPurchase);
+        _purchasePunk(calls, punkId);
         _stakePUSD(
             _collateralizePunkPUSD(punkId, borrowAmount, insure),
             minCurveLP,

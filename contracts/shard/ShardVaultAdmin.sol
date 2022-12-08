@@ -18,10 +18,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      */
     function purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        bool isFinalPurchase
+        uint256 punkId
     ) external payable onlyProtocolOwner {
-        _purchasePunk(calls, punkId, isFinalPurchase);
+        _purchasePunk(calls, punkId);
     }
 
     /**
@@ -77,8 +76,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
-        bool insure,
-        bool isFinalPurchase
+        bool insure
     ) external onlyProtocolOwner {
         _investPunk(
             calls,
@@ -86,8 +84,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             borrowAmount,
             minCurveLP,
             poolInfoIndex,
-            insure,
-            isFinalPurchase
+            insure
         );
     }
 
@@ -269,5 +266,12 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             minETH,
             poolInfoIndex
         );
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function makeUnusedETHClaimable() external onlyProtocolOwner {
+        _makeUnusedETHClaimable();
     }
 }
