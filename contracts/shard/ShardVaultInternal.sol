@@ -868,14 +868,22 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice returns excess ETH left over after vault has invested
+     * @notice sends excess ETH left over after vault has invested, to the msg.sender
+     * @param tokenIds array of shard IDs to claim with
+     */
+    function _claimExcessETH(uint256[] memory tokenIds) internal {
+        _claimExcessETH(msg.sender, tokenIds);
+    }
+
+    /**
+     * @notice sends excess ETH left over after vault has invested
      * @param account address making the claim
      * @param tokenIds array of shard IDs to claim with
      */
     function _claimExcessETH(
         address account,
         uint256[] memory tokenIds
-    ) internal {
+    ) private {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = tokenIds.length;
@@ -904,11 +912,19 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice sends yield in the form of ETH + JPEG tokens to msg.sender
+     * @param tokenIds array of shard IDs to claim with
+     */
+    function _claimYield(uint256[] memory tokenIds) internal {
+        _claimYield(msg.sender, tokenIds);
+    }
+
+    /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param account address making the yield claim
      * @param tokenIds array of shard IDs to claim with
      */
-    function _claimYield(address account, uint256[] memory tokenIds) internal {
+    function _claimYield(address account, uint256[] memory tokenIds) private {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = tokenIds.length;
