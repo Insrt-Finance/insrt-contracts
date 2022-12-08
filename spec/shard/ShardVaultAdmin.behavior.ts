@@ -2399,6 +2399,51 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
+    describe('makeUnusedETHClaimable()', () => {
+      it('increases cumulative ETH per shard', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        const punkPrice = (
+          await cryptoPunkMarket['punksOfferedForSale(uint256)'](punkId)
+        ).minValue;
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        await pethInstance.connect(owner).makeUnusedETHClaimable();
+
+        const acquisitionFee = punkPrice
+          .mul(await pethInstance.acquisitionFeeBP())
+          .div(BASIS_POINTS);
+        const expectedCumulativeETHPerShard = ethers.utils
+          .parseEther('100')
+          .sub(punkPrice)
+          .sub(acquisitionFee)
+          .div(await pethInstance['totalSupply()']());
+
+        expect(await pethInstance['cumulativeETHPerShard()']()).to.eq(
+          expectedCumulativeETHPerShard,
+        );
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            pethInstance.connect(nonOwner)['makeUnusedETHClaimable()'](),
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
     describe('#setAcquisitionFee(uint16)', () => {
       it('sets acquisition fee value', async () => {
         const feeValue = BigNumber.from('1234');
