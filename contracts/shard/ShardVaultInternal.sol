@@ -321,7 +321,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         l.ownedTokenIds.add(punkId);
 
         if (isFinalPurchase) {
-            l.cumulativeEPS +=
+            l.cumulativeETHPerShard +=
                 (address(this).balance - l.accruedFees) /
                 _totalSupply();
         }
@@ -862,8 +862,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             l.isYieldClaiming = true;
         }
 
-        l.cumulativeEPS += providedETH / l.totalSupply;
-        l.cumulativeJPS += providedJPEG / l.totalSupply;
+        l.cumulativeETHPerShard += providedETH / l.totalSupply;
+        l.cumulativeJPEGPerShard += providedJPEG / l.totalSupply;
     }
 
     /**
@@ -882,18 +882,20 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         _enforceNotYieldClaimingAndInvested();
         _enforceSufficientBalance(account, tokens);
 
-        uint256 cumulativeEPS = l.cumulativeEPS;
+        uint256 cumulativeETHPerShard = l.cumulativeETHPerShard;
         uint256 totalETH;
-        uint256 claimedEPS;
+        uint256 claimedETHPerShard;
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
                 _enforceShardOwnership(account, tokenIds[i]);
                 _enforceVaultTokenIdMatch(tokenIds[i]);
 
-                claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
-                totalETH += claimedEPS;
-                l.claimedEPS[tokenIds[i]] += claimedEPS;
+                claimedETHPerShard =
+                    cumulativeETHPerShard -
+                    l.claimedETHPerShard[tokenIds[i]];
+                totalETH += claimedETHPerShard;
+                l.claimedETHPerShard[tokenIds[i]] += claimedETHPerShard;
             }
         }
 
@@ -914,13 +916,13 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         _enforceSufficientBalance(account, tokens);
 
         //parameters for ETH claiming
-        uint256 cumulativeEPS = l.cumulativeEPS;
+        uint256 cumulativeETHPerShard = l.cumulativeETHPerShard;
         uint256 totalETH;
-        uint256 claimedEPS;
+        uint256 claimedETHPerShard;
         //parameters for JPEG claiming
-        uint256 cumulativeJPS = l.cumulativeJPS;
+        uint256 cumulativeJPEGPerShard = l.cumulativeJPEGPerShard;
         uint256 totalJPEG;
-        uint256 claimedJPS;
+        uint256 claimedJPEGPerShard;
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
@@ -928,14 +930,18 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
                 _enforceVaultTokenIdMatch(tokenIds[i]);
 
                 //account for claimable ETH
-                claimedEPS = cumulativeEPS - l.claimedEPS[tokenIds[i]];
-                totalETH += claimedEPS;
-                l.claimedEPS[tokenIds[i]] += claimedEPS;
+                claimedETHPerShard =
+                    cumulativeETHPerShard -
+                    l.claimedETHPerShard[tokenIds[i]];
+                totalETH += claimedETHPerShard;
+                l.claimedETHPerShard[tokenIds[i]] += claimedETHPerShard;
 
                 //account for claimable JPEG
-                claimedJPS = cumulativeJPS - l.claimedJPS[tokenIds[i]];
-                totalJPEG += claimedJPS;
-                l.claimedJPS[tokenIds[i]] += claimedJPS;
+                claimedJPEGPerShard =
+                    cumulativeJPEGPerShard -
+                    l.claimedJPEGPerShard[tokenIds[i]];
+                totalJPEG += claimedJPEGPerShard;
+                l.claimedJPEGPerShard[tokenIds[i]] += claimedJPEGPerShard;
             }
         }
 
@@ -1129,39 +1135,55 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     /**
      * @notice returns the JPEG claimed by a given shard
      * @param shardId id of shard to check
-     * @return claimedJPS claimed JPEG for given shard
+     * @return claimedJPEGPerShard claimed JPEG for given shard
      */
-    function _claimedJPS(
+    function _claimedJPEGPerShard(
         uint256 shardId
-    ) internal view returns (uint256 claimedJPS) {
-        claimedJPS = ShardVaultStorage.layout().claimedJPS[shardId];
+    ) internal view returns (uint256 claimedJPEGPerShard) {
+        claimedJPEGPerShard = ShardVaultStorage.layout().claimedJPEGPerShard[
+            shardId
+        ];
     }
 
     /**
      * @notice returns the ETH claimed by a given shard
      * @param shardId id of shard to check
-     * @return claimedEPS claimed ETH for given shard
+     * @return claimedETHPerShard claimed ETH for given shard
      */
-    function _claimedEPS(
+    function _claimedETHPerShard(
         uint256 shardId
-    ) internal view returns (uint256 claimedEPS) {
-        claimedEPS = ShardVaultStorage.layout().claimedEPS[shardId];
+    ) internal view returns (uint256 claimedETHPerShard) {
+        claimedETHPerShard = ShardVaultStorage.layout().claimedETHPerShard[
+            shardId
+        ];
     }
 
     /**
      * @notice returns the cumulative JPEG per shard value
-     * @return cumulativeJPS cumulative JPEG per shard value
+     * @return cumulativeJPEGPerShard cumulative JPEG per shard value
      */
-    function _cumulativeJPS() internal view returns (uint256 cumulativeJPS) {
-        cumulativeJPS = ShardVaultStorage.layout().cumulativeJPS;
+    function _cumulativeJPEGPerShard()
+        internal
+        view
+        returns (uint256 cumulativeJPEGPerShard)
+    {
+        cumulativeJPEGPerShard = ShardVaultStorage
+            .layout()
+            .cumulativeJPEGPerShard;
     }
 
     /**
      * @notice returns the cumulative ETH per shard value
-     * @return cumulativeEPS cumulative ETH per shard value
+     * @return cumulativeETHPerShard cumulative ETH per shard value
      */
-    function _cumulativeEPS() internal view returns (uint256 cumulativeEPS) {
-        cumulativeEPS = ShardVaultStorage.layout().cumulativeEPS;
+    function _cumulativeETHPerShard()
+        internal
+        view
+        returns (uint256 cumulativeETHPerShard)
+    {
+        cumulativeETHPerShard = ShardVaultStorage
+            .layout()
+            .cumulativeETHPerShard;
     }
 
     /**

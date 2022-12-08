@@ -170,33 +170,41 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function claimedJPS(
+    function claimedJPEGPerShard(
         uint256 shardId
-    ) external view returns (uint256 claimedJPS) {
-        claimedJPS = _claimedJPS(shardId);
+    ) external view returns (uint256 claimedJPEGPerShard) {
+        claimedJPEGPerShard = _claimedJPEGPerShard(shardId);
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function claimedEPS(
+    function claimedETHPerShard(
         uint256 shardId
-    ) external view returns (uint256 claimedEPS) {
-        claimedEPS = _claimedEPS(shardId);
+    ) external view returns (uint256 claimedETHPerShard) {
+        claimedETHPerShard = _claimedETHPerShard(shardId);
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function cumulativeJPS() external view returns (uint256 cumulativeJPS) {
-        cumulativeJPS = _cumulativeJPS();
+    function cumulativeJPEGPerShard()
+        external
+        view
+        returns (uint256 cumulativeJPEGPerShard)
+    {
+        cumulativeJPEGPerShard = _cumulativeJPEGPerShard();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function cumulativeEPS() external view returns (uint256 cumulativeEPS) {
-        cumulativeEPS = _cumulativeEPS();
+    function cumulativeETHPerShard()
+        external
+        view
+        returns (uint256 cumulativeETHPerShard)
+    {
+        cumulativeETHPerShard = _cumulativeETHPerShard();
     }
 
     /**

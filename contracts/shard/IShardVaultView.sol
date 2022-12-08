@@ -155,34 +155,40 @@ interface IShardVaultView {
     function marketplaceHelper() external view returns (address);
 
     /**
-     * @notice returns the JPEG claimed by a given shard
+     * @notice fetches claimed JPEG for shard id
      * @param shardId id of shard to check
-     * @return claimedJPS claimed JPEG for given shard
+     * @return claimedJPEGPerShard claimed JPEG for given shard
      */
-    function claimedJPS(
+    function claimedJPEGPerShard(
         uint256 shardId
-    ) external view returns (uint256 claimedJPS);
+    ) external view returns (uint256 claimedJPEGPerShard);
 
     /**
-     * @notice returns the ETH claimed by a given shard
+     * @notice fetches claimed ETH for shard id
      * @param shardId id of shard to check
-     * @return claimedEPS claimed ETH for given shard
+     * @return claimedETHPerShard claimed ETH for given shard
      */
-    function claimedEPS(
+    function claimedETHPerShard(
         uint256 shardId
-    ) external view returns (uint256 claimedEPS);
+    ) external view returns (uint256 claimedETHPerShard);
 
     /**
-     * @notice returns the cumulative JPEG per shard value
-     * @return cumulativeJPS cumulative JPEG per shard value
+     * @notice fetches accumulated JPEG per shard
+     * @return cumulativeJPEGPerShard cumulative JPEG per shard value
      */
-    function cumulativeJPS() external view returns (uint256 cumulativeJPS);
+    function cumulativeJPEGPerShard()
+        external
+        view
+        returns (uint256 cumulativeJPEGPerShard);
 
     /**
-     * @notice returns the cumulative ETH per shard value
-     * @return cumulativeEPS cumulative ETH per shard value
+     * @notice fetches accumulated ETH per shard
+     * @return cumulativeETHPerShard cumulative ETH per shard value
      */
-    function cumulativeEPS() external view returns (uint256 cumulativeEPS);
+    function cumulativeETHPerShard()
+        external
+        view
+        returns (uint256 cumulativeETHPerShard);
 
     /**
      * @notice returns the yield claiming status of the vault
