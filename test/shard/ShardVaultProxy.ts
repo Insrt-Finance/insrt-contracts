@@ -65,7 +65,6 @@ describe('ShardVaultProxy', () => {
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
-  const maxShardsPerUser = BigNumber.from('10');
   const ltvBufferBP = BigNumber.from('500');
   const ltvDeviationBP = BigNumber.from('200');
   const pUSDConversionBuffer = BigNumber.from('1000178');
@@ -149,12 +148,7 @@ describe('ShardVaultProxy', () => {
     ).deploy();
     const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
-    ).deploy(
-      'ShardVaultCollection',
-      'SVC',
-      'shards',
-      shardVaultDiamond.address,
-    );
+    ).deploy('ShardVaultCollection', 'SVC', 'shards');
 
     const shardCollectionFacetCuts = [
       await new ShardCollection__factory(deployer).deploy(),

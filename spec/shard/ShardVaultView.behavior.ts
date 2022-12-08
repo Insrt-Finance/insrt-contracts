@@ -30,6 +30,16 @@ export function formatTokenId(
   return tokenId;
 }
 
+export function parseTokenId(tokenId: BigNumber): [string, BigNumber] {
+  let address: string;
+  let internalId: BigNumber;
+
+  address = ethers.utils.getAddress(tokenId.shr(96).toHexString());
+  internalId = tokenId.mask(96);
+
+  return [address, internalId];
+}
+
 export function describeBehaviorOfShardVaultView(
   deploy: () => Promise<IShardVault>,
   pethDeploy: () => Promise<IShardVault>,
@@ -243,10 +253,9 @@ export function describeBehaviorOfShardVaultView(
 
       await pethInstance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256)'](
           punkPurchaseCallsPETH,
           punkId,
-          true,
         );
 
       const requestedBorrow = (
@@ -318,10 +327,9 @@ export function describeBehaviorOfShardVaultView(
 
       await pethInstance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256)'](
           punkPurchaseCallsPETH,
           punkId,
-          true,
         );
 
       const requestedBorrow = (
@@ -398,10 +406,9 @@ export function describeBehaviorOfShardVaultView(
 
       await instance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256)'](
           punkPurchaseCallsPUSD,
           punkId,
-          true,
         );
 
       const requestedBorrow = (
@@ -472,10 +479,9 @@ export function describeBehaviorOfShardVaultView(
 
       await instance
         .connect(owner)
-        ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+        ['purchasePunk((bytes,uint256,address)[],uint256)'](
           punkPurchaseCallsPUSD,
           punkId,
-          true,
         );
 
       const requestedBorrow = (
