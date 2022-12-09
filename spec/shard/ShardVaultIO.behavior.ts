@@ -15,7 +15,7 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { formatTokenId } from './ShardVaultView.behavior';
+import { formatShardId } from './ShardVaultView.behavior';
 import { IERC20 } from '../../typechain-types/@solidstate/contracts/interfaces/IERC20';
 
 export interface ShardVaultIOBehaviorArgs {
@@ -559,7 +559,7 @@ export function describeBehaviorOfShardVaultIO(
             'ShardVault__NotShardOwner',
           );
         });
-        it('owned shards correspond to different vault', async () => {
+        it('shards used to withdraw match different vault', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
           await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
           await instance
@@ -581,7 +581,7 @@ export function describeBehaviorOfShardVaultIO(
             secondInstance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
-            'ShardVault__VaultTokenIdMismatch',
+            'ShardVault__VaultShardIdMismatch',
           );
         });
         it('vault is full', async () => {
@@ -723,33 +723,33 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeJPEGPerShard = await pethInstance[
           'cumulativeJPEGPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         const oldclaimedJPEGPerShard = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           oldclaimedJPEGPerShard.push(
-            await pethInstance['claimedJPEGPerShard(uint256)'](tokenId),
+            await pethInstance['claimedJPEGPerShard(uint256)'](shardId),
           );
         }
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
         const newclaimedJPEGPerShard = [];
-        for (let i = 0; i < tokenIds.length; i++) {
+        for (let i = 0; i < shardIds.length; i++) {
           newclaimedJPEGPerShard.push(
             cumulativeJPEGPerShard.sub(oldclaimedJPEGPerShard[i]),
           );
         }
 
-        for (let i = 0; i < tokenIds.length; i++) {
+        for (let i = 0; i < shardIds.length; i++) {
           expect(
-            await pethInstance['claimedJPEGPerShard(uint256)'](tokenIds[i]),
+            await pethInstance['claimedJPEGPerShard(uint256)'](shardIds[i]),
           ).to.eq(oldclaimedJPEGPerShard[i].add(newclaimedJPEGPerShard[i]));
         }
       });
@@ -834,33 +834,33 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeETHPerShard = await pethInstance[
           'cumulativeETHPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         const oldclaimedETHPerShard = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           oldclaimedETHPerShard.push(
-            await pethInstance['claimedETHPerShard(uint256)'](tokenId),
+            await pethInstance['claimedETHPerShard(uint256)'](shardId),
           );
         }
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
         const newclaimedETHPerShard = [];
-        for (let i = 0; i < tokenIds.length; i++) {
+        for (let i = 0; i < shardIds.length; i++) {
           newclaimedETHPerShard.push(
             cumulativeETHPerShard.sub(oldclaimedETHPerShard[i]),
           );
         }
 
-        for (let i = 0; i < tokenIds.length; i++) {
+        for (let i = 0; i < shardIds.length; i++) {
           expect(
-            await pethInstance['claimedETHPerShard(uint256)'](tokenIds[i]),
+            await pethInstance['claimedETHPerShard(uint256)'](shardIds[i]),
           ).to.eq(oldclaimedETHPerShard[i].add(newclaimedETHPerShard[i]));
         }
       });
@@ -945,18 +945,18 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeETHPerShard = await pethInstance[
           'cumulativeETHPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         let claimedETH = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedETH = claimedETH.add(
             cumulativeETHPerShard.sub(
               await pethInstance.callStatic['claimedETHPerShard(uint256)'](
-                tokenId,
+                shardId,
               ),
             ),
           );
@@ -970,7 +970,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
         const newAccruedFees = await pethInstance.callStatic['accruedFees()']();
 
@@ -1057,19 +1057,19 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeJPEGPerShard = await pethInstance[
           'cumulativeJPEGPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         let claimedJPEG = BigNumber.from(0);
 
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedJPEG = claimedJPEG.add(
             cumulativeJPEGPerShard.sub(
               await pethInstance.callStatic['claimedJPEGPerShard(uint256)'](
-                tokenId,
+                shardId,
               ),
             ),
           );
@@ -1083,7 +1083,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
         const newAccruedJPEG = await pethInstance['accruedJPEG()']();
 
@@ -1170,18 +1170,18 @@ export function describeBehaviorOfShardVaultIO(
           'cumulativeJPEGPerShard()'
         ]();
 
-        const tokenIds = [];
+        const shardIds = [];
         let claimedJPEG = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedJPEG = claimedJPEG.add(
             cumulativeJPEGPerShard.sub(
               await pethInstance.callStatic['claimedJPEGPerShard(uint256)'](
-                tokenId,
+                shardId,
               ),
             ),
           );
@@ -1194,7 +1194,7 @@ export function describeBehaviorOfShardVaultIO(
         const claimedJPEGMinusFee = claimedJPEG.sub(jpegFee);
 
         await expect(() =>
-          pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+          pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
         ).to.changeTokenBalances(
           jpeg,
           [depositor, pethInstance],
@@ -1285,18 +1285,18 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeETHPerShard = await pethInstance[
           'cumulativeETHPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         let claimedETH = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedETH = claimedETH.add(
             cumulativeETHPerShard.sub(
               await pethInstance.callStatic['claimedETHPerShard(uint256)'](
-                tokenId,
+                shardId,
               ),
             ),
           );
@@ -1309,7 +1309,7 @@ export function describeBehaviorOfShardVaultIO(
         const claimedETHMinusFee = claimedETH.sub(ETHFee);
 
         await expect(() =>
-          pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+          pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [
@@ -1386,17 +1386,17 @@ export function describeBehaviorOfShardVaultIO(
             stakeTimeStamp + duration,
           ]);
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__YieldClaimingForbidden',
@@ -1480,17 +1480,17 @@ export function describeBehaviorOfShardVaultIO(
               poolInfoIndex,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 111; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__InsufficientShards',
@@ -1574,19 +1574,19 @@ export function describeBehaviorOfShardVaultIO(
               poolInfoIndex,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(secondDepositor)
-              ['claimYield(uint256[])'](tokenIds),
+              ['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__NotShardOwner',
@@ -1675,20 +1675,20 @@ export function describeBehaviorOfShardVaultIO(
               poolInfoIndex,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               instance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__VaultTokenIdMismatch',
+            'ShardVault__VaultShardIdMismatch',
           );
         });
       });
@@ -1714,33 +1714,33 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeETHPerShard = await pethInstance[
           'cumulativeETHPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         const oldclaimedETHPerShard = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           oldclaimedETHPerShard.push(
-            await pethInstance['claimedETHPerShard(uint256)'](tokenId),
+            await pethInstance['claimedETHPerShard(uint256)'](shardId),
           );
         }
 
         await pethInstance
           .connect(depositor)
-          ['claimExcessETH(uint256[])'](tokenIds);
+          ['claimExcessETH(uint256[])'](shardIds);
 
         const newclaimedETHPerShard = [];
-        for (let i = 0; i < tokenIds.length; i++) {
+        for (let i = 0; i < shardIds.length; i++) {
           newclaimedETHPerShard.push(
             cumulativeETHPerShard.sub(oldclaimedETHPerShard[i]),
           );
         }
 
-        for (let i = 0; i < tokenIds.length; i++) {
+        for (let i = 0; i < shardIds.length; i++) {
           expect(
-            await pethInstance['claimedETHPerShard(uint256)'](tokenIds[i]),
+            await pethInstance['claimedETHPerShard(uint256)'](shardIds[i]),
           ).to.eq(oldclaimedETHPerShard[i].add(newclaimedETHPerShard[i]));
         }
       });
@@ -1762,18 +1762,18 @@ export function describeBehaviorOfShardVaultIO(
         const cumulativeETHPerShard = await pethInstance[
           'cumulativeETHPerShard()'
         ]();
-        const tokenIds = [];
+        const shardIds = [];
         let claimedETH = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedETH = claimedETH.add(
             cumulativeETHPerShard.sub(
               await pethInstance.callStatic['claimedETHPerShard(uint256)'](
-                tokenId,
+                shardId,
               ),
             ),
           );
@@ -1782,7 +1782,7 @@ export function describeBehaviorOfShardVaultIO(
         await expect(() =>
           pethInstance
             .connect(depositor)
-            ['claimExcessETH(uint256[])'](tokenIds),
+            ['claimExcessETH(uint256[])'](shardIds),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [claimedETH, claimedETH.mul(ethers.constants.NegativeOne)],
@@ -1804,19 +1804,19 @@ export function describeBehaviorOfShardVaultIO(
             punkId,
           );
 
-        const tokenIds = [];
+        const shardIds = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
         }
 
         await expect(() =>
           pethInstance
             .connect(depositor)
-            ['claimExcessETH(uint256[])'](tokenIds),
+            ['claimExcessETH(uint256[])'](shardIds),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [ethers.constants.Zero, ethers.constants.Zero],
@@ -1833,19 +1833,19 @@ export function describeBehaviorOfShardVaultIO(
             .connect(secondDepositor)
             .deposit({ value: ethers.utils.parseEther('100') });
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__ClaimingExcessETHForbidden',
@@ -1928,19 +1928,19 @@ export function describeBehaviorOfShardVaultIO(
               minETH,
               poolInfoIndex,
             );
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__ClaimingExcessETHForbidden',
@@ -1962,19 +1962,19 @@ export function describeBehaviorOfShardVaultIO(
               punkId,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 111; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__InsufficientShards',
@@ -1996,19 +1996,19 @@ export function describeBehaviorOfShardVaultIO(
               punkId,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(secondDepositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__NotShardOwner',
@@ -2031,22 +2031,22 @@ export function describeBehaviorOfShardVaultIO(
               punkId,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               instance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__VaultTokenIdMismatch',
+            'ShardVault__VaultShardIdMismatch',
           );
         });
       });
