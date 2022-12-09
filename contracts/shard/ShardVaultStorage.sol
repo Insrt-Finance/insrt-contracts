@@ -9,6 +9,9 @@ library ShardVaultStorage {
         uint256 shardValue;
         uint256 accruedFees;
         uint256 conversionBuffer;
+        uint64 whitelistEndsAt;
+        uint16 reservedShards;
+        uint16 maxUserShards;
         uint16 count;
         uint16 maxSupply;
         uint16 totalSupply;
@@ -24,8 +27,10 @@ library ShardVaultStorage {
         address collection;
         bool isInvested;
         bool divested;
+        bool isEnabled;
         bool isPUSDVault;
         EnumerableSet.UintSet ownedTokenIds;
+        mapping(address => uint16) userShards;
     }
 
     bytes32 internal constant STORAGE_SLOT =

@@ -6,6 +6,7 @@ import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { IERC173 } from '@solidstate/contracts/interfaces/IERC173.sol';
+import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
@@ -36,7 +37,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
-    address internal immutable BOOSTER;
+    address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
@@ -50,7 +51,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         address lpFarm,
         address curvePUSDPool,
         address curvePETHPool,
-        address booster,
+        address dawnOfInsrt,
         address marketplaceHelper
     ) {
         SHARD_COLLECTION = shardCollection;
@@ -62,7 +63,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         LP_FARM = lpFarm;
         CURVE_PUSD_POOL = curvePUSDPool;
         CURVE_PETH_POOL = curvePETHPool;
-        BOOSTER = booster;
+        DAWN_OF_INSRT = dawnOfInsrt;
         MARKETPLACE_HELPER = marketplaceHelper;
     }
 
@@ -91,27 +92,49 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _deposit() internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        if (!l.isEnabled) {
+            revert ShardVault__NotEnabled();
+        }
+
+        uint16 maxSupply = l.maxSupply;
+        uint16 balance = l.userShards[msg.sender];
+        uint16 maxUserShards = l.maxUserShards;
+
+        if (balance == maxUserShards) {
+            revert ShardVault__MaxUserShards();
+        }
+
+        if (block.timestamp < l.whitelistEndsAt) {
+            _enforceWhitelist(msg.sender);
+            maxSupply = l.reservedShards;
+        }
+
         uint256 amount = msg.value;
         uint256 shardValue = l.shardValue;
         uint16 totalSupply = l.totalSupply;
-        uint16 maxSupply = l.maxSupply;
 
         if (amount % shardValue != 0 || amount == 0) {
             revert ShardVault__InvalidDepositAmount();
         }
-        if (l.isInvested || totalSupply == maxSupply) {
+        if (totalSupply == maxSupply || l.isInvested) {
             revert ShardVault__DepositForbidden();
         }
 
         uint16 shards = uint16(amount / shardValue);
         uint16 excessShards;
 
-        if (shards + totalSupply >= maxSupply) {
-            excessShards = shards + totalSupply - maxSupply;
+        if (balance + shards > maxUserShards) {
+            excessShards = shards + balance - maxUserShards;
+            shards -= excessShards;
         }
 
-        shards -= excessShards;
+        if (shards + totalSupply > maxSupply) {
+            excessShards += shards + totalSupply - maxSupply;
+            shards = maxSupply - totalSupply;
+        }
+
         l.totalSupply += shards;
+        l.userShards[msg.sender] += shards;
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
@@ -129,94 +152,134 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice burn held shards before NFT acquisition and withdraw corresponding ETH
-     * @param tokenIds list of ids of shards to burn
+     * @param shardIds list of ids of shards to burn
      */
-    function _withdraw(uint256[] memory tokenIds) internal {
+    function _withdraw(uint256[] memory shardIds) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         if (l.isInvested || l.totalSupply == l.maxSupply) {
             revert ShardVault__WithdrawalForbidden();
         }
 
-        uint16 tokens = uint16(tokenIds.length);
+        uint16 shards = uint16(shardIds.length);
 
-        if (IShardCollection(SHARD_COLLECTION).balanceOf(msg.sender) < tokens) {
+        if (l.userShards[msg.sender] < shards) {
             revert ShardVault__InsufficientShards();
         }
 
         unchecked {
-            for (uint256 i; i < tokens; ++i) {
+            for (uint256 i; i < shards; ++i) {
                 if (
-                    IShardCollection(SHARD_COLLECTION).ownerOf(tokenIds[i]) !=
+                    IShardCollection(SHARD_COLLECTION).ownerOf(shardIds[i]) !=
                     msg.sender
                 ) {
                     revert ShardVault__NotShardOwner();
                 }
 
-                (address vault, ) = _parseTokenId(tokenIds[i]);
+                (address vault, ) = _parseTokenId(shardIds[i]);
                 if (vault != address(this)) {
                     revert ShardVault__VaultTokenIdMismatch();
                 }
 
-                IShardCollection(SHARD_COLLECTION).burn(tokenIds[i]);
+                IShardCollection(SHARD_COLLECTION).burn(shardIds[i]);
             }
         }
 
-        l.totalSupply -= tokens;
+        l.totalSupply -= shards;
+        l.userShards[msg.sender] -= shards;
 
-        payable(msg.sender).sendValue(tokens * l.shardValue);
+        payable(msg.sender).sendValue(shards * l.shardValue);
     }
 
     /**
      * @notice returns total minted shards amount
+     * @return totalSupply total minted shards amount
      */
-    function _totalSupply() internal view returns (uint16) {
-        return ShardVaultStorage.layout().totalSupply;
+    function _totalSupply() internal view returns (uint16 totalSupply) {
+        totalSupply = ShardVaultStorage.layout().totalSupply;
     }
 
     /**
      * @notice returns maximum possible minted shards
+     * @return maxSupply maximum possible minted shards
      */
-    function _maxSupply() internal view returns (uint16) {
-        return ShardVaultStorage.layout().maxSupply;
+    function _maxSupply() internal view returns (uint16 maxSupply) {
+        maxSupply = ShardVaultStorage.layout().maxSupply;
     }
 
     /**
-     * @notice returns ETH value of shard
+     * @notice returns ETH value of a shard
+     * @return shardValue ETH value of a shard
      */
-    function _shardValue() internal view returns (uint256) {
-        return ShardVaultStorage.layout().shardValue;
+    function _shardValue() internal view returns (uint256 shardValue) {
+        shardValue = ShardVaultStorage.layout().shardValue;
     }
 
     /**
      * @notice return ShardCollection address
+     * @return shardCollection address
      */
-    function _shardCollection() internal view returns (address) {
-        return SHARD_COLLECTION;
+    function _shardCollection()
+        internal
+        view
+        returns (address shardCollection)
+    {
+        shardCollection = SHARD_COLLECTION;
     }
 
     /**
-     * @notice return minted token count
-     * @dev does not reduce when tokens are burnt
+     * @notice return minted token count; does not reduce when tokens are burnt
+     * @return count minted token count
      */
-    function _count() internal view returns (uint16) {
-        return ShardVaultStorage.layout().count;
+    function _count() internal view returns (uint16 count) {
+        count = ShardVaultStorage.layout().count;
     }
 
     /**
-     * @notice return isInvested flag state
-     * @return bool isInvested flag
+     * @notice return isInvested flag state; indicates whether last asset purchase has been made
+     * @return isInvested isInvested flag
      */
-    function _isInvested() internal view returns (bool) {
-        return ShardVaultStorage.layout().isInvested;
+    function _isInvested() internal view returns (bool isInvested) {
+        isInvested = ShardVaultStorage.layout().isInvested;
+    }
+
+    /**
+     * @notice return maxUserShards
+     * @return maxUserShards maxUserShards value
+     */
+    function _maxUserShards() internal view returns (uint16 maxUserShards) {
+        maxUserShards = ShardVaultStorage.layout().maxUserShards;
+    }
+
+    /**
+     * @notice return vault shards owned by an account
+     * @param account address owning shards
+     * @return userShards shards owned by account
+     */
+    function _userShards(
+        address account
+    ) internal view returns (uint16 userShards) {
+        userShards = ShardVaultStorage.layout().userShards[account];
+    }
+
+    /**
+     * @notice return amount of shards reserved for whitelist
+     * @return reserverdShards amount of shards reserved for whitelist
+     */
+    function _reservedShards() internal view returns (uint16 reserverdShards) {
+        reserverdShards = ShardVaultStorage.layout().reservedShards;
     }
 
     /**
      * @notice return array with owned token IDs
-     * @return uint256[]  array of owned token IDs
+     * @return ownedTokenIds  array of owned token IDs
      */
-    function _ownedTokenIds() internal view returns (uint256[] memory) {
-        return ShardVaultStorage.layout().ownedTokenIds.toArray();
+    function _ownedTokenIds()
+        internal
+        view
+        returns (uint256[] memory ownedTokenIds)
+    {
+        ownedTokenIds = ShardVaultStorage.layout().ownedTokenIds.toArray();
     }
 
     /**
@@ -766,7 +829,41 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice returns accrued fees
+     * @notice sets the whitelistEndsAt timestamp
+     * @param whitelistEndsAt timestamp of whitelist end
+     */
+    function _setWhitelistEndsAt(uint64 whitelistEndsAt) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        l.whitelistEndsAt = whitelistEndsAt;
+    }
+
+    /**
+     * @notice sets the maximum amount of shard to be minted during whitelist
+     * @param reservedShards whitelist shard amount
+     */
+    function _setReservedShards(uint16 reservedShards) internal {
+        ShardVaultStorage.layout().reservedShards = reservedShards;
+    }
+
+    /**
+     * @notice sets the isEnabled flag
+     * @param isEnabled boolean value
+     */
+    function _setIsEnabled(bool isEnabled) internal {
+        ShardVaultStorage.layout().isEnabled = isEnabled;
+    }
+
+    /**
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
+     * @param maxUserShards new maxUserShards value
+     */
+    function _setMaxUserShards(uint16 maxUserShards) internal {
+        ShardVaultStorage.layout().maxUserShards = maxUserShards;
+    }
+
+    /**
+     * @notice returns sum of total fees (sale, yield, acquisition) accrued over the entire lifetime of the vault; accounts for fee withdrawals
      * @return fees accrued fees
      */
     function _accruedFees() internal view returns (uint256 fees) {
@@ -799,6 +896,54 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _yieldFeeBP() internal view returns (uint16 yieldFeeBP) {
         yieldFeeBP = ShardVaultStorage.layout().yieldFeeBP;
+    }
+
+    /**
+     * @notice returns the amount of shards a given account has left to mint
+     * @param account address to calculate for
+     * @return shards the amount of shards the account may mint
+     */
+    function _userRemainingShards(
+        address account
+    ) internal view returns (uint256 shards) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        if (l.maxUserShards > l.userShards[account]) {
+            shards = l.maxUserShards - l.userShards[account];
+        }
+    }
+
+    /**
+     * @notice returns how many remaining reservations for shards are left; returns 0 if whitelist period has elapsed
+     * @return shards the amount of remaining shard reservations
+     */
+    function _remainingShardReservations()
+        internal
+        view
+        returns (uint256 shards)
+    {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        if (block.timestamp < l.whitelistEndsAt) {
+            shards = l.maxSupply - l.totalSupply;
+        }
+    }
+
+    /**
+     * @notice returns vault-wide amount of shards that can still be minted
+     * @return shards amount of shards which can still be minted
+     */
+    function _remainingShards() internal view returns (uint256 shards) {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        shards = l.maxSupply - l.totalSupply;
+    }
+
+    /**
+     * @notice check to ensure account is whitelisted (holding a DAWN_OF_INSRT token)
+     * @param account address to check
+     */
+    function _enforceWhitelist(address account) internal view {
+        if (IERC721(DAWN_OF_INSRT).balanceOf(account) == 0) {
+            revert ShardVault__NotWhitelisted();
+        }
     }
 
     /**

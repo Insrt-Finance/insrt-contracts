@@ -132,13 +132,9 @@ abstract contract IndexInternal is
      * @inheritdoc ERC4626BaseInternal
      * @dev assets and shares are pegged 1:1, so this override is made for gas savings
      */
-    function _convertToAssets(uint256 shareAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint256 assetAmount)
-    {
+    function _convertToAssets(
+        uint256 shareAmount
+    ) internal view virtual override returns (uint256 assetAmount) {
         assetAmount = shareAmount;
     }
 
@@ -146,13 +142,9 @@ abstract contract IndexInternal is
      * @inheritdoc ERC4626BaseInternal
      * @dev assets and shares are pegged 1:1, so this override is made for gas savings
      */
-    function _convertToShares(uint256 assetAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint256 shareAmount)
-    {
+    function _convertToShares(
+        uint256 assetAmount
+    ) internal view virtual override returns (uint256 shareAmount) {
         shareAmount = assetAmount;
     }
 
@@ -160,13 +152,9 @@ abstract contract IndexInternal is
      * @inheritdoc ERC4626BaseInternal
      * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewDeposit
      */
-    function _previewMint(uint256 shareAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint256 assetAmount)
-    {
+    function _previewMint(
+        uint256 shareAmount
+    ) internal view virtual override returns (uint256 assetAmount) {
         assetAmount = _previewDeposit(shareAmount);
     }
 
@@ -174,13 +162,9 @@ abstract contract IndexInternal is
      * @inheritdoc ERC4626BaseInternal
      * @dev assets and shares are pegged 1:1, so this function acts as an alias of _previewRedeem
      */
-    function _previewWithdraw(uint256 assetAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint256 shareAmount)
-    {
+    function _previewWithdraw(
+        uint256 assetAmount
+    ) internal view virtual override returns (uint256 shareAmount) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         shareAmount = STREAMING_FEE_FACTOR_PER_SECOND_64x64
@@ -194,13 +178,9 @@ abstract contract IndexInternal is
      * @inheritdoc ERC4626BaseInternal
      * @dev apply exit fee and streaming fee to amount out
      */
-    function _previewRedeem(uint256 shareAmount)
-        internal
-        view
-        virtual
-        override
-        returns (uint256 assetAmount)
-    {
+    function _previewRedeem(
+        uint256 shareAmount
+    ) internal view virtual override returns (uint256 assetAmount) {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         assetAmount = _applyExitFee(
@@ -213,11 +193,9 @@ abstract contract IndexInternal is
      * @param principal the token amount to which fee is applied
      * @return amountOut amount after fee
      */
-    function _applyExitFee(uint256 principal)
-        internal
-        view
-        returns (uint256 amountOut)
-    {
+    function _applyExitFee(
+        uint256 principal
+    ) internal view returns (uint256 amountOut) {
         amountOut = EXIT_FEE_FACTOR_64x64.mulu(principal);
     }
 
@@ -228,11 +206,10 @@ abstract contract IndexInternal is
      * @param timestamp timestamp of beginning of fee accrual period
      * @return amountOut amount after fee
      */
-    function _applyStreamingFee(uint256 principal, uint256 timestamp)
-        internal
-        view
-        returns (uint256 amountOut)
-    {
+    function _applyStreamingFee(
+        uint256 principal,
+        uint256 timestamp
+    ) internal view returns (uint256 amountOut) {
         amountOut = STREAMING_FEE_FACTOR_PER_SECOND_64x64
             .pow(block.timestamp - timestamp)
             .mulu(principal);
@@ -299,9 +276,10 @@ abstract contract IndexInternal is
      * @param amounts token quantities to deposit, in asset-sorted order
      * @param userData encoded join parameters
      */
-    function _joinPool(uint256[] memory amounts, bytes memory userData)
-        internal
-    {
+    function _joinPool(
+        uint256[] memory amounts,
+        bytes memory userData
+    ) internal {
         IndexStorage.Layout storage l = IndexStorage.layout();
 
         IVault.JoinPoolRequest memory request = IVault.JoinPoolRequest(

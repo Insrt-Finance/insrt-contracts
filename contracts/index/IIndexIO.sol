@@ -12,8 +12,10 @@ interface IIndexIO {
      * @param poolTokenAmounts quantities of underlying pool tokens deposited
      * @param receiver recipient of initial BPT supply
      */
-    function initialize(uint256[] memory poolTokenAmounts, address receiver)
-        external;
+    function initialize(
+        uint256[] memory poolTokenAmounts,
+        address receiver
+    ) external;
 
     /**
      * @notice trigger collection of accrued streaming from given addresses

@@ -16,16 +16,18 @@ interface IVault {
     /// @notice Allows users to deposit `token`. Contracts can't call this function
     /// @param _to The address to send the tokens to
     /// @param _amount The amount to deposit
-    function deposit(address _to, uint256 _amount)
-        external
-        returns (uint256 shares);
+    function deposit(
+        address _to,
+        uint256 _amount
+    ) external returns (uint256 shares);
 
     /// @notice Allows users to withdraw tokens. Contracts can't call this function
     /// @param _to The address to send the tokens to
     /// @param _shares The amount of shares to burn
-    function withdraw(address _to, uint256 _shares)
-        external
-        returns (uint256 backingTokens);
+    function withdraw(
+        address _to,
+        uint256 _shares
+    ) external returns (uint256 backingTokens);
 
     /// @return The underlying tokens per share
     function exchangeRate() external view returns (uint256);

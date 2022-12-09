@@ -61,6 +61,26 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__TargetLTVReached();
 
     /**
+     * @notice thrown when attempting to act without being whitelisted
+     */
+    error ShardVault__NotWhitelisted();
+
+    /**
+     * @notice thrown when attempting to call a disabled function
+     */
+    error ShardVault__NotEnabled();
+
+    /**
+     * @notice thrown when attempting to set whitelist deadline without setting reserved shards
+     */
+    error ShardVault__NoReservedShards();
+
+    /**
+     * @notice thrown when user is attempting to deposit when already owning max shards
+     */
+    error ShardVault__MaxUserShards();
+
+    /**
      * @notice thrown when the actual downpayment amount is too small
      */
     error ShardVault__DownPaymentInsufficient();
