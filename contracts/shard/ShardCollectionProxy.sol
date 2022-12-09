@@ -16,11 +16,10 @@ contract ShardCollectionProxy is SolidStateDiamond {
         string memory symbol,
         string memory baseURI
     ) {
-        ERC721MetadataStorage.Layout
-            storage metadataStorage = ERC721MetadataStorage.layout();
+        ERC721MetadataStorage.Layout storage l = ERC721MetadataStorage.layout();
 
-        metadataStorage.name = name;
-        metadataStorage.symbol = symbol;
-        metadataStorage.baseURI = baseURI;
+        l.name = name;
+        l.symbol = symbol;
+        l.baseURI = baseURI;
     }
 }
