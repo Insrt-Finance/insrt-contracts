@@ -12,6 +12,8 @@ library ShardVaultStorage {
         uint256 conversionBuffer;
         uint256 cumulativeETHPerShard;
         uint256 cumulativeJPEGPerShard;
+        mapping(uint256 => uint256) claimedETHPerShard;
+        mapping(uint256 => uint256) claimedJPEGPerShard;
         uint64 whitelistEndsAt;
         uint16 reservedShards;
         uint16 maxUserShards;
@@ -34,8 +36,6 @@ library ShardVaultStorage {
         bool isYieldClaiming;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => uint16) userShards;
-        mapping(uint256 => uint256) claimedETHPerShard;
-        mapping(uint256 => uint256) claimedJPEGPerShard;
     }
 
     bytes32 internal constant STORAGE_SLOT =
