@@ -9,6 +9,7 @@ import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInt
 import { IShardCollectionInternal } from './IShardCollectionInternal.sol';
 import { IShardVault } from './IShardVault.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
+import { ShardId } from './ShardId.sol';
 
 /**
  * @title Internal logic for ShardCollection
@@ -64,7 +65,7 @@ contract ShardCollectionInternal is
         address to,
         uint256 tokenId
     ) internal virtual override {
-        (address shardVault, ) = _parseTokenId(tokenId);
+        (address shardVault, ) = ShardId.parseTokenId(tokenId);
         IShardVault(shardVault).implicitClaim(from, to, tokenId);
     }
 
@@ -90,18 +91,5 @@ contract ShardCollectionInternal is
      */
     function _setSymbol(string memory symbol) internal {
         ERC721MetadataStorage.layout().symbol = symbol;
-    }
-
-    /**
-     * @notice parses a tokenId to extract seeded vault address and internalId
-     * @param tokenId tokenId to parse
-     * @return vault seeded vault address
-     * @return internalId internal ID
-     */
-    function _parseTokenId(
-        uint256 tokenId
-    ) internal pure returns (address vault, uint96 internalId) {
-        vault = address(uint160(tokenId >> 96));
-        internalId = uint96(tokenId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 }

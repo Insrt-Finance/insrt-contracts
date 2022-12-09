@@ -12,6 +12,7 @@ import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInt
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
 import { IShardCollection } from './IShardCollection.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
+import { ShardId } from './ShardId.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
@@ -133,7 +134,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             for (uint256 i; i < shards; ++i) {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    _formatTokenId(uint96(++l.count))
+                    ShardId.formatTokenId(uint96(++l.count))
                 );
             }
         }
@@ -272,7 +273,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _formatTokenId(
         uint96 internalId
     ) internal view returns (uint256 tokenId) {
-        tokenId = ((uint256(uint160(address(this))) << 96) | internalId);
+        tokenId = ShardId.formatTokenId(internalId);
     }
 
     /**
@@ -284,8 +285,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _parseTokenId(
         uint256 tokenId
     ) internal pure returns (address vault, uint96 internalId) {
-        vault = address(uint160(tokenId >> 96));
-        internalId = uint96(tokenId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
+        (vault, internalId) = ShardId.parseTokenId(tokenId);
     }
 
     /**
@@ -1238,7 +1238,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @param tokenId tokenId to check
      */
     function _enforceVaultTokenIdMatch(uint256 tokenId) internal view {
-        (address vault, ) = _parseTokenId(tokenId);
+        (address vault, ) = ShardId.parseTokenId(tokenId);
         if (vault != address(this)) {
             revert ShardVault__VaultTokenIdMismatch();
         }
