@@ -37,22 +37,22 @@ interface IShardVaultView {
     function count() external view returns (uint16 count);
 
     /**
-     * @notice formats a tokenId given the internalId and address of ShardVault contract
+     * @notice formats a shardId given the internalId and address of ShardVault contract
      * @param internalId the internal ID
-     * @return tokenId the formatted tokenId
+     * @return shardId the formatted shardId
      */
-    function formatTokenId(
+    function formatShardId(
         uint96 internalId
-    ) external view returns (uint256 tokenId);
+    ) external view returns (uint256 shardId);
 
     /**
-     * @notice parses a tokenId to extract seeded vault address and internalId
-     * @param tokenId tokenId to parse
+     * @notice parses a shardId to extract seeded vault address and internalId
+     * @param shardId shardId to parse
      * @return vault seeded vault address
      * @return internalId internal ID
      */
-    function parseTokenId(
-        uint256 tokenId
+    function parseShardId(
+        uint256 shardId
     ) external pure returns (address vault, uint96 internalId);
 
     /**
@@ -72,10 +72,10 @@ interface IShardVaultView {
 
     /**
      * @notice returns total debt owed to jpeg'd vault for a given token
-     * @param tokenId id of token position pertains to
+     * @param shardId id of token position pertains to
      * @return debt total debt owed
      */
-    function totalDebt(uint256 tokenId) external view returns (uint256 debt);
+    function totalDebt(uint256 shardId) external view returns (uint256 debt);
 
     /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking

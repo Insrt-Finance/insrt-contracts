@@ -134,7 +134,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             for (uint256 i; i < shards; ++i) {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    ShardId.formatTokenId(uint96(++l.count))
+                    ShardId.formatShardId(uint96(++l.count))
                 );
             }
         }
@@ -162,7 +162,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             for (uint256 i; i < shards; ++i) {
                 uint256 shardId = shardIds[i];
                 _enforceShardOwnership(msg.sender, shardId);
-                _enforceVaultTokenIdMatch(shardId);
+                _enforceVaultShardIdMatch(shardId);
 
                 IShardCollection(SHARD_COLLECTION).burn(shardId);
             }
@@ -266,26 +266,26 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice formats a tokenId given the internalId and address of ShardVault contract
+     * @notice formats a shardId given the internalId and address of ShardVault contract
      * @param internalId the internal ID
-     * @return tokenId the formatted tokenId
+     * @return shardId the formatted shardId
      */
-    function _formatTokenId(
+    function _formatShardId(
         uint96 internalId
-    ) internal view returns (uint256 tokenId) {
-        tokenId = ShardId.formatTokenId(internalId);
+    ) internal view returns (uint256 shardId) {
+        shardId = ShardId.formatShardId(internalId);
     }
 
     /**
-     * @notice parses a tokenId to extract seeded vault address and internalId
-     * @param tokenId tokenId to parse
+     * @notice parses a shardId to extract seeded vault address and internalId
+     * @param shardId shardId to parse
      * @return vault seeded vault address
      * @return internalId internal ID
      */
-    function _parseTokenId(
-        uint256 tokenId
+    function _parseShardId(
+        uint256 shardId
     ) internal pure returns (address vault, uint96 internalId) {
-        (vault, internalId) = ShardId.parseTokenId(tokenId);
+        (vault, internalId) = ShardId.parseShardId(shardId);
     }
 
     /**
@@ -869,24 +869,24 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice sends excess ETH left over after vault has invested, to the msg.sender
-     * @param tokenIds array of shard IDs to claim with
+     * @param shardIds array of shard IDs to claim with
      */
-    function _claimExcessETH(uint256[] memory tokenIds) internal {
-        _claimExcessETH(msg.sender, tokenIds);
+    function _claimExcessETH(uint256[] memory shardIds) internal {
+        _claimExcessETH(msg.sender, shardIds);
     }
 
     /**
      * @notice sends excess ETH left over after vault has invested
      * @param account address making the claim
-     * @param tokenIds array of shard IDs to claim with
+     * @param shardIds array of shard IDs to claim with
      */
     function _claimExcessETH(
         address account,
-        uint256[] memory tokenIds
+        uint256[] memory shardIds
     ) private {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 tokens = tokenIds.length;
+        uint256 tokens = shardIds.length;
 
         _enforceNotYieldClaimingAndInvested();
         _enforceSufficientBalance(account, tokens);
@@ -897,14 +897,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
-                _enforceShardOwnership(account, tokenIds[i]);
-                _enforceVaultTokenIdMatch(tokenIds[i]);
+                uint256 shardId = shardIds[i];
+                _enforceShardOwnership(account, shardId);
+                _enforceVaultShardIdMatch(shardId);
 
                 claimedETHPerShard =
                     cumulativeETHPerShard -
-                    l.claimedETHPerShard[tokenIds[i]];
+                    l.claimedETHPerShard[shardId];
                 totalETH += claimedETHPerShard;
-                l.claimedETHPerShard[tokenIds[i]] += claimedETHPerShard;
+                l.claimedETHPerShard[shardId] += claimedETHPerShard;
             }
         }
 
@@ -913,21 +914,21 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to msg.sender
-     * @param tokenIds array of shard IDs to claim with
+     * @param shardIds array of shard IDs to claim with
      */
-    function _claimYield(uint256[] memory tokenIds) internal {
-        _claimYield(msg.sender, tokenIds);
+    function _claimYield(uint256[] memory shardIds) internal {
+        _claimYield(msg.sender, shardIds);
     }
 
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param account address making the yield claim
-     * @param tokenIds array of shard IDs to claim with
+     * @param shardIds array of shard IDs to claim with
      */
-    function _claimYield(address account, uint256[] memory tokenIds) private {
+    function _claimYield(address account, uint256[] memory shardIds) private {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 tokens = tokenIds.length;
+        uint256 tokens = shardIds.length;
 
         _enforceYieldClaiming();
         _enforceSufficientBalance(account, tokens);
@@ -943,22 +944,23 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
         unchecked {
             for (uint256 i; i < tokens; ++i) {
-                _enforceShardOwnership(account, tokenIds[i]);
-                _enforceVaultTokenIdMatch(tokenIds[i]);
+                uint256 shardId = shardIds[i];
+                _enforceShardOwnership(account, shardId);
+                _enforceVaultShardIdMatch(shardId);
 
                 //account for claimable ETH
                 claimedETHPerShard =
                     cumulativeETHPerShard -
-                    l.claimedETHPerShard[tokenIds[i]];
+                    l.claimedETHPerShard[shardId];
                 totalETH += claimedETHPerShard;
-                l.claimedETHPerShard[tokenIds[i]] += claimedETHPerShard;
+                l.claimedETHPerShard[shardId] += claimedETHPerShard;
 
                 //account for claimable JPEG
                 claimedJPEGPerShard =
                     cumulativeJPEGPerShard -
-                    l.claimedJPEGPerShard[tokenIds[i]];
+                    l.claimedJPEGPerShard[shardId];
                 totalJPEG += claimedJPEGPerShard;
-                l.claimedJPEGPerShard[tokenIds[i]] += claimedJPEGPerShard;
+                l.claimedJPEGPerShard[shardId] += claimedJPEGPerShard;
             }
         }
 
@@ -979,12 +981,12 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @dev only SHARD_COLLECTION proxy may call
      * @param from address transferring
      * @param to address receiving
-     * @param tokenId id of shard being transferred
+     * @param shardId id of shard being transferred
      */
     function _implicitClaim(
         address from,
         address to,
-        uint256 tokenId
+        uint256 shardId
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
@@ -992,18 +994,18 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             revert ShardVault__NotShardCollection();
         }
 
-        uint256[] memory tokenIds;
+        uint256[] memory shardIds;
         uint256[] memory temp = new uint256[](1);
-        temp[0] = tokenId;
-        tokenIds = temp;
+        temp[0] = shardId;
+        shardIds = temp;
 
         if (from != address(0)) {
             if (l.isYieldClaiming) {
-                _claimYield(from, tokenIds);
+                _claimYield(from, shardIds);
             }
 
             if (!l.isYieldClaiming && l.isInvested) {
-                _claimExcessETH(from, tokenIds);
+                _claimExcessETH(from, shardIds);
             }
 
             --l.userShards[from];
@@ -1220,27 +1222,27 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
-     * @notice check to ensure account owns a given tokenId corresponding to a shard
+     * @notice check to ensure account owns a given shardId corresponding to a shard
      * @param account address to check
-     * @param tokenId tokenId to check
+     * @param shardId shardId to check
      */
     function _enforceShardOwnership(
         address account,
-        uint256 tokenId
+        uint256 shardId
     ) internal view {
-        if (IShardCollection(SHARD_COLLECTION).ownerOf(tokenId) != account) {
+        if (IShardCollection(SHARD_COLLECTION).ownerOf(shardId) != account) {
             revert ShardVault__NotShardOwner();
         }
     }
 
     /**
-     * @notice check to ensure tokenId corresponds to vault
-     * @param tokenId tokenId to check
+     * @notice check to ensure shardId corresponds to vault
+     * @param shardId shardId to check
      */
-    function _enforceVaultTokenIdMatch(uint256 tokenId) internal view {
-        (address vault, ) = ShardId.parseTokenId(tokenId);
+    function _enforceVaultShardIdMatch(uint256 shardId) internal view {
+        (address vault, ) = ShardId.parseShardId(shardId);
         if (vault != address(this)) {
-            revert ShardVault__VaultTokenIdMismatch();
+            revert ShardVault__VaultShardIdMismatch();
         }
     }
 

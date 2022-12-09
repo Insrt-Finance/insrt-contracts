@@ -7,26 +7,26 @@ pragma solidity ^0.8.0;
  */
 library ShardId {
     /**
-     * @notice formats a tokenId given the internalId and address of ShardVault contract
+     * @notice formats a shardId given the internalId and address of ShardVault contract
      * @param internalId the internal ID
-     * @return tokenId the formatted tokenId
+     * @return shardId the formatted shardId
      */
-    function formatTokenId(
+    function formatShardId(
         uint96 internalId
-    ) internal view returns (uint256 tokenId) {
-        tokenId = ((uint256(uint160(address(this))) << 96) | internalId);
+    ) internal view returns (uint256 shardId) {
+        shardId = ((uint256(uint160(address(this))) << 96) | internalId);
     }
 
     /**
-     * @notice parses a tokenId to extract seeded vault address and internalId
-     * @param tokenId tokenId to parse
+     * @notice parses a shardId to extract seeded vault address and internalId
+     * @param shardId shardId to parse
      * @return vault seeded vault address
      * @return internalId internal ID
      */
-    function parseTokenId(
-        uint256 tokenId
+    function parseShardId(
+        uint256 shardId
     ) internal pure returns (address vault, uint96 internalId) {
-        vault = address(uint160(tokenId >> 96));
-        internalId = uint96(tokenId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
+        vault = address(uint160(shardId >> 96));
+        internalId = uint96(shardId & 0xFFFFFFFFFFFFFFFFFFFFFFFF);
     }
 }
