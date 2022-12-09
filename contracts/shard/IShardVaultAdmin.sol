@@ -13,22 +13,19 @@ interface IShardVaultAdmin {
      * @param calls  array of EncodedCall structs containing information to execute necessary low level
      * calls to purchase a punk
      * @param punkId id of punk
-     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
-     * any excess ETH for claiming
      */
     function purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        bool isFinalPurchase
+        uint256 punkId
     ) external payable;
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pUSD borrowed pUSD
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPUSD(
         uint256 punkId,
@@ -37,12 +34,12 @@ interface IShardVaultAdmin {
     ) external returns (uint256 pUSD);
 
     /**
-     * @notice borrows pETH by collateralizing a punk on JPEG'd
+     * @notice borrows pETH by collateralizing a punk on JPEG'
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pETH borrowed pETH
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPETH(
         uint256 punkId,
@@ -89,8 +86,6 @@ interface IShardVaultAdmin {
      * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
      * the pool to deposit into
      * @param insure whether to insure position
-     * @param isFinalPurchase indicates whether this is the final purchase for the vault, to free up
-     * any excess ETH for claiming
      */
     function investPunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
@@ -98,8 +93,7 @@ interface IShardVaultAdmin {
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
-        bool insure,
-        bool isFinalPurchase
+        bool insure
     ) external;
 
     /**
@@ -155,9 +149,8 @@ interface IShardVaultAdmin {
     ) external;
 
     /**
-     * @notice return the maximum shards a user is allowed to mint
-     * @dev theoretically a user may acquire more than this amount via transfers, but once this amount is exceeded
-     * said user may not deposit more
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
      * @param maxUserShards new maxUserShards value
      */
     function setMaxUserShards(uint16 maxUserShards) external;
@@ -270,4 +263,9 @@ interface IShardVaultAdmin {
         uint256 minETH,
         uint256 poolInfoIndex
     ) external payable returns (uint256 providedETH, uint256 providedJPEG);
+
+    /**
+     * @notice makes the any ETH besides the vault accrued fees claimable
+     */
+    function makeUnusedETHClaimable() external;
 }
