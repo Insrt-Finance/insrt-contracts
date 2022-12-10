@@ -9,6 +9,7 @@ import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInt
 import { IShardCollectionInternal } from './IShardCollectionInternal.sol';
 import { IShardVault } from './IShardVault.sol';
 import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
+import { ShardId } from './ShardId.sol';
 
 /**
  * @title Internal logic for ShardCollection
@@ -62,12 +63,10 @@ contract ShardCollectionInternal is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 shardId
     ) internal virtual override {
-        (address shardVault, ) = IShardVault(
-            ShardCollectionStorage.layout().shardVaultDiamond
-        ).parseTokenId(tokenId);
-        IShardVault(shardVault).beforeShardTransfer(from, to, tokenId);
+        (address shardVault, ) = ShardId.parseShardId(shardId);
+        IShardVault(shardVault).implicitClaim(from, to, shardId);
     }
 
     /**

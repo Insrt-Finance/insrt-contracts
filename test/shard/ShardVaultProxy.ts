@@ -61,10 +61,10 @@ describe('ShardVaultProxy', () => {
   const pethPunkVaultHelper = '0x2bE665ee27096344B8f015b1952D3dFDb4Db4691';
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
+  const maxShardsPerUser = BigNumber.from('10');
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
-  const maxShardsPerUser = BigNumber.from('10');
   const ltvBufferBP = BigNumber.from('500');
   const ltvDeviationBP = BigNumber.from('200');
   const pUSDConversionBuffer = BigNumber.from('1000178');
@@ -148,12 +148,7 @@ describe('ShardVaultProxy', () => {
     ).deploy();
     const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
-    ).deploy(
-      'ShardVaultCollection',
-      'SVC',
-      'shards',
-      shardVaultDiamond.address,
-    );
+    ).deploy('ShardVaultCollection', 'SVC', 'shards');
 
     const shardCollectionFacetCuts = [
       await new ShardCollection__factory(deployer).deploy(),

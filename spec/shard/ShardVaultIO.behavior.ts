@@ -15,7 +15,7 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { formatTokenId } from './ShardVaultView.behavior';
+import { formatShardId } from './ShardVaultView.behavior';
 import { IERC20 } from '../../typechain-types/@solidstate/contracts/interfaces/IERC20';
 
 export interface ShardVaultIOBehaviorArgs {
@@ -188,7 +188,7 @@ export function describeBehaviorOfShardVaultIO(
           [depositAmount, depositAmount.mul(ethers.constants.NegativeOne)],
         );
       });
-      it('mints tokens from ShardCollection to depositor', async () => {
+      it('mints shards from ShardCollection to depositor', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
@@ -201,9 +201,7 @@ export function describeBehaviorOfShardVaultIO(
           shards,
         );
         expect(
-          await instance.callStatic['shardBalances(address)'](
-            depositor.address,
-          ),
+          await instance.callStatic['userShards(address)'](depositor.address),
         ).to.eq(shards);
       });
       it('increases total shard supply', async () => {
@@ -227,7 +225,7 @@ export function describeBehaviorOfShardVaultIO(
           depositAmount.div(ethers.utils.parseEther('1.0')),
         );
       });
-      it('increases shardBalances', async () => {
+      it('increases userShards', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
@@ -236,10 +234,11 @@ export function describeBehaviorOfShardVaultIO(
         const shards = depositAmount.div(
           await instance.callStatic['shardValue()'](),
         );
-        expect(
-          await instance['shardBalances(address)'](depositor.address),
-        ).to.eq(shards);
+        expect(await instance['userShards(address)'](depositor.address)).to.eq(
+          shards,
+        );
       });
+
       it('returns any excess ETH after MaxUserShards is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         const depositOneAmount = ethers.utils.parseEther('5');
@@ -271,6 +270,7 @@ export function describeBehaviorOfShardVaultIO(
           [change, change.mul(ethers.constants.NegativeOne)],
         );
       });
+
       it('returns any excess ETH after maxSupply is reached, if depositor has not reached MaxUserShards', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         const depositOneAmount = ethers.utils.parseEther('5');
@@ -406,10 +406,9 @@ export function describeBehaviorOfShardVaultIO(
 
           await instance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPUSD,
               punkId,
-              true,
             );
 
           await expect(
@@ -475,41 +474,41 @@ export function describeBehaviorOfShardVaultIO(
     describe('#withdraw(uint256[])', () => {
       const depositAmount = ethers.utils.parseEther('10');
 
-      it('returns ETH analogous to tokens burnt', async () => {
+      it('returns ETH analogous to shards burnt', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
-        const withdrawTokens = 5;
-        const tokens = [];
-        for (let i = 0; i < withdrawTokens; i++) {
-          tokens.push(
+        const withdrawShards = 5;
+        const shards = [];
+        for (let i = 0; i < withdrawShards; i++) {
+          shards.push(
             await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
           );
         }
 
         expect(() =>
-          instance.connect(depositor)['withdraw(uint256[])'](tokens),
+          instance.connect(depositor)['withdraw(uint256[])'](shards),
         ).to.changeEtherBalances(
           [instance, depositor],
           [
             ethers.utils
-              .parseEther(withdrawTokens.toString())
+              .parseEther(withdrawShards.toString())
               .mul(ethers.constants.NegativeOne),
-            ethers.utils.parseEther(withdrawTokens.toString()),
+            ethers.utils.parseEther(withdrawShards.toString()),
           ],
         );
       });
 
-      it('decreases total supply by tokens burnt', async () => {
+      it('decreases total supply by shards burnt', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance
           .connect(depositor)
           ['deposit()']({ value: depositAmount });
-        const withdrawTokens = 5;
-        const tokens = [];
-        for (let i = 0; i < withdrawTokens; i++) {
-          tokens.push(
+        const withdrawShards = 5;
+        const shards = [];
+        for (let i = 0; i < withdrawShards; i++) {
+          shards.push(
             await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
           );
         }
@@ -518,11 +517,11 @@ export function describeBehaviorOfShardVaultIO(
           depositAmount.div(ethers.utils.parseEther('1.0')),
         );
 
-        await instance.connect(depositor)['withdraw(uint256[])'](tokens);
+        await instance.connect(depositor)['withdraw(uint256[])'](shards);
 
         expect(await instance.totalSupply()).to.eq(
           depositAmount
-            .sub(ethers.utils.parseEther(withdrawTokens.toString()))
+            .sub(ethers.utils.parseEther(withdrawShards.toString()))
             .div(ethers.utils.parseEther('1.0')),
         );
       });
@@ -545,22 +544,22 @@ export function describeBehaviorOfShardVaultIO(
             .connect(secondDepositor)
             ['deposit()']({ value: depositAmount.div(ethers.constants.Two) });
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            instance.connect(secondDepositor)['withdraw(uint256[])'](tokens),
+            instance.connect(secondDepositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotShardOwner',
           );
         });
-        it('owned shards correspond to different vault', async () => {
+        it('shards used to withdraw match different vault', async () => {
           await instance.connect(owner)['setIsEnabled(bool)'](true);
           await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
           await instance
@@ -570,19 +569,19 @@ export function describeBehaviorOfShardVaultIO(
             .connect(depositor)
             ['deposit()']({ value: depositAmount });
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            secondInstance.connect(depositor)['withdraw(uint256[])'](tokens),
+            secondInstance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
-            'ShardVault__VaultTokenIdMismatch',
+            'ShardVault__VaultShardIdMismatch',
           );
         });
         it('vault is full', async () => {
@@ -594,16 +593,16 @@ export function describeBehaviorOfShardVaultIO(
             .connect(secondDepositor)
             ['deposit()']({ value: depositAmount });
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+            instance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__WithdrawalForbidden',
@@ -619,22 +618,21 @@ export function describeBehaviorOfShardVaultIO(
 
           await instance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPUSD,
               punkId,
-              true,
             );
 
-          const withdrawTokens = 5;
-          const tokens = [];
-          for (let i = 0; i < withdrawTokens; i++) {
-            tokens.push(
+          const withdrawShards = 5;
+          const shards = [];
+          for (let i = 0; i < withdrawShards; i++) {
+            shards.push(
               await shardCollection.tokenOfOwnerByIndex(depositor.address, i),
             );
           }
 
           await expect(
-            instance.connect(depositor)['withdraw(uint256[])'](tokens),
+            instance.connect(depositor)['withdraw(uint256[])'](shards),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__WithdrawalForbidden',
@@ -644,7 +642,7 @@ export function describeBehaviorOfShardVaultIO(
     });
 
     describe('#claimYield(uint256[])', () => {
-      it('increases claimedJPS for each shard used to claim', async () => {
+      it('increases claimedJPEGPerShard for each shard used to claim', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await pethInstance
           .connect(depositor)
@@ -655,10 +653,9 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
         const requestedBorrow = (
@@ -723,36 +720,40 @@ export function describeBehaviorOfShardVaultIO(
             poolInfoIndex,
           );
 
-        const cumulativeJPS = await pethInstance['cumulativeJPS()']();
-        const tokenIds = [];
-        const oldClaimedJPS = [];
+        const cumulativeJPEGPerShard = await pethInstance[
+          'cumulativeJPEGPerShard()'
+        ]();
+        const shardIds = [];
+        const oldclaimedJPEGPerShard = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
-          oldClaimedJPS.push(
-            await pethInstance['claimedJPS(uint256)'](tokenId),
+          shardIds.push(shardId);
+          oldclaimedJPEGPerShard.push(
+            await pethInstance['claimedJPEGPerShard(uint256)'](shardId),
           );
         }
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
-        const newClaimedJPS = [];
-        for (let i = 0; i < tokenIds.length; i++) {
-          newClaimedJPS.push(cumulativeJPS.sub(oldClaimedJPS[i]));
+        const newclaimedJPEGPerShard = [];
+        for (let i = 0; i < shardIds.length; i++) {
+          newclaimedJPEGPerShard.push(
+            cumulativeJPEGPerShard.sub(oldclaimedJPEGPerShard[i]),
+          );
         }
 
-        for (let i = 0; i < tokenIds.length; i++) {
-          expect(await pethInstance['claimedJPS(uint256)'](tokenIds[i])).to.eq(
-            oldClaimedJPS[i].add(newClaimedJPS[i]),
-          );
+        for (let i = 0; i < shardIds.length; i++) {
+          expect(
+            await pethInstance['claimedJPEGPerShard(uint256)'](shardIds[i]),
+          ).to.eq(oldclaimedJPEGPerShard[i].add(newclaimedJPEGPerShard[i]));
         }
       });
-      it('increases claimedEPS for each shard used to claim', async () => {
+      it('increases claimedETHPerShard for each shard used to claim', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await pethInstance
           .connect(depositor)
@@ -763,10 +764,9 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
         const requestedBorrow = (
@@ -831,33 +831,37 @@ export function describeBehaviorOfShardVaultIO(
             poolInfoIndex,
           );
 
-        const cumulativeEPS = await pethInstance['cumulativeEPS()']();
-        const tokenIds = [];
-        const oldClaimedEPS = [];
+        const cumulativeETHPerShard = await pethInstance[
+          'cumulativeETHPerShard()'
+        ]();
+        const shardIds = [];
+        const oldclaimedETHPerShard = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
-          oldClaimedEPS.push(
-            await pethInstance['claimedEPS(uint256)'](tokenId),
+          shardIds.push(shardId);
+          oldclaimedETHPerShard.push(
+            await pethInstance['claimedETHPerShard(uint256)'](shardId),
           );
         }
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
-        const newClaimedEPS = [];
-        for (let i = 0; i < tokenIds.length; i++) {
-          newClaimedEPS.push(cumulativeEPS.sub(oldClaimedEPS[i]));
+        const newclaimedETHPerShard = [];
+        for (let i = 0; i < shardIds.length; i++) {
+          newclaimedETHPerShard.push(
+            cumulativeETHPerShard.sub(oldclaimedETHPerShard[i]),
+          );
         }
 
-        for (let i = 0; i < tokenIds.length; i++) {
-          expect(await pethInstance['claimedEPS(uint256)'](tokenIds[i])).to.eq(
-            oldClaimedEPS[i].add(newClaimedEPS[i]),
-          );
+        for (let i = 0; i < shardIds.length; i++) {
+          expect(
+            await pethInstance['claimedETHPerShard(uint256)'](shardIds[i]),
+          ).to.eq(oldclaimedETHPerShard[i].add(newclaimedETHPerShard[i]));
         }
       });
       it('increases accruedFees', async () => {
@@ -871,10 +875,9 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
         const requestedBorrow = (
@@ -939,18 +942,22 @@ export function describeBehaviorOfShardVaultIO(
             poolInfoIndex,
           );
 
-        const cumulativeEPS = await pethInstance['cumulativeEPS()']();
-        const tokenIds = [];
+        const cumulativeETHPerShard = await pethInstance[
+          'cumulativeETHPerShard()'
+        ]();
+        const shardIds = [];
         let claimedETH = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedETH = claimedETH.add(
-            cumulativeEPS.sub(
-              await pethInstance.callStatic['claimedEPS(uint256)'](tokenId),
+            cumulativeETHPerShard.sub(
+              await pethInstance.callStatic['claimedETHPerShard(uint256)'](
+                shardId,
+              ),
             ),
           );
         }
@@ -963,7 +970,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
         const newAccruedFees = await pethInstance.callStatic['accruedFees()']();
 
@@ -980,10 +987,9 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
         const requestedBorrow = (
@@ -1048,19 +1054,23 @@ export function describeBehaviorOfShardVaultIO(
             poolInfoIndex,
           );
 
-        const cumulativeJPS = await pethInstance['cumulativeJPS()']();
-        const tokenIds = [];
+        const cumulativeJPEGPerShard = await pethInstance[
+          'cumulativeJPEGPerShard()'
+        ]();
+        const shardIds = [];
         let claimedJPEG = BigNumber.from(0);
 
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedJPEG = claimedJPEG.add(
-            cumulativeJPS.sub(
-              await pethInstance.callStatic['claimedJPS(uint256)'](tokenId),
+            cumulativeJPEGPerShard.sub(
+              await pethInstance.callStatic['claimedJPEGPerShard(uint256)'](
+                shardId,
+              ),
             ),
           );
         }
@@ -1073,7 +1083,7 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](tokenIds);
+          ['claimYield(uint256[])'](shardIds);
 
         const newAccruedJPEG = await pethInstance['accruedJPEG()']();
 
@@ -1090,10 +1100,9 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
         const requestedBorrow = (
@@ -1157,19 +1166,23 @@ export function describeBehaviorOfShardVaultIO(
             minETH,
             poolInfoIndex,
           );
-        const cumulativeJPS = await pethInstance['cumulativeJPS()']();
+        const cumulativeJPEGPerShard = await pethInstance[
+          'cumulativeJPEGPerShard()'
+        ]();
 
-        const tokenIds = [];
+        const shardIds = [];
         let claimedJPEG = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedJPEG = claimedJPEG.add(
-            cumulativeJPS.sub(
-              await pethInstance.callStatic['claimedJPS(uint256)'](tokenId),
+            cumulativeJPEGPerShard.sub(
+              await pethInstance.callStatic['claimedJPEGPerShard(uint256)'](
+                shardId,
+              ),
             ),
           );
         }
@@ -1181,7 +1194,7 @@ export function describeBehaviorOfShardVaultIO(
         const claimedJPEGMinusFee = claimedJPEG.sub(jpegFee);
 
         await expect(() =>
-          pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+          pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
         ).to.changeTokenBalances(
           jpeg,
           [depositor, pethInstance],
@@ -1202,10 +1215,9 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
         const requestedBorrow = (
@@ -1270,18 +1282,22 @@ export function describeBehaviorOfShardVaultIO(
             poolInfoIndex,
           );
 
-        const cumulativeEPS = await pethInstance['cumulativeEPS()']();
-        const tokenIds = [];
+        const cumulativeETHPerShard = await pethInstance[
+          'cumulativeETHPerShard()'
+        ]();
+        const shardIds = [];
         let claimedETH = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedETH = claimedETH.add(
-            cumulativeEPS.sub(
-              await pethInstance.callStatic['claimedEPS(uint256)'](tokenId),
+            cumulativeETHPerShard.sub(
+              await pethInstance.callStatic['claimedETHPerShard(uint256)'](
+                shardId,
+              ),
             ),
           );
         }
@@ -1293,7 +1309,7 @@ export function describeBehaviorOfShardVaultIO(
         const claimedETHMinusFee = claimedETH.sub(ETHFee);
 
         await expect(() =>
-          pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+          pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [
@@ -1315,10 +1331,9 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
           const requestedBorrow = (
@@ -1371,17 +1386,17 @@ export function describeBehaviorOfShardVaultIO(
             stakeTimeStamp + duration,
           ]);
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__YieldClaimingForbidden',
@@ -1398,10 +1413,9 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
           const requestedBorrow = (
@@ -1466,17 +1480,17 @@ export function describeBehaviorOfShardVaultIO(
               poolInfoIndex,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 111; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__InsufficientShards',
@@ -1493,10 +1507,9 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
           const requestedBorrow = (
@@ -1561,19 +1574,19 @@ export function describeBehaviorOfShardVaultIO(
               poolInfoIndex,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(secondDepositor)
-              ['claimYield(uint256[])'](tokenIds),
+              ['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__NotShardOwner',
@@ -1595,10 +1608,9 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
           const requestedBorrow = (
@@ -1663,27 +1675,27 @@ export function describeBehaviorOfShardVaultIO(
               poolInfoIndex,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               instance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](tokenIds),
+            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__VaultTokenIdMismatch',
+            'ShardVault__VaultShardIdMismatch',
           );
         });
       });
     });
 
     describe('#claimExcessETH(uint256[])', () => {
-      it('increases claimedEPS for each shard used to claim', async () => {
+      it('increases claimedETHPerShard for each shard used to claim', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await pethInstance
           .connect(depositor)
@@ -1694,39 +1706,42 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
 
-        const cumulativeEPS = await pethInstance['cumulativeEPS()']();
-        const tokenIds = [];
-        const oldClaimedEPS = [];
+        const cumulativeETHPerShard = await pethInstance[
+          'cumulativeETHPerShard()'
+        ]();
+        const shardIds = [];
+        const oldclaimedETHPerShard = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
-          oldClaimedEPS.push(
-            await pethInstance['claimedEPS(uint256)'](tokenId),
+          shardIds.push(shardId);
+          oldclaimedETHPerShard.push(
+            await pethInstance['claimedETHPerShard(uint256)'](shardId),
           );
         }
 
         await pethInstance
           .connect(depositor)
-          ['claimExcessETH(uint256[])'](tokenIds);
+          ['claimExcessETH(uint256[])'](shardIds);
 
-        const newClaimedEPS = [];
-        for (let i = 0; i < tokenIds.length; i++) {
-          newClaimedEPS.push(cumulativeEPS.sub(oldClaimedEPS[i]));
+        const newclaimedETHPerShard = [];
+        for (let i = 0; i < shardIds.length; i++) {
+          newclaimedETHPerShard.push(
+            cumulativeETHPerShard.sub(oldclaimedETHPerShard[i]),
+          );
         }
 
-        for (let i = 0; i < tokenIds.length; i++) {
-          expect(await pethInstance['claimedEPS(uint256)'](tokenIds[i])).to.eq(
-            oldClaimedEPS[i].add(newClaimedEPS[i]),
-          );
+        for (let i = 0; i < shardIds.length; i++) {
+          expect(
+            await pethInstance['claimedETHPerShard(uint256)'](shardIds[i]),
+          ).to.eq(oldclaimedETHPerShard[i].add(newclaimedETHPerShard[i]));
         }
       });
       it('transfers ETH to claimer', async () => {
@@ -1740,23 +1755,26 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            true,
           );
-        const cumulativeEPS = await pethInstance['cumulativeEPS()']();
-        const tokenIds = [];
+        const cumulativeETHPerShard = await pethInstance[
+          'cumulativeETHPerShard()'
+        ]();
+        const shardIds = [];
         let claimedETH = BigNumber.from('0');
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
           claimedETH = claimedETH.add(
-            cumulativeEPS.sub(
-              await pethInstance.callStatic['claimedEPS(uint256)'](tokenId),
+            cumulativeETHPerShard.sub(
+              await pethInstance.callStatic['claimedETHPerShard(uint256)'](
+                shardId,
+              ),
             ),
           );
         }
@@ -1764,7 +1782,7 @@ export function describeBehaviorOfShardVaultIO(
         await expect(() =>
           pethInstance
             .connect(depositor)
-            ['claimExcessETH(uint256[])'](tokenIds),
+            ['claimExcessETH(uint256[])'](shardIds),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [claimedETH, claimedETH.mul(ethers.constants.NegativeOne)],
@@ -1781,25 +1799,24 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(owner)
-          ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
             punkPurchaseCallsPETH,
             punkId,
-            false,
           );
 
-        const tokenIds = [];
+        const shardIds = [];
         for (let i = 1; i < 51; i++) {
-          let tokenId = formatTokenId(
+          let shardId = formatShardId(
             BigNumber.from(i.toString()),
             pethInstance.address,
           );
-          tokenIds.push(tokenId);
+          shardIds.push(shardId);
         }
 
         await expect(() =>
           pethInstance
             .connect(depositor)
-            ['claimExcessETH(uint256[])'](tokenIds),
+            ['claimExcessETH(uint256[])'](shardIds),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [ethers.constants.Zero, ethers.constants.Zero],
@@ -1816,19 +1833,19 @@ export function describeBehaviorOfShardVaultIO(
             .connect(secondDepositor)
             .deposit({ value: ethers.utils.parseEther('100') });
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__ClaimingExcessETHForbidden',
@@ -1845,10 +1862,9 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
           const requestedBorrow = (
@@ -1912,19 +1928,19 @@ export function describeBehaviorOfShardVaultIO(
               minETH,
               poolInfoIndex,
             );
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__ClaimingExcessETHForbidden',
@@ -1941,25 +1957,24 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 111; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__InsufficientShards',
@@ -1976,25 +1991,24 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               pethInstance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(secondDepositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__NotShardOwner',
@@ -2012,28 +2026,27 @@ export function describeBehaviorOfShardVaultIO(
 
           await pethInstance
             .connect(owner)
-            ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
               punkPurchaseCallsPETH,
               punkId,
-              true,
             );
 
-          const tokenIds = [];
+          const shardIds = [];
           for (let i = 1; i < 51; i++) {
-            let tokenId = formatTokenId(
+            let shardId = formatShardId(
               BigNumber.from(i.toString()),
               instance.address,
             );
-            tokenIds.push(tokenId);
+            shardIds.push(shardId);
           }
 
           await expect(
             pethInstance
               .connect(depositor)
-              ['claimExcessETH(uint256[])'](tokenIds),
+              ['claimExcessETH(uint256[])'](shardIds),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__VaultTokenIdMismatch',
+            'ShardVault__VaultShardIdMismatch',
           );
         });
       });

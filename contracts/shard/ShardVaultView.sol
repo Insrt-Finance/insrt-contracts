@@ -53,19 +53,19 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function formatTokenId(
+    function formatShardId(
         uint96 internalId
-    ) external view returns (uint256 tokenId) {
-        tokenId = _formatTokenId(internalId);
+    ) external view returns (uint256 shardId) {
+        shardId = _formatShardId(internalId);
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function parseTokenId(
-        uint256 tokenId
+    function parseShardId(
+        uint256 shardId
     ) external pure returns (address vault, uint96 internalId) {
-        (vault, internalId) = _parseTokenId(tokenId);
+        (vault, internalId) = _parseShardId(shardId);
     }
 
     /**
@@ -112,6 +112,9 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
         autoComp = _queryAutoCompForPUSD(pUSD);
     }
 
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function queryAutoCompForPETH(
         uint256 pETH
     ) external view returns (uint256 autoComp) {
@@ -146,8 +149,8 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function shardBalances(address account) external view returns (uint16) {
-        return _shardBalances(account);
+    function userShards(address account) external view returns (uint16) {
+        return _userShards(account);
     }
 
     /**
@@ -167,33 +170,41 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function claimedJPS(
+    function claimedJPEGPerShard(
         uint256 shardId
-    ) external view returns (uint256 claimedJPS) {
-        claimedJPS = _claimedJPS(shardId);
+    ) external view returns (uint256 claimedJPEGPerShard) {
+        claimedJPEGPerShard = _claimedJPEGPerShard(shardId);
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function claimedEPS(
+    function claimedETHPerShard(
         uint256 shardId
-    ) external view returns (uint256 claimedEPS) {
-        claimedEPS = _claimedEPS(shardId);
+    ) external view returns (uint256 claimedETHPerShard) {
+        claimedETHPerShard = _claimedETHPerShard(shardId);
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function cumulativeJPS() external view returns (uint256 cumulativeJPS) {
-        cumulativeJPS = _cumulativeJPS();
+    function cumulativeJPEGPerShard()
+        external
+        view
+        returns (uint256 cumulativeJPEGPerShard)
+    {
+        cumulativeJPEGPerShard = _cumulativeJPEGPerShard();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function cumulativeEPS() external view returns (uint256 cumulativeEPS) {
-        cumulativeEPS = _cumulativeEPS();
+    function cumulativeETHPerShard()
+        external
+        view
+        returns (uint256 cumulativeETHPerShard)
+    {
+        cumulativeETHPerShard = _cumulativeETHPerShard();
     }
 
     /**

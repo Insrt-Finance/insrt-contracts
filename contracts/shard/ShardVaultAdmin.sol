@@ -18,10 +18,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      */
     function purchasePunk(
         IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        bool isFinalPurchase
+        uint256 punkId
     ) external payable onlyProtocolOwner {
-        _purchasePunk(calls, punkId, isFinalPurchase);
+        _purchasePunk(calls, punkId);
     }
 
     /**
@@ -77,8 +76,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 borrowAmount,
         uint256 minCurveLP,
         uint256 poolInfoIndex,
-        bool insure,
-        bool isFinalPurchase
+        bool insure
     ) external onlyProtocolOwner {
         _investPunk(
             calls,
@@ -86,8 +84,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             borrowAmount,
             minCurveLP,
             poolInfoIndex,
-            insure,
-            isFinalPurchase
+            insure
         );
     }
 
@@ -131,21 +128,21 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function setReservedShards(
+        uint16 reservedShards
+    ) external onlyProtocolOwner {
+        _setReservedShards(reservedShards);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function unstakePUSD(
         uint256 amount,
         uint256 minPUSD,
         uint256 poolInfoIndex
     ) external onlyProtocolOwner returns (uint256 pUSD) {
         pUSD = _unstakePUSD(amount, minPUSD, poolInfoIndex);
-    }
-
-    /**
-     * @inheritdoc IShardVaultAdmin
-     */
-    function setReservedShards(
-        uint16 reservedShards
-    ) external onlyProtocolOwner {
-        _setReservedShards(reservedShards);
     }
 
     /**
@@ -287,5 +284,12 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             minETH,
             poolInfoIndex
         );
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function makeUnusedETHClaimable() external onlyProtocolOwner {
+        _makeUnusedETHClaimable();
     }
 }
