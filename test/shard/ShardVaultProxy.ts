@@ -101,7 +101,6 @@ describe('ShardVaultProxy', () => {
     SHARD_COLLECTION: string;
     PUNKS: string;
     DAWN_OF_INSRT: string;
-    MARKETPLACE_HELPER: string;
   }
 
   const feeParams: FeeParamsStruct = {
@@ -166,6 +165,7 @@ describe('ShardVaultProxy', () => {
     const coreFacetCuts = [
       await new ShardVaultManager__factory(deployer).deploy(
         shardVaultDiamond.address,
+        marketplaceHelper.address,
       ),
     ].map(function (f) {
       return {
@@ -192,7 +192,6 @@ describe('ShardVaultProxy', () => {
       SHARD_COLLECTION: shardCollectionProxy.address,
       PUNKS: CRYPTO_PUNKS_MARKET,
       DAWN_OF_INSRT: DAWN_OF_INSRT,
-      MARKETPLACE_HELPER: marketplaceHelper.address,
     };
 
     const shardVaultSelectors = new Set();
@@ -262,6 +261,10 @@ describe('ShardVaultProxy', () => {
       (e) => e.event === 'ShardVaultDeployed',
     ).args;
 
+    const marketPlaceHelperProxy = ethers.utils.getAddress(
+      BigNumber.from(events[0].data).mask(160).toHexString(),
+    );
+
     instance = IShardVault__factory.connect(deployment, deployer);
 
     const deploySecondShardVaultTx = await core
@@ -320,7 +323,7 @@ describe('ShardVaultProxy', () => {
     );
 
     shardCollectionAddress.push(shardCollectionProxy.address);
-    marketplaceHelperAddress.push(marketplaceHelper.address);
+    marketplaceHelperAddress.push(marketPlaceHelperProxy);
 
     await shardCollectionInstance
       .connect(deployer)
