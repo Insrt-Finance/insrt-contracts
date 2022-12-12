@@ -20,7 +20,6 @@ interface IShardVaultInternal is IOwnableInternal {
         address SHARD_COLLECTION;
         address PUNKS;
         address DAWN_OF_INSRT;
-        address MARKETPLACE_HELPER;
     }
 
     /**

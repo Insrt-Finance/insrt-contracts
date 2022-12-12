@@ -16,6 +16,11 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 contract ShardVaultProxy is Proxy {
     address private immutable SHARD_VAULT_DIAMOND;
 
+    /**
+     * @notice emitted upon MarketPlaceHelperProxy deployment
+     */
+    event MarketPlaceHelperProxyDeployed(address marketPlacerHelperProxy);
+
     constructor(
         address shardVaultDiamond,
         address marketPlaceHelper,
@@ -34,10 +39,12 @@ contract ShardVaultProxy is Proxy {
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        l.marketPlaceHelper = address(
+        address marketPlaceHelperProxy = address(
             new MarketPlaceHelperProxy(marketPlaceHelper)
         );
+        emit MarketPlaceHelperProxyDeployed(marketPlaceHelperProxy);
 
+        l.marketPlaceHelper = marketPlaceHelperProxy;
         l.collection = collection;
         l.jpegdVault = jpegdVault;
         l.jpegdVaultHelper = jpegdVaultHelper;

@@ -40,7 +40,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
     address internal immutable DAWN_OF_INSRT;
-    address internal immutable MARKETPLACE_HELPER;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -59,7 +58,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         SHARD_COLLECTION = auxiliaryParams.SHARD_COLLECTION;
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
-        MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
     }
 
     modifier onlyProtocolOwner() {
@@ -285,7 +283,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             .punksOfferedForSale(punkId)
             .minValue;
 
-        IMarketPlaceHelper(MARKETPLACE_HELPER).purchaseAsset{ value: price }(
+        IMarketPlaceHelper(l.marketPlaceHelper).purchaseAsset{ value: price }(
             calls,
             address(0),
             price
@@ -646,8 +644,9 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         IMarketPlaceHelper.EncodedCall[] memory calls,
         uint256 punkId
     ) internal {
-        ICryptoPunkMarket(PUNKS).transferPunk(MARKETPLACE_HELPER, punkId);
-        IMarketPlaceHelper(MARKETPLACE_HELPER).listAsset(calls);
+        address marketPlaceHelper = _marketplaceHelper();
+        ICryptoPunkMarket(PUNKS).transferPunk(marketPlaceHelper, punkId);
+        IMarketPlaceHelper(marketPlaceHelper).listAsset(calls);
     }
 
     /**
@@ -1125,7 +1124,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @return MARKETPLACE_HELPER address
      */
     function _marketplaceHelper() internal view returns (address) {
-        return MARKETPLACE_HELPER;
+        return ShardVaultStorage.layout().marketPlaceHelper;
     }
 
     /**
