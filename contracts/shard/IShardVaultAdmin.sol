@@ -97,7 +97,7 @@ interface IShardVaultAdmin {
     ) external;
 
     /**
-     * @notice withdraws JPEG and ETH accrued fees
+     * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
      * @return feesETH total ETH fees withdrawn
      * @return feesJPEG total JPEG fees withdrawn
      */
