@@ -9,12 +9,14 @@ library ShardId {
     /**
      * @notice formats a shardId given the internalId and address of ShardVault contract
      * @param internalId the internal ID
+     * @param vault address of vault to use as seed for ShardId
      * @return shardId the formatted shardId
      */
     function formatShardId(
-        uint96 internalId
-    ) internal view returns (uint256 shardId) {
-        shardId = ((uint256(uint160(address(this))) << 96) | internalId);
+        uint96 internalId,
+        address vault
+    ) internal pure returns (uint256 shardId) {
+        shardId = ((uint256(uint160(vault)) << 96) | internalId);
     }
 
     /**

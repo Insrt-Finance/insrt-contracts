@@ -134,7 +134,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             for (uint256 i; i < shards; ++i) {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    ShardId.formatShardId(uint96(++l.count))
+                    ShardId.formatShardId(uint96(++l.count), address(this))
                 );
             }
         }
@@ -263,29 +263,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         returns (uint256[] memory ownedTokenIds)
     {
         ownedTokenIds = ShardVaultStorage.layout().ownedTokenIds.toArray();
-    }
-
-    /**
-     * @notice formats a shardId given the internalId and address of ShardVault contract
-     * @param internalId the internal ID
-     * @return shardId the formatted shardId
-     */
-    function _formatShardId(
-        uint96 internalId
-    ) internal view returns (uint256 shardId) {
-        shardId = ShardId.formatShardId(internalId);
-    }
-
-    /**
-     * @notice parses a shardId to extract seeded vault address and internalId
-     * @param shardId shardId to parse
-     * @return vault seeded vault address
-     * @return internalId internal ID
-     */
-    function _parseShardId(
-        uint256 shardId
-    ) internal pure returns (address vault, uint96 internalId) {
-        (vault, internalId) = ShardId.parseShardId(shardId);
     }
 
     /**
