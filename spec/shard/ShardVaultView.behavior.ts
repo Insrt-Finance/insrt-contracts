@@ -200,49 +200,6 @@ export function describeBehaviorOfShardVaultView(
       });
     });
 
-    describe('#formatShardId(uint96)', () => {
-      it('generates a unique token id using the vault address as a seed', async () => {
-        const ShardIds = [];
-        const testIds = [];
-        for (let i = 0; i < 10; i++) {
-          ShardIds.push(await instance.formatShardId(i));
-          testIds.push(
-            formatShardId(BigNumber.from(i.toString()), instance.address),
-          );
-          expect(ShardIds[i]).to.eq(testIds[i]);
-        }
-      });
-      it('generates incrementally increasing ShardIds', async () => {
-        const initialId = await instance['formatShardId(uint96)'](
-          ethers.constants.One,
-        );
-        const finalId = await instance['formatShardId(uint96)'](
-          BigNumber.from('101'),
-        );
-
-        expect(finalId.sub(initialId)).to.eq(BigNumber.from('100'));
-      });
-    });
-    describe('#parseShardId(uint256)', () => {
-      it('returns the seeded vault address', async () => {
-        const ShardId = await instance['formatShardId(uint96)'](
-          ethers.constants.One,
-        );
-        const [address] = await instance['parseShardId(uint256)'](ShardId);
-
-        expect(address).to.eq(instance.address);
-      });
-
-      it('returns the internal id used to generate the ShardId', async () => {
-        const maxUint96 = ethers.constants.Two.pow(BigNumber.from('96')).sub(
-          ethers.constants.One,
-        );
-        const ShardId = await instance['formatShardId(uint96)'](maxUint96);
-        const [, internalId] = await instance['parseShardId(uint256)'](ShardId);
-
-        expect(internalId).to.eq(maxUint96);
-      });
-    });
     describe('#queryAutoCompForPETH(uint256)', () => {
       it('returns autocomp amount resulting in at least amount of PETH requested after unstaking', async () => {
         await pethInstance.connect(owner)['setIsEnabled(bool)'](true);
