@@ -268,4 +268,15 @@ interface IShardVaultAdmin {
      * @notice makes the any ETH besides the vault accrued fees claimable
      */
     function makeUnusedETHClaimable() external;
+
+    /**
+     * @notice accepts a punk bid and withdraws any proceeds generated from punk sales
+     * @dev called from marketPlaceHelper contract to transfer ETH proceeds from punk sale
+     * @param calls encoded calls required to accept bid on an asset
+     * @param punkId id of punk to accept bid on
+     */
+    function acceptPunkBid(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) external;
 }
