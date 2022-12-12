@@ -21,6 +21,12 @@ interface IShardVaultManager {
     function SHARD_VAULT_DIAMOND() external view returns (address);
 
     /**
+     * @notice returns address of MarketPlaceHelper implementation contract
+     * @return address of MarketPlaceHelper implementation
+     */
+    function MARKETPLACE_HELPER() external view returns (address);
+
+    /**
      * @notice deploys a ShardVaultProxy
      * @param collection the address of the NFT collection contract
      * @param jpegdVault the jpeg'd NFT vault corresponding to the collection
