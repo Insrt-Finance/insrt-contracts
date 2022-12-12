@@ -5,11 +5,12 @@ pragma solidity ^0.8.0;
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
+import { Ownable } from '@solidstate/contracts/access/ownable/Ownable.sol';
 
 import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 
-contract MarketPlaceHelper is IMarketPlaceHelper {
+contract MarketPlaceHelper is IMarketPlaceHelper, Ownable {
     using AddressUtils for address payable;
 
     address private immutable CRYPTO_PUNK_MARKET;
@@ -25,7 +26,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         EncodedCall[] calldata calls,
         address purchaseToken,
         uint256 price
-    ) external payable {
+    ) external payable onlyOwner {
         if (purchaseToken == address(0) && msg.value < price) {
             revert MarketPlaceHelper__InsufficientETH();
         } else if (
@@ -49,7 +50,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
     /**
      * @inheritdoc IMarketPlaceHelper
      */
-    function listAsset(EncodedCall[] memory calls) external {
+    function listAsset(EncodedCall[] memory calls) external onlyOwner {
         unchecked {
             for (uint256 i; i < calls.length; ++i) {
                 (bool success, ) = calls[i].target.call{
