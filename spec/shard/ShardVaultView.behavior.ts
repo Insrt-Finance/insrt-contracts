@@ -200,6 +200,17 @@ export function describeBehaviorOfShardVaultView(
       });
     });
 
+    describe('#treasury()', () => {
+      it('returns treasury address', async () => {
+        expect(await pethInstance['treasury()']()).to.eq(owner.address);
+      });
+      it('returns non-zero address', async () => {
+        expect(await pethInstance['treasury()']()).to.not.eq(
+          ethers.constants.AddressZero,
+        );
+      });
+    });
+
     describe('#queryAutoCompForPETH(uint256)', () => {
       it('returns autocomp amount resulting in at least amount of PETH requested after unstaking', async () => {
         await pethInstance.connect(owner)['setIsEnabled(bool)'](true);

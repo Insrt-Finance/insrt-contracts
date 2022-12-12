@@ -102,6 +102,7 @@ describe('ShardVaultProxy', () => {
     PUNKS: string;
     DAWN_OF_INSRT: string;
     MARKETPLACE_HELPER: string;
+    TREASURY: string;
   }
 
   const feeParams: FeeParamsStruct = {
@@ -193,6 +194,7 @@ describe('ShardVaultProxy', () => {
       PUNKS: CRYPTO_PUNKS_MARKET,
       DAWN_OF_INSRT: DAWN_OF_INSRT,
       MARKETPLACE_HELPER: marketplaceHelper.address,
+      TREASURY: deployer.address,
     };
 
     const shardVaultSelectors = new Set();

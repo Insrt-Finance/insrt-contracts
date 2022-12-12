@@ -2406,9 +2406,6 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const jpegFees = await pethInstance['accruedJPEG()']();
-        await pethInstance
-          .connect(owner)
-          ['setTreasury(address)'](owner.address);
 
         await expect(() =>
           pethInstance.connect(owner)['withdrawFees()'](),
@@ -2494,9 +2491,6 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const ethFees = await pethInstance['accruedFees()']();
-        await pethInstance
-          .connect(owner)
-          ['setTreasury(address)'](owner.address);
 
         await expect(() =>
           pethInstance.connect(owner)['withdrawFees()'](),
@@ -2580,10 +2574,6 @@ export function describeBehaviorOfShardVaultAdmin(
             poolInfoIndex,
           );
 
-        await pethInstance
-          .connect(owner)
-          ['setTreasury(address)'](owner.address);
-
         await pethInstance.connect(owner)['withdrawFees()']();
 
         expect(await pethInstance['accruedJPEG()']()).to.eq(
@@ -2665,10 +2655,6 @@ export function describeBehaviorOfShardVaultAdmin(
             poolInfoIndex,
           );
 
-        await pethInstance
-          .connect(owner)
-          ['setTreasury(address)'](owner.address);
-
         await pethInstance.connect(owner)['withdrawFees()']();
 
         expect(await pethInstance['accruedFees()']()).to.eq(
@@ -2682,14 +2668,6 @@ export function describeBehaviorOfShardVaultAdmin(
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__NotProtocolOwner',
-          );
-        });
-        it('treasury is zero address', async () => {
-          await expect(
-            pethInstance.connect(owner)['withdrawFees()'](),
-          ).to.be.revertedWithCustomError(
-            pethInstance,
-            'ShardVault__TreasuryIsZeroAddress',
           );
         });
       });
@@ -2972,27 +2950,6 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setReservedShards(uint16)'](BigNumber.from('1000')),
-          ).to.be.revertedWithCustomError(
-            instance,
-            'ShardVault__NotProtocolOwner',
-          );
-        });
-      });
-    });
-
-    describe('#setTreasury(address)', () => {
-      it('sets treasury address', async () => {
-        await instance.connect(owner)['setTreasury(address)'](owner.address);
-
-        expect(await instance['treasury()']()).to.eq(owner.address);
-      });
-
-      describe('reverts if', () => {
-        it('called by non-owner', async () => {
-          await expect(
-            instance
-              .connect(nonOwner)
-              ['setTreasury(address)'](nonOwner.address),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',
