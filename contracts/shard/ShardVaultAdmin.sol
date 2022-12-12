@@ -201,13 +201,6 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setTreasury(address treasury) external onlyProtocolOwner {
-        _setTreasury(treasury);
-    }
-
-    /**
-     * @inheritdoc IShardVaultAdmin
-     */
     function setMaxUserShards(uint16 maxUserShards) external onlyProtocolOwner {
         _setMaxUserShards(maxUserShards);
     }

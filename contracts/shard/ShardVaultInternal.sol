@@ -41,6 +41,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CURVE_PETH_POOL;
     address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
+    address internal immutable TREASURY;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -60,6 +61,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
         MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
+        TREASURY = auxiliaryParams.TREASURY;
     }
 
     modifier onlyProtocolOwner() {
@@ -513,10 +515,6 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         returns (uint256 feesETH, uint256 feesJPEG)
     {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        address treasury = l.treasury;
-        if (treasury == address(0)) {
-            revert ShardVault__TreasuryIsZeroAddress();
-        }
 
         feesETH = l.accruedFees;
         feesJPEG = l.accruedJPEG;
@@ -524,16 +522,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         l.accruedFees -= feesETH;
         l.accruedJPEG -= feesJPEG;
 
-        IERC20(JPEG).transfer(treasury, feesJPEG);
-        payable(treasury).sendValue(feesETH);
-    }
-
-    /**
-     * @notice sets the treasury address
-     * @param treasury address to set as treasury
-     */
-    function _setTreasury(address treasury) internal {
-        ShardVaultStorage.layout().treasury = treasury;
+        IERC20(JPEG).transfer(TREASURY, feesJPEG);
+        payable(TREASURY).sendValue(feesETH);
     }
 
     /**
@@ -1237,7 +1227,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      * @return treasury address of treasury
      */
     function _treasury() internal view returns (address treasury) {
-        treasury = ShardVaultStorage.layout().treasury;
+        treasury = TREASURY;
     }
 
     /**

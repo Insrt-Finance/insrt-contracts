@@ -21,6 +21,7 @@ interface IShardVaultInternal is IOwnableInternal {
         address PUNKS;
         address DAWN_OF_INSRT;
         address MARKETPLACE_HELPER;
+        address TREASURY;
     }
 
     /**

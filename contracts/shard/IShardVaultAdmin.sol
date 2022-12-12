@@ -106,12 +106,6 @@ interface IShardVaultAdmin {
         returns (uint256 feesETH, uint256 feesJPEG);
 
     /**
-     * @notice sets the treasury address
-     * @param treasury address to set as treasury
-     */
-    function setTreasury(address treasury) external;
-
-    /**
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
