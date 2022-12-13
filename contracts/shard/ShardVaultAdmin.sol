@@ -9,34 +9,9 @@ import { IMarketPlaceHelper } from '../helpers/IMarketPlaceHelper.sol';
 
 contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     constructor(
-        address shardCollection,
-        address pUSD,
-        address pETH,
-        address punkMarket,
-        address pusdCitadel,
-        address pethCitadel,
-        address lpFarm,
-        address curvePUSDPool,
-        address curvePETHPool,
-        address booster,
-        address marketplaceHelper,
-        address jpegCardCigStaking
-    )
-        ShardVaultInternal(
-            shardCollection,
-            pUSD,
-            pETH,
-            punkMarket,
-            pusdCitadel,
-            pethCitadel,
-            lpFarm,
-            curvePUSDPool,
-            curvePETHPool,
-            booster,
-            marketplaceHelper,
-            jpegCardCigStaking
-        )
-    {}
+        JPEGParams memory jpegParams,
+        AuxiliaryParams memory auxiliaryParams
+    ) ShardVaultInternal(jpegParams, auxiliaryParams) {}
 
     /**
      * @inheritdoc IShardVaultAdmin
@@ -95,6 +70,27 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function investPunk(
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
+        uint256 punkId,
+        uint256 borrowAmount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex,
+        bool insure
+    ) external onlyProtocolOwner {
+        _investPunk(
+            calls,
+            punkId,
+            borrowAmount,
+            minCurveLP,
+            poolInfoIndex,
+            insure
+        );
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function setAcquisitionFee(uint16 feeBP) external onlyProtocolOwner {
         _setAcquisitionFee(feeBP);
     }
@@ -123,6 +119,24 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function setWhitelistEndsAt(
+        uint64 whitelistEndsAt
+    ) external onlyProtocolOwner {
+        _setWhitelistEndsAt(whitelistEndsAt);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setReservedShards(
+        uint16 reservedShards
+    ) external onlyProtocolOwner {
+        _setReservedShards(reservedShards);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function unstakePUSD(
         uint256 amount,
         uint256 minPUSD,
@@ -145,6 +159,25 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function setIsEnabled(bool isEnabled) external onlyProtocolOwner {
+        _setIsEnabled(isEnabled);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function initiateWhitelistAndDeposits(
+        uint64 whitelistEndsAt,
+        uint16 reservedShards
+    ) external onlyProtocolOwner {
+        _setReservedShards(reservedShards);
+        _setWhitelistEndsAt(whitelistEndsAt);
+        _setIsEnabled(true);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function closePunkPosition(
         uint256 punkId,
         uint256 minTokenAmount,
@@ -152,6 +185,24 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         bool isPUSD
     ) external onlyProtocolOwner {
         _closePunkPosition(punkId, minTokenAmount, poolInfoIndex, isPUSD);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function withdrawFees()
+        external
+        onlyProtocolOwner
+        returns (uint256 feesETH, uint256 feesJPEG)
+    {
+        (feesETH, feesJPEG) = _withdrawFees();
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setMaxUserShards(uint16 maxUserShards) external onlyProtocolOwner {
+        _setMaxUserShards(maxUserShards);
     }
 
     /**
@@ -181,20 +232,20 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function directRepayLoanPUSD(uint256 amount, uint256 punkId)
-        external
-        onlyProtocolOwner
-    {
+    function directRepayLoanPUSD(
+        uint256 amount,
+        uint256 punkId
+    ) external onlyProtocolOwner {
         _directRepayLoan(PUSD, amount, punkId);
     }
 
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function directRepayLoanPETH(uint256 amount, uint256 punkId)
-        external
-        onlyProtocolOwner
-    {
+    function directRepayLoanPETH(
+        uint256 amount,
+        uint256 punkId
+    ) external onlyProtocolOwner {
         _directRepayLoan(PETH, amount, punkId);
     }
 
@@ -221,6 +272,26 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function unstakeCard(uint256 tokenId) external onlyProtocolOwner {
         _unstakeCard(tokenId);
     }
+     
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function provideYieldPETH(
+        uint256 autoComp,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    )
+        external
+        payable
+        onlyProtocolOwner
+        returns (uint256 providedETH, uint256 providedJPEG)
+    {
+        (providedETH, providedJPEG) = _provideYieldPETH(
+            autoComp,
+            minETH,
+            poolInfoIndex
+        );
+    }
 
     /**
      * @inheritdoc IShardVaultAdmin
@@ -230,5 +301,12 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         onlyProtocolOwner
     {
         _transferCard(tokenId, to);
+    }
+    
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function makeUnusedETHClaimable() external onlyProtocolOwner {
+        _makeUnusedETHClaimable();
     }
 }

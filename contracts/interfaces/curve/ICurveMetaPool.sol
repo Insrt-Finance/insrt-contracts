@@ -29,9 +29,10 @@ interface ICurveMetaPool {
      * @param _min_mint_amount Minimum amount of LP tokens to mint from the deposit
      * @return amount of LP tokens received by depositing
      */
-    function add_liquidity(uint256[2] memory _amounts, uint256 _min_mint_amount)
-        external
-        returns (uint256);
+    function add_liquidity(
+        uint256[2] memory _amounts,
+        uint256 _min_mint_amount
+    ) external returns (uint256);
 
     /**
      * @notice Withdraw a single coin from the pool
@@ -44,7 +45,7 @@ interface ICurveMetaPool {
         uint256 _burn_amount,
         int128 i,
         uint256 _min_received
-    ) external returns (uint256);
+    ) external payable returns (uint256);
 
     /**
      * @notice Calculate addition or reduction in token supply from a deposit or withdrawal
@@ -54,10 +55,10 @@ interface ICurveMetaPool {
      * @param _is_deposit set True for deposits, False for withdrawals
      * @return Expected amount of LP tokens received
      */
-    function calc_token_amount(uint256[2] memory _amounts, bool _is_deposit)
-        external
-        view
-        returns (uint256);
+    function calc_token_amount(
+        uint256[2] memory _amounts,
+        bool _is_deposit
+    ) external view returns (uint256);
 
     /**
      * @notice Calculate the amount received when withdrawing a single coin
@@ -65,10 +66,10 @@ interface ICurveMetaPool {
      * @param i Index value of the coin to withdraw
      * @return Amount of coin received
      */
-    function calc_withdraw_one_coin(uint256 _token_amount, int128 i)
-        external
-        view
-        returns (uint256);
+    function calc_withdraw_one_coin(
+        uint256 _token_amount,
+        int128 i
+    ) external view returns (uint256);
 
     /**
      * @notice The current virtual price of the pool LP token

@@ -21,11 +21,11 @@ interface IShardVaultAdmin {
 
     /**
      * @notice borrows pUSD by collateralizing a punk on JPEG'd
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pUSD borrowed pUSD
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPUSD(
         uint256 punkId,
@@ -34,12 +34,12 @@ interface IShardVaultAdmin {
     ) external returns (uint256 pUSD);
 
     /**
-     * @notice borrows pETH by collateralizing a punk on JPEG'd
+     * @notice borrows pETH by collateralizing a punk on JPEG'
+     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      * @param punkId id of punk
      * @param borrowAmount amount to be borrowed
      * @param insure whether to insure position
      * @return pETH borrowed pETH
-     * @dev insuring is explained here: https://github.com/jpegd/core/blob/7581b11fc680ab7004ea869226ba21be01fc0a51/contracts/vaults/NFTVault.sol#L563
      */
     function collateralizePunkPETH(
         uint256 punkId,
@@ -77,6 +77,35 @@ interface IShardVaultAdmin {
     ) external returns (uint256 shares);
 
     /**
+     * @notice purchase and collateralize a punk, and stake amount of pUSD borrowed in Curve & JPEG'd
+     * @param calls  array of EncodedCall structs containing information to execute necessary low level
+     * calls to purchase a punk
+     * @param punkId id of punk
+     * @param borrowAmount amount to be borrowed
+     * @param minCurveLP minimum LP to be accepted as return from curve staking
+     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
+     * the pool to deposit into
+     * @param insure whether to insure position
+     */
+    function investPunk(
+        IMarketPlaceHelper.EncodedCall[] calldata calls,
+        uint256 punkId,
+        uint256 borrowAmount,
+        uint256 minCurveLP,
+        uint256 poolInfoIndex,
+        bool insure
+    ) external;
+
+    /**
+     * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
+     * @return feesETH total ETH fees withdrawn
+     * @return feesJPEG total JPEG fees withdrawn
+     */
+    function withdrawFees()
+        external
+        returns (uint256 feesETH, uint256 feesJPEG);
+
+    /**
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
@@ -99,6 +128,41 @@ interface IShardVaultAdmin {
      * @param maxSupply the maxSupply of shards
      */
     function setMaxSupply(uint16 maxSupply) external;
+
+    /**
+     * @notice sets the whitelistEndsAt timestamp
+     * @param whitelistEndsAt timestamp of whitelist end
+     */
+    function setWhitelistEndsAt(uint64 whitelistEndsAt) external;
+
+    /**
+     * @notice sets the maximum amount of shard to be minted during whitelist
+     * @param reservedShards reserved shard amount
+     */
+    function setReservedShards(uint16 reservedShards) external;
+
+    /**
+     * @notice sets the isEnabled flag, allowing or prohibiting deposits
+     * @param isEnabled boolean value
+     */
+    function setIsEnabled(bool isEnabled) external;
+
+    /**
+     * @notice sets the whitelist deadline and allows deposits
+     * @param whitelistEndsAt whitelist deadline timestamp
+     * @param reservedShards whitelist shard amount
+     */
+    function initiateWhitelistAndDeposits(
+        uint64 whitelistEndsAt,
+        uint16 reservedShards
+    ) external;
+
+    /**
+     * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
+     * but once this amount is exceeded said user may not deposit more
+     * @param maxUserShards new maxUserShards value
+     */
+    function setMaxUserShards(uint16 maxUserShards) external;
 
     /**
      * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
@@ -211,4 +275,25 @@ interface IShardVaultAdmin {
      * @param to address to transfer to
      */
     function transferCard(uint256 tokenId, address to) external;
+
+    /**
+     * @notice provides (makes available) yield in the form of ETH and JPEG tokens
+     * @dev unstakes some of the pETH position to convert to yield, and claims
+     * pending rewards in LP_FARM to receive JPEG
+     * @param autoComp amount of autoComp tokens to unstake
+     * @param minETH minimum ETH to receive after unstaking
+     * @param poolInfoIndex the index of the LP_FARM pool which corresponds to staking PETH-ETH curveLP
+     * @return providedETH total ETH provided as yield
+     * @return providedJPEG total JEPG provided as yield
+     */
+    function provideYieldPETH(
+        uint256 autoComp,
+        uint256 minETH,
+        uint256 poolInfoIndex
+    ) external payable returns (uint256 providedETH, uint256 providedJPEG);
+
+    /**
+     * @notice makes the any ETH besides the vault accrued fees claimable
+     */
+    function makeUnusedETHClaimable() external;
 }

@@ -36,10 +36,10 @@ contract IndexSettings is IndexInternal, IIndexSettings {
     /**
      * @inheritdoc IIndexSettings
      */
-    function updateWeights(uint256[] calldata updatedWeights, uint256 endTime)
-        external
-        onlyProtocolOwner
-    {
+    function updateWeights(
+        uint256[] calldata updatedWeights,
+        uint256 endTime
+    ) external onlyProtocolOwner {
         (address investmentPool, ) = IVault(BALANCER_VAULT).getPool(_poolId());
         IInvestmentPool(investmentPool).updateWeightsGradually(
             block.timestamp,

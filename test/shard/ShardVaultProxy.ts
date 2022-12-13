@@ -49,12 +49,13 @@ describe('ShardVaultProxy', () => {
   const BAYC = '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D';
   const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
   const PETH = '0x836A808d4828586A69364065A1e064609F5078c7';
+  const JPEG = '0xE80C0cd204D654CEbe8dd64A4857cAb6Be8345a3';
   const pusdCitadel = '0xF6Cbf5e56a8575797069c7A7FBED218aDF17e3b2';
   const pethCitadel = '0x56D1b6Ac326e152C9fAad749F1F4f9737a049d46';
   const lpFarm = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
   const curvePUSDPool = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
   const curvePETHPool = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
-  const convexBooster = '0xF403C135812408BFbE8713b5A23a04b3D48AAE31';
+  const DAWN_OF_INSRT = '0x1522C79D2044BBC06f4368c07b88A32e9Cd64BD1';
   const pusdPunkVault = '0xD636a2fC1C18A54dB4442c3249D5e620cf8fE98F';
   const pusdPunkVaultHelper = '0x810fdbc7E5Cfe998127a1f2Aa26f34E64e0364f4';
   const pethPunkVault = '0x4e5F305bFCa77b17f804635A9bA669e187d51719';
@@ -62,6 +63,7 @@ describe('ShardVaultProxy', () => {
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
   const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
+  const maxShardsPerUser = BigNumber.from('10');
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
   const yieldFeeBP = BigNumber.from('1000');
@@ -84,6 +86,25 @@ describe('ShardVaultProxy', () => {
     ltvBufferBP: BigNumber;
     ltvDeviationBP: BigNumber;
     conversionBuffer: BigNumber;
+  }
+
+  interface JPEGParamsStruct {
+    PUSD: string;
+    PETH: string;
+    JPEG: string;
+    PUSD_CITADEL: string;
+    PETH_CITADEL: string;
+    CURVE_PUSD_POOL: string;
+    CURVE_PETH_POOL: string;
+    LP_FARM: string;
+  }
+
+  interface AuxilaryParamsStruct {
+    SHARD_COLLECTION: string;
+    PUNKS: string;
+    DAWN_OF_INSRT: string;
+    MARKETPLACE_HELPER: string;
+    TREASURY: string;
   }
 
   const feeParams: FeeParamsStruct = {
@@ -130,7 +151,7 @@ describe('ShardVaultProxy', () => {
     ).deploy();
     const shardCollectionProxy = await new ShardCollectionProxy__factory(
       deployer,
-    ).deploy('ShardVaultCollection', 'SVC', 'shards/');
+    ).deploy('ShardVaultCollection', 'SVC', 'shards');
 
     const shardCollectionFacetCuts = [
       await new ShardCollection__factory(deployer).deploy(),
@@ -159,64 +180,39 @@ describe('ShardVaultProxy', () => {
       };
     });
 
+    const jpegParams: JPEGParamsStruct = {
+      PUSD: PUSD,
+      PETH: PETH,
+      JPEG: JPEG,
+      PUSD_CITADEL: pusdCitadel,
+      PETH_CITADEL: pethCitadel,
+      CURVE_PUSD_POOL: curvePUSDPool,
+      CURVE_PETH_POOL: curvePETHPool,
+      LP_FARM: lpFarm,
+    };
+
+    const auxiliaryPArams: AuxilaryParamsStruct = {
+      SHARD_COLLECTION: shardCollectionProxy.address,
+      PUNKS: CRYPTO_PUNKS_MARKET,
+      DAWN_OF_INSRT: DAWN_OF_INSRT,
+      MARKETPLACE_HELPER: marketplaceHelper.address,
+      TREASURY: deployer.address,
+    };
+
     const shardVaultSelectors = new Set();
 
     const shardVaultFacetCuts = [
       await new ShardVaultIO__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        convexBooster,
-        marketplaceHelper.address,
-        JPEG_CARDS_CIG_STAKING,
+        jpegParams,
+        auxiliaryPArams,
       ),
       await new ShardVaultView__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        convexBooster,
-        marketplaceHelper.address,
-        JPEG_CARDS_CIG_STAKING,
+        jpegParams,
+        auxiliaryPArams,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        convexBooster,
-        marketplaceHelper.address,
-        JPEG_CARDS_CIG_STAKING,
-      ),
-      await new ShardVaultBase__factory(deployer).deploy(
-        shardCollectionProxy.address,
-        PUSD,
-        PETH,
-        CRYPTO_PUNKS_MARKET,
-        pusdCitadel,
-        pethCitadel,
-        lpFarm,
-        curvePUSDPool,
-        curvePETHPool,
-        convexBooster,
-        marketplaceHelper.address,
-        JPEG_CARDS_CIG_STAKING,
+        jpegParams,
+        auxiliaryPArams,
       ),
     ].map(function (f) {
       return {
@@ -252,13 +248,14 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
         pusdPunkVaultHelper,
         shardValue,
         maxShards,
+        maxShardsPerUser,
         feeParams,
         pUSDBufferParams,
       );
@@ -272,15 +269,15 @@ describe('ShardVaultProxy', () => {
 
     const deploySecondShardVaultTx = await core
       .connect(deployer)
-      .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         BAYC,
         baycVault,
         ethers.constants.AddressZero,
         shardValue,
         maxShards,
+        maxShardsPerUser,
         feeParams,
         pUSDBufferParams,
       );
@@ -297,15 +294,15 @@ describe('ShardVaultProxy', () => {
 
     const deployPethShardVaultTx = await core
       .connect(deployer)
-      .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
         pethPunkVaultHelper,
         shardValue,
         maxShards,
+        maxShardsPerUser,
         feeParams,
         pETHBufferParams,
       );

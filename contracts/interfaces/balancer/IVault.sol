@@ -83,7 +83,10 @@ interface IVault {
      * @return lastChangeBlock the block in which the balances of the Balancer's pool underlying tokens last changed
      * @return assetManager the address responsible for managing cash/managed values
      */
-    function getPoolTokenInfo(bytes32 poolId, IERC20 token)
+    function getPoolTokenInfo(
+        bytes32 poolId,
+        IERC20 token
+    )
         external
         view
         returns (
@@ -100,7 +103,9 @@ interface IVault {
      * @return balances an array of the balances of each of the underlying Balancer Pool tokens
      * @return lastChangeBlock the block in which the balances of the Balancer's pool underlying tokens last changed
      */
-    function getPoolTokens(bytes32 poolId)
+    function getPoolTokens(
+        bytes32 poolId
+    )
         external
         view
         returns (
@@ -127,8 +132,7 @@ interface IVault {
      * @return address the address of the Balancer Pool
      * @return PoolSpecialization the specialization of the Balancer Pool
      */
-    function getPool(bytes32 poolId)
-        external
-        view
-        returns (address, PoolSpecialization);
+    function getPool(
+        bytes32 poolId
+    ) external view returns (address, PoolSpecialization);
 }

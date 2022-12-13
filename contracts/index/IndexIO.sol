@@ -40,9 +40,10 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initialize(uint256[] memory poolTokenAmounts, address receiver)
-        external
-    {
+    function initialize(
+        uint256[] memory poolTokenAmounts,
+        address receiver
+    ) external {
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.INIT,
             poolTokenAmounts
