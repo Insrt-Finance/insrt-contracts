@@ -204,6 +204,7 @@ export function describeBehaviorOfShardVaultView(
       it('returns treasury address', async () => {
         expect(await pethInstance['treasury()']()).to.eq(owner.address);
       });
+
       it('returns non-zero address', async () => {
         expect(await pethInstance['treasury()']()).to.not.eq(
           ethers.constants.AddressZero,
