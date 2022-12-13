@@ -37,25 +37,6 @@ interface IShardVaultView {
     function count() external view returns (uint16 count);
 
     /**
-     * @notice formats a tokenId given the internalId and address of ShardVault contract
-     * @param internalId the internal ID
-     * @return tokenId the formatted tokenId
-     */
-    function formatTokenId(
-        uint96 internalId
-    ) external view returns (uint256 tokenId);
-
-    /**
-     * @notice parses a tokenId to extract seeded vault address and internalId
-     * @param tokenId tokenId to parse
-     * @return vault seeded vault address
-     * @return internalId internal ID
-     */
-    function parseTokenId(
-        uint256 tokenId
-    ) external pure returns (address vault, uint96 internalId);
-
-    /**
      * @notice return isInvested flag state
      * @return isInvested isInvested flag
      */
@@ -72,10 +53,10 @@ interface IShardVaultView {
 
     /**
      * @notice returns total debt owed to jpeg'd vault for a given token
-     * @param tokenId id of token position pertains to
+     * @param shardId id of token position pertains to
      * @return debt total debt owed
      */
-    function totalDebt(uint256 tokenId) external view returns (uint256 debt);
+    function totalDebt(uint256 shardId) external view returns (uint256 debt);
 
     /**
      * @notice returns amount of AutoComp LP shares needed to be burnt during unstaking
@@ -102,6 +83,13 @@ interface IShardVaultView {
      * @return fees accrued fees
      */
     function accruedFees() external view returns (uint256 fees);
+
+    /**
+     * @notice returns sum of total jpeg due to yield fee accrued over the entire lifetime of the vault
+     * @dev accounts for jpeg withdrawals
+     * @return jpeg accrued jpeg
+     */
+    function accruedJPEG() external view returns (uint256 jpeg);
 
     /**
      * @notice returns acquisition fee BP
@@ -146,4 +134,52 @@ interface IShardVaultView {
      * @return MARKETPLACE_HELPER address
      */
     function marketplaceHelper() external view returns (address);
+
+    /**
+     * @notice fetches claimed JPEG for shard id
+     * @param shardId id of shard to check
+     * @return claimedJPEGPerShard claimed JPEG for given shard
+     */
+    function claimedJPEGPerShard(
+        uint256 shardId
+    ) external view returns (uint256 claimedJPEGPerShard);
+
+    /**
+     * @notice fetches claimed ETH for shard id
+     * @param shardId id of shard to check
+     * @return claimedETHPerShard claimed ETH for given shard
+     */
+    function claimedETHPerShard(
+        uint256 shardId
+    ) external view returns (uint256 claimedETHPerShard);
+
+    /**
+     * @notice fetches accumulated JPEG per shard
+     * @return cumulativeJPEGPerShard cumulative JPEG per shard value
+     */
+    function cumulativeJPEGPerShard()
+        external
+        view
+        returns (uint256 cumulativeJPEGPerShard);
+
+    /**
+     * @notice fetches accumulated ETH per shard
+     * @return cumulativeETHPerShard cumulative ETH per shard value
+     */
+    function cumulativeETHPerShard()
+        external
+        view
+        returns (uint256 cumulativeETHPerShard);
+
+    /**
+     * @notice returns the yield claiming status of the vault
+     * @return isYieldClaiming the yield claiming status of the vault
+     */
+    function isYieldClaiming() external view returns (bool isYieldClaiming);
+
+    /**
+     * @notice returns timestamp of whitelist end
+     * @return whitelistEndsAt timestamp of whitelist end
+     */
+    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt);
 }

@@ -11,32 +11,9 @@ import { IShardVaultView } from './IShardVaultView.sol';
  */
 contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     constructor(
-        address shardCollection,
-        address pUSD,
-        address pETH,
-        address punkMarket,
-        address pusdCitadel,
-        address pethCitadel,
-        address lpFarm,
-        address curvePUSDPool,
-        address curvePETHPool,
-        address booster,
-        address marketplaceHelper
-    )
-        ShardVaultInternal(
-            shardCollection,
-            pUSD,
-            pETH,
-            punkMarket,
-            pusdCitadel,
-            pethCitadel,
-            lpFarm,
-            curvePUSDPool,
-            curvePETHPool,
-            booster,
-            marketplaceHelper
-        )
-    {}
+        JPEGParams memory jpegParams,
+        AuxiliaryParams memory auxiliaryParams
+    ) ShardVaultInternal(jpegParams, auxiliaryParams) {}
 
     /**
      * @inheritdoc IShardVaultView
@@ -76,24 +53,6 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function formatTokenId(
-        uint96 internalId
-    ) external view returns (uint256 tokenId) {
-        tokenId = _formatTokenId(internalId);
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function parseTokenId(
-        uint256 tokenId
-    ) external pure returns (address vault, uint96 internalId) {
-        (vault, internalId) = _parseTokenId(tokenId);
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
     function isInvested() external view returns (bool) {
         return _isInvested();
     }
@@ -122,12 +81,22 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function accruedJPEG() external view returns (uint256 jpeg) {
+        jpeg = _accruedJPEG();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function queryAutoCompForPUSD(
         uint256 pUSD
     ) external view returns (uint256 autoComp) {
         autoComp = _queryAutoCompForPUSD(pUSD);
     }
 
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function queryAutoCompForPETH(
         uint256 pETH
     ) external view returns (uint256 autoComp) {
@@ -178,5 +147,59 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function marketplaceHelper() external view returns (address) {
         return _marketplaceHelper();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function claimedJPEGPerShard(
+        uint256 shardId
+    ) external view returns (uint256 claimedJPEGPerShard) {
+        claimedJPEGPerShard = _claimedJPEGPerShard(shardId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function claimedETHPerShard(
+        uint256 shardId
+    ) external view returns (uint256 claimedETHPerShard) {
+        claimedETHPerShard = _claimedETHPerShard(shardId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function cumulativeJPEGPerShard()
+        external
+        view
+        returns (uint256 cumulativeJPEGPerShard)
+    {
+        cumulativeJPEGPerShard = _cumulativeJPEGPerShard();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function cumulativeETHPerShard()
+        external
+        view
+        returns (uint256 cumulativeETHPerShard)
+    {
+        cumulativeETHPerShard = _cumulativeETHPerShard();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function isYieldClaiming() external view returns (bool isYieldClaiming) {
+        isYieldClaiming = _isYieldClaiming();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt) {
+        whitelistEndsAt = _whitelistEndsAt();
     }
 }
