@@ -355,7 +355,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     ) internal returns (uint256 pUSD) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        _enforceIsPUSDVault(l.isPUSDVault, true);
+        _enforceIsPUSDVault();
         address jpegdVault = l.jpegdVault;
         uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
 
@@ -376,7 +376,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     ) internal returns (uint256 pETH) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        _enforceIsPUSDVault(l.isPUSDVault, false);
+        _enforceIsPETHVault();
         address jpegdVault = l.jpegdVault;
         uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
 
@@ -452,7 +452,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
-        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, true);
+        _enforceIsPUSDVault();
         //pUSD is in position 0 in the curve meta pool
         shares = _stake(
             amount,
@@ -478,7 +478,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
-        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, false);
+        _enforceIsPETHVault();
         //pETH is in position 1 in the curve meta pool
         shares = _stake(
             amount,
@@ -556,7 +556,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minPUSD,
         uint256 poolInfoIndex
     ) internal returns (uint256 pUSD) {
-        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, true);
+        _enforceIsPUSDVault();
         //pUSD is in position 0 in the curve meta pool
         pUSD = _unstake(
             amount,
@@ -580,7 +580,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minPETH,
         uint256 poolInfoIndex
     ) internal returns (uint256 pETH) {
-        _enforceIsPUSDVault(ShardVaultStorage.layout().isPUSDVault, false);
+        _enforceIsPETHVault();
 
         //pETH is in position 1 in the curve meta pool
         pETH = _unstake(
@@ -683,7 +683,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     ) internal returns (uint256 paidDebt) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        _enforceIsPUSDVault(l.isPUSDVault, true);
+        _enforceIsPUSDVault();
         address jpegdVault = l.jpegdVault;
 
         uint256 autoComp = _queryAutoCompForPUSD(amount);
@@ -713,7 +713,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     ) internal returns (uint256 paidDebt) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        _enforceIsPUSDVault(l.isPUSDVault, false);
+        _enforceIsPETHVault();
         address jpegdVault = l.jpegdVault;
 
         uint256 autoComp = _queryAutoCompForPETH(amount);
@@ -964,13 +964,17 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
 
     /**
      * @notice enforces that the type of the vault matches the type of the call
-     * @param isPUSDVault indicates whether the vault is meant to handle PUSD
-     * @param isPUSDCall indicates whether the call related to PUSD
      */
-    function _enforceIsPUSDVault(
-        bool isPUSDVault,
-        bool isPUSDCall
-    ) internal pure {
-        if (isPUSDVault != isPUSDCall) revert ShardVault__CallTypeProhibited();
+    function _enforceIsPUSDVault() internal view {
+        if (ShardVaultStorage.layout().isPUSDVault == false)
+            revert ShardVault__CallTypeProhibited();
+    }
+
+    /**
+     * @notice enforces that the type of the vault matches the type of the call
+     */
+    function _enforceIsPETHVault() internal view {
+        if (ShardVaultStorage.layout().isPUSDVault == true)
+            revert ShardVault__CallTypeProhibited();
     }
 }
