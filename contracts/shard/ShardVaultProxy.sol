@@ -55,4 +55,6 @@ contract ShardVaultProxy is Proxy {
     function _getImplementation() internal view override returns (address) {
         return IDiamondReadable(SHARD_VAULT_DIAMOND).facetAddress(msg.sig);
     }
+
+    receive() external payable {}
 }

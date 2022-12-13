@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import { ERC721MetadataStorage } from '@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol';
 import { SolidStateDiamond } from '@solidstate/contracts/proxy/diamond/SolidStateDiamond.sol';
+import { ShardCollectionStorage } from './ShardCollectionStorage.sol';
 
 /**
  * @title Diamond proxy used as centrally controlled ShardCollection implementation

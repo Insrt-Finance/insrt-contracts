@@ -38,4 +38,22 @@ interface IShardCollection is ISolidStateERC721, IShardCollectionInternal {
      * @return bool whitelisted state
      */
     function isWhitelisted(address vault) external view returns (bool);
+
+    /**
+     * @notice sets base URI for shard collection
+     * @param baseURI base URI string
+     */
+    function setBaseURI(string memory baseURI) external;
+
+    /**
+     * @notice sets name for shard collection
+     * @param name name string
+     */
+    function setName(string memory name) external;
+
+    /**
+     * @notice sets symbol for shard collection
+     * @param symbol symbol string
+     */
+    function setSymbol(string memory symbol) external;
 }

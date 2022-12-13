@@ -8,7 +8,12 @@ library ShardVaultStorage {
     struct Layout {
         uint256 shardValue;
         uint256 accruedFees;
+        uint256 accruedJPEG;
         uint256 conversionBuffer;
+        uint256 cumulativeETHPerShard;
+        uint256 cumulativeJPEGPerShard;
+        mapping(uint256 => uint256) claimedETHPerShard;
+        mapping(uint256 => uint256) claimedJPEGPerShard;
         uint64 whitelistEndsAt;
         uint16 reservedShards;
         uint16 maxUserShards;
@@ -20,15 +25,15 @@ library ShardVaultStorage {
         uint16 yieldFeeBP;
         uint16 ltvBufferBP;
         uint16 ltvDeviationBP;
-        address treasury;
         address jpegdVault;
         address jpegdVaultHelper;
         address jpegdLP;
         address collection;
         bool isInvested;
-        bool divested;
+        bool isDivested;
         bool isEnabled;
         bool isPUSDVault;
+        bool isYieldClaiming;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => uint16) userShards;
     }
