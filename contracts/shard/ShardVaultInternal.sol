@@ -134,7 +134,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             for (uint256 i; i < shards; ++i) {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    ShardId.formatShardId(uint96(++l.count), address(this))
+                    ShardId.formatShardId(address(this), uint96(++l.count))
                 );
             }
         }
