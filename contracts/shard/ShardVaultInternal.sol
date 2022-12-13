@@ -783,13 +783,35 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 punkId
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-        uint256 proceeds = IMarketPlaceHelper(l.marketPlaceHelper)
-            .acceptAssetBid(calls);
+        IMarketPlaceHelper(l.marketPlaceHelper).acceptAssetBid(calls);
+        l.ownedTokenIds.remove(punkId);
+    }
 
+    /**
+     * @notice receives proceeds from punks sold, and removes any required punkIds from ownedTokenIds
+     * @param calls encoded calls required to withdraw proceeds of sold punks
+     * @param punkIds ids of punk to remove
+     */
+    function _receivePunkProceeds(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256[] memory punkIds
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 proceeds = IMarketPlaceHelper(l.marketPlaceHelper)
+            .forwardSaleProceeds(calls);
         uint256 saleFee = (proceeds * l.saleFeeBP) / BASIS_POINTS;
         l.accruedFees += saleFee;
         l.cumulativeETHPerShard += (proceeds - saleFee) / l.totalSupply;
-        l.ownedTokenIds.remove(punkId);
+
+        uint256 idLength = punkIds.length;
+        if (idLength > 0) {
+            unchecked {
+                for (uint256 i; i < idLength; i++) {
+                    l.ownedTokenIds.remove(punkIds[i]);
+                }
+            }
+        }
     }
 
     /**
