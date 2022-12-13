@@ -111,6 +111,11 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__DownPaymentInsufficient();
 
     /**
+     * @notice thrown when the vault is meant to handle PUSD but is called a PETH function or vice versa
+     */
+    error ShardVault__CallTypeProhibited();
+
+    /**
      * @notice thrown when attempting to claim yield before yield claiming is initialized
      */
     error ShardVault__YieldClaimingForbidden();

@@ -532,6 +532,20 @@ export function describeBehaviorOfShardVaultAdmin(
           );
         });
 
+        it('vault is not PUSD vault', async () => {
+          await expect(
+            pethInstance
+              .connect(owner)
+              ['collateralizePunkPUSD(uint256,uint256,bool)'](
+                punkId,
+                ethers.constants.One,
+                false,
+              ),
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__CallTypeProhibited',
+          );
+        });
         it('called by non-owner', async () => {
           await expect(
             instance
@@ -718,6 +732,21 @@ export function describeBehaviorOfShardVaultAdmin(
           );
         });
 
+        it('vault is not PETH vault', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['collateralizePunkPETH(uint256,uint256,bool)'](
+                punkId,
+                ethers.constants.One,
+                false,
+              ),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__CallTypeProhibited',
+          );
+        });
+
         it('called by non-owner', async () => {
           await expect(
             pethInstance
@@ -812,6 +841,21 @@ export function describeBehaviorOfShardVaultAdmin(
         expect(amount).to.eq(shares);
       });
       describe('reverts if', () => {
+        it('vault is not PUSD vault', async () => {
+          await expect(
+            pethInstance
+              .connect(owner)
+              ['stakePUSD(uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__CallTypeProhibited',
+          );
+        });
+
         it('called by non-owner', async () => {
           await expect(
             instance
@@ -906,6 +950,21 @@ export function describeBehaviorOfShardVaultAdmin(
         expect(amount).to.eq(shares);
       });
       describe('reverts if', () => {
+        it('vault is not PETH vault', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['stakePETH(uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__CallTypeProhibited',
+          );
+        });
+
         it('called by non-owner', async () => {
           await expect(
             pethInstance
@@ -1106,6 +1165,22 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       describe('reverts if', () => {
+        it('vault is not PUSD vault', async () => {
+          await expect(
+            pethInstance
+              .connect(owner)
+              ['repayLoanPUSD(uint256,uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__CallTypeProhibited',
+          );
+        });
+
         it('called by non-owner', async () => {
           await expect(
             instance
@@ -1318,6 +1393,22 @@ export function describeBehaviorOfShardVaultAdmin(
         expect(accruedDebtInterest.sub(debtDifference)).to.gt(paymentAmount);
       });
       describe('reverts if', () => {
+        it('vault is not PETH vault', async () => {
+          await expect(
+            instance
+              .connect(owner)
+              ['repayLoanPETH(uint256,uint256,uint256,uint256)'](
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+                ethers.constants.One,
+              ),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__CallTypeProhibited',
+          );
+        });
+
         it('called by non-owner', async () => {
           await expect(
             pethInstance
