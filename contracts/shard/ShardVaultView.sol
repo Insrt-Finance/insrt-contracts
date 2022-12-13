@@ -202,4 +202,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function whitelistEndsAt() external view returns (uint64 whitelistEndsAt) {
         whitelistEndsAt = _whitelistEndsAt();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function treasury() external view returns (address treasury) {
+        treasury = _treasury();
+    }
 }

@@ -190,6 +190,17 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function withdrawFees()
+        external
+        onlyProtocolOwner
+        returns (uint256 feesETH, uint256 feesJPEG)
+    {
+        (feesETH, feesJPEG) = _withdrawFees();
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function setMaxUserShards(uint16 maxUserShards) external onlyProtocolOwner {
         _setMaxUserShards(maxUserShards);
     }

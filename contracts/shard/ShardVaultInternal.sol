@@ -41,6 +41,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable CURVE_PETH_POOL;
     address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
+    address internal immutable TREASURY;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -60,6 +61,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
         MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
+        TREASURY = auxiliaryParams.TREASURY;
     }
 
     modifier onlyProtocolOwner() {
@@ -501,6 +503,27 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             minCurveLP,
             poolInfoIndex
         );
+    }
+
+    /**
+     * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
+     * @return feesETH total ETH fees withdrawn
+     * @return feesJPEG total JPEG fees withdrawn
+     */
+    function _withdrawFees()
+        internal
+        returns (uint256 feesETH, uint256 feesJPEG)
+    {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        feesETH = l.accruedFees;
+        feesJPEG = l.accruedJPEG;
+
+        l.accruedFees -= feesETH;
+        l.accruedJPEG -= feesJPEG;
+
+        IERC20(JPEG).transfer(TREASURY, feesJPEG);
+        payable(TREASURY).sendValue(feesETH);
     }
 
     /**
@@ -1196,6 +1219,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _whitelistEndsAt() internal view returns (uint64 whitelistEndsAt) {
         whitelistEndsAt = ShardVaultStorage.layout().whitelistEndsAt;
+    }
+
+    /**
+
+     * @notice returns treasury address
+     * @return treasury address of treasury
+     */
+    function _treasury() internal view returns (address treasury) {
+        treasury = TREASURY;
     }
 
     /**

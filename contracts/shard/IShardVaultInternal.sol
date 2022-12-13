@@ -21,6 +21,7 @@ interface IShardVaultInternal is IOwnableInternal {
         address PUNKS;
         address DAWN_OF_INSRT;
         address MARKETPLACE_HELPER;
+        address TREASURY;
     }
 
     /**
@@ -117,4 +118,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to claim excess ETH after yield claiming is initialized
      */
     error ShardVault__ClaimingExcessETHForbidden();
+
+    /**
+     * @notice thrown when attempting to withdraw fees with treasury address == address(0)
+     */
+    error ShardVault__TreasuryIsZeroAddress();
 }

@@ -97,6 +97,15 @@ interface IShardVaultAdmin {
     ) external;
 
     /**
+     * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
+     * @return feesETH total ETH fees withdrawn
+     * @return feesJPEG total JPEG fees withdrawn
+     */
+    function withdrawFees()
+        external
+        returns (uint256 feesETH, uint256 feesJPEG);
+
+    /**
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */

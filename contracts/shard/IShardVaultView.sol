@@ -182,4 +182,10 @@ interface IShardVaultView {
      * @return whitelistEndsAt timestamp of whitelist end
      */
     function whitelistEndsAt() external view returns (uint64 whitelistEndsAt);
+
+    /**
+     * @notice returns treasury address
+     * @return treasury address of treasury
+     */
+    function treasury() external view returns (address treasury);
 }
