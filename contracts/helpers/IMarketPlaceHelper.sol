@@ -35,6 +35,11 @@ interface IMarketPlaceHelper {
     error MarketPlaceHelper__FailedAcceptBidCall();
 
     /**
+     * @notice thrown when withdrawing + forwarding sale proceeds fails
+     */
+    error MarketPlaceHelper__FailedForwardSaleProceedsCall();
+
+    /**
      * @notice purchasing call made to arbitrary marketplace
      * @param calls array of EncodedCall structs containing information to execute the desired
      * number of low level calls
@@ -56,9 +61,15 @@ interface IMarketPlaceHelper {
     /**
      * @notice accept bid call made to arbitrary marketplace
      * @param calls encoded calls needed to accept bid
-     * @return receivedETH eth received as a result of executing encoded calls
      */
-    function acceptAssetBid(
+    function acceptAssetBid(EncodedCall[] memory calls) external;
+
+    /**
+     * @notice accept bid call made to arbitrary marketplace
+     * @param calls encoded calls needed to accept bid
+     * @return proceeds amount of ETH forwarded to msg.sender (which is the owner)
+     */
+    function forwardSaleProceeds(
         EncodedCall[] memory calls
-    ) external payable returns (uint256 receivedETH);
+    ) external payable returns (uint256 proceeds);
 }

@@ -66,11 +66,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper, Ownable {
     /**
      * @inheritdoc IMarketPlaceHelper
      */
-    function acceptAssetBid(
-        EncodedCall[] memory calls
-    ) external payable returns (uint256 receivedETH) {
-        uint256 oldBalance = address(this).balance;
-
+    function acceptAssetBid(EncodedCall[] memory calls) external onlyOwner {
         for (uint256 i; i < calls.length; ) {
             unchecked {
                 (bool success, ) = calls[i].target.call{
@@ -82,12 +78,29 @@ contract MarketPlaceHelper is IMarketPlaceHelper, Ownable {
                 ++i;
             }
         }
+    }
 
-        uint256 newBalance = address(this).balance;
-        receivedETH = newBalance - oldBalance;
+    /**
+     * @inheritdoc IMarketPlaceHelper
+     */
+    function forwardSaleProceeds(
+        EncodedCall[] memory calls
+    ) external payable onlyOwner returns (uint256 proceeds) {
+        for (uint256 i; i < calls.length; ) {
+            unchecked {
+                (bool success, ) = calls[i].target.call{
+                    value: calls[i].value
+                }(calls[i].data);
+                if (!success) {
+                    revert MarketPlaceHelper__FailedForwardSaleProceedsCall();
+                }
+                ++i;
+            }
+        }
 
-        if (receivedETH != 0) {
-            payable(msg.sender).sendValue(receivedETH);
+        proceeds = address(this).balance;
+        if (proceeds != 0) {
+            payable(msg.sender).sendValue(proceeds);
         }
     }
 }
