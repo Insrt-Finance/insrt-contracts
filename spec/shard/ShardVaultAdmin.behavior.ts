@@ -3019,8 +3019,8 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe.only('#unstakeCard(uint256)', () => {
-      it.only('unstakes a jpeg cig card', async () => {
+    describe('#unstakeCard(uint256)', () => {
+      it('unstakes a jpeg cig card', async () => {
         await jpegCards
           .connect(cardOwner)
           ['transferFrom(address,address,uint256)'](
