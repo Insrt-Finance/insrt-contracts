@@ -92,6 +92,7 @@ describe('ShardVaultProxy', () => {
     PUSD: string;
     PETH: string;
     JPEG: string;
+    JPEG_CARDS_CIG_STAKING: string;
     PUSD_CITADEL: string;
     PETH_CITADEL: string;
     CURVE_PUSD_POOL: string;
@@ -184,6 +185,7 @@ describe('ShardVaultProxy', () => {
       PUSD: PUSD,
       PETH: PETH,
       JPEG: JPEG,
+      JPEG_CARDS_CIG_STAKING: JPEG_CARDS_CIG_STAKING,
       PUSD_CITADEL: pusdCitadel,
       PETH_CITADEL: pethCitadel,
       CURVE_PUSD_POOL: curvePUSDPool,
@@ -211,6 +213,10 @@ describe('ShardVaultProxy', () => {
         auxiliaryPArams,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
+        jpegParams,
+        auxiliaryPArams,
+      ),
+      await new ShardVaultBase__factory(deployer).deploy(
         jpegParams,
         auxiliaryPArams,
       ),

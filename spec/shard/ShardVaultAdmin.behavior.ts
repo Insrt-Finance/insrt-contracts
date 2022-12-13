@@ -3011,13 +3011,16 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['stakeCard(uint256)'](ethers.constants.One),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
 
-    describe('#unstakeCard(uint256)', () => {
-      it('unstakes a jpeg cig card', async () => {
+    describe.only('#unstakeCard(uint256)', () => {
+      it.only('unstakes a jpeg cig card', async () => {
         await jpegCards
           .connect(cardOwner)
           ['transferFrom(address,address,uint256)'](
@@ -3043,7 +3046,10 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['unstakeCard(uint256)'](ethers.constants.One),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
@@ -3079,7 +3085,10 @@ export function describeBehaviorOfShardVaultAdmin(
                 ethers.constants.One,
                 ethers.constants.AddressZero,
               ),
-          ).to.be.revertedWith('ShardVault__NotProtocolOwner()');
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
         });
       });
     });
