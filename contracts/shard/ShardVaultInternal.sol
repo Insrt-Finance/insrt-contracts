@@ -1342,6 +1342,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _transferCard(uint256 tokenId, address to) internal {
         IERC721(JPEG_CARDS).transferFrom(address(this), to, tokenId);
+    }
 
     /**
      * @notice enforces that the type of the vault matches the type of the call
