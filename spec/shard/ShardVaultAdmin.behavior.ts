@@ -1914,7 +1914,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe.only('#closePunkPositionPETH(uint256,uint256,uint256)', () => {
+    describe('#closePunkPositionPETH(uint256,uint256,uint256)', () => {
       it('closes punk position', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance

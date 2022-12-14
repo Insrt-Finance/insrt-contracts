@@ -369,7 +369,7 @@ export function describeBehaviorOfShardVaultView(
         }
       });
     });
-    describe.only('#queryAutoCompforPUSD(uint256)', async () => {
+    describe('#queryAutoCompforPUSD(uint256)', async () => {
       it('returns autoComp amount resulting in at least amount of PUSD requested after unstaking', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
