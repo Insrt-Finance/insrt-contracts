@@ -15,6 +15,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ShardId } from './ShardId.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
+import { IJpegCardsCigStaking } from '../interfaces/jpegd/IJpegCardsCigStaking.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -39,8 +40,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
-    address internal immutable DAWN_OF_INSRT;
     address internal immutable MARKETPLACE_HELPER;
+    address internal immutable JPEG_CARDS_CIG_STAKING;
+    address internal immutable JPEG_CARDS;
+    address internal immutable DAWN_OF_INSRT;
     address internal immutable TREASURY;
     uint256 internal constant BASIS_POINTS = 10000;
 
@@ -56,6 +59,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CURVE_PUSD_POOL = jpegParams.CURVE_PUSD_POOL;
         CURVE_PETH_POOL = jpegParams.CURVE_PETH_POOL;
         JPEG = jpegParams.JPEG;
+        JPEG_CARDS_CIG_STAKING = jpegParams.JPEG_CARDS_CIG_STAKING;
+        JPEG_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
 
         SHARD_COLLECTION = auxiliaryParams.SHARD_COLLECTION;
         PUNKS = auxiliaryParams.PUNKS;
@@ -1312,6 +1317,31 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     function _enforceBasis(uint16 value) internal pure {
         if (value > 10000) revert ShardVault__BasisExceeded();
     }
+
+    /**
+     * @notice stakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function _stakeCard(uint256 tokenId) internal {
+        IERC721(JPEG_CARDS).approve(JPEG_CARDS_CIG_STAKING, tokenId);
+        IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).deposit(tokenId);
+    }
+
+    /**
+     * @notice unstakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function _unstakeCard(uint256 tokenId) internal {
+        IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).withdraw(tokenId);
+    }
+
+    /**
+     * @notice transfers a jpeg card to an address
+     * @param tokenId id of card in card collection
+     * @param to address to transfer to
+     */
+    function _transferCard(uint256 tokenId, address to) internal {
+        IERC721(JPEG_CARDS).transferFrom(address(this), to, tokenId);
 
     /**
      * @notice enforces that the type of the vault matches the type of the call

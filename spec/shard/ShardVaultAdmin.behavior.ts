@@ -10,8 +10,10 @@ import {
   IShardVault,
   ICurveMetaPool,
   IMarketPlaceHelper,
+  IERC721,
 } from '../../typechain-types';
 import {
+  IJpegCardsCigStaking,
   ILPFarming,
   IVault,
 } from '../../typechain-types/contracts/interfaces/jpegd';
@@ -32,6 +34,7 @@ export function describeBehaviorOfShardVaultAdmin(
     let depositor: SignerWithAddress;
     let owner: SignerWithAddress;
     let nonOwner: SignerWithAddress;
+    let cardOwner: SignerWithAddress;
     let instance: IShardVault;
     let secondInstance: IShardVault;
     let pethInstance: IShardVault;
@@ -41,6 +44,8 @@ export function describeBehaviorOfShardVaultAdmin(
     let jpeg: IERC20;
     let jpegdVault: INFTVault;
     let pethJpegdVault: INFTVault;
+    let jpegCardsCigStaking: IJpegCardsCigStaking;
+    let jpegCards: IERC721;
     let lpFarm: ILPFarming;
 
     const punkId = BigNumber.from('2534');
@@ -55,6 +60,9 @@ export function describeBehaviorOfShardVaultAdmin(
     const LP_FARM = '0xb271d2C9e693dde033d97f8A3C9911781329E4CA';
     const curvePUSDPoolAddress = '0x8EE017541375F6Bcd802ba119bdDC94dad6911A1';
     const curvePETHPoolAddress = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
+    const cardOwnerAddress = '0xeDE2a066F4aB9bB21D768aD0367F539978EE6f8c';
+    const cardID = BigNumber.from('513');
+    const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
     const targetLTVBP = BigNumber.from('2800');
     const BASIS_POINTS = BigNumber.from('10000');
     const punkPurchaseCallsPETH: IMarketPlaceHelper.EncodedCallStruct[] = [];
@@ -92,6 +100,21 @@ export function describeBehaviorOfShardVaultAdmin(
         'INFTVault',
         PETH_JPEGD_VAULT,
       );
+
+      jpegCardsCigStaking = <IJpegCardsCigStaking>(
+        await ethers.getContractAt(
+          'IJpegCardsCigStaking',
+          JPEG_CARDS_CIG_STAKING,
+        )
+      );
+
+      jpegCards = <IERC721>(
+        await ethers.getContractAt(
+          'IERC721',
+          await jpegCardsCigStaking.callStatic['cards()'](),
+        )
+      );
+
       lpFarm = await ethers.getContractAt('ILPFarming', LP_FARM);
     });
 
@@ -101,6 +124,13 @@ export function describeBehaviorOfShardVaultAdmin(
       pethInstance = await pethDeploy();
       [depositor, nonOwner] = await ethers.getSigners();
       owner = await args.getProtocolOwner();
+
+      cardOwner = await ethers.getSigner(cardOwnerAddress);
+
+      await hre.network.provider.request({
+        method: 'hardhat_impersonateAccount',
+        params: [cardOwnerAddress],
+      });
 
       await instance.connect(owner)['setIsEnabled(bool)'](true);
       await secondInstance.connect(owner)['setIsEnabled(bool)'](true);
@@ -115,6 +145,7 @@ export function describeBehaviorOfShardVaultAdmin(
       await pethInstance
         .connect(owner)
         ['setMaxUserShards(uint16)'](BigNumber.from('110'));
+
       let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
         'buyPunk',
         [punkId],
@@ -3041,6 +3072,110 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setReservedShards(uint16)'](BigNumber.from('1000')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('#stakeCard(uint256)', () => {
+      it('stakes a jpeg cig card', async () => {
+        await jpegCards
+          .connect(cardOwner)
+          ['transferFrom(address,address,uint256)'](
+            cardOwner.address,
+            instance.address,
+            cardID,
+          );
+
+        await instance.connect(owner)['stakeCard(uint256)'](cardID);
+
+        expect(
+          await jpegCardsCigStaking['isUserStaking(address)'](instance.address),
+        ).to.be.true;
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['stakeCard(uint256)'](ethers.constants.One),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('#unstakeCard(uint256)', () => {
+      it('unstakes a jpeg cig card', async () => {
+        await jpegCards
+          .connect(cardOwner)
+          ['transferFrom(address,address,uint256)'](
+            cardOwner.address,
+            instance.address,
+            cardID,
+          );
+
+        await instance.connect(owner)['stakeCard(uint256)'](cardID);
+
+        expect(
+          await jpegCardsCigStaking['isUserStaking(address)'](instance.address),
+        ).to.be.true;
+
+        await instance.connect(owner)['unstakeCard(uint256)'](cardID);
+        expect(
+          await jpegCardsCigStaking['isUserStaking(address)'](instance.address),
+        ).to.be.false;
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['unstakeCard(uint256)'](ethers.constants.One),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('#transferCard(uint256,address)', () => {
+      it('transfers a card to a given address', async () => {
+        await jpegCards
+          .connect(cardOwner)
+          ['transferFrom(address,address,uint256)'](
+            cardOwner.address,
+            instance.address,
+            cardID,
+          );
+
+        expect(await jpegCards['ownerOf(uint256)'](cardID)).to.eq(
+          instance.address,
+        );
+
+        await instance
+          .connect(owner)
+          ['transferCard(uint256,address)'](cardID, cardOwner.address);
+        expect(await jpegCards['ownerOf(uint256)'](cardID)).to.eq(
+          cardOwner.address,
+        );
+      });
+
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['transferCard(uint256,address)'](
+                ethers.constants.One,
+                ethers.constants.AddressZero,
+              ),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',

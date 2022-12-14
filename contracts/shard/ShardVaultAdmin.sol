@@ -262,6 +262,20 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function stakeCard(uint256 tokenId) external onlyProtocolOwner {
+        _stakeCard(tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function unstakeCard(uint256 tokenId) external onlyProtocolOwner {
+        _unstakeCard(tokenId);
+    }
+     
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function provideYieldPETH(
         uint256 autoComp,
         uint256 minETH,
@@ -279,6 +293,16 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         );
     }
 
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function transferCard(uint256 tokenId, address to)
+        external
+        onlyProtocolOwner
+    {
+        _transferCard(tokenId, to);
+    }
+    
     /**
      * @inheritdoc IShardVaultAdmin
      */
