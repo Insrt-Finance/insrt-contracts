@@ -97,6 +97,15 @@ interface IShardVaultAdmin {
     ) external;
 
     /**
+     * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
+     * @return feesETH total ETH fees withdrawn
+     * @return feesJPEG total JPEG fees withdrawn
+     */
+    function withdrawFees()
+        external
+        returns (uint256 feesETH, uint256 feesJPEG);
+
+    /**
      * @notice sets the acquisition fee BP
      * @param feeBP basis points value of fee
      */
@@ -247,6 +256,25 @@ interface IShardVaultAdmin {
         IMarketPlaceHelper.EncodedCall[] memory calls,
         uint256 punkId
     ) external;
+
+    /**
+     * @notice stakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function stakeCard(uint256 tokenId) external;
+
+    /**
+     * @notice unstakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function unstakeCard(uint256 tokenId) external;
+
+    /**
+     * @notice transfers a jpeg card to an address
+     * @param tokenId id of card in card collection
+     * @param to address to transfer to
+     */
+    function transferCard(uint256 tokenId, address to) external;
 
     /**
      * @notice provides (makes available) yield in the form of ETH and JPEG tokens

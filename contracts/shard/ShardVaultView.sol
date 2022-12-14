@@ -53,24 +53,6 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function formatShardId(
-        uint96 internalId
-    ) external view returns (uint256 shardId) {
-        shardId = _formatShardId(internalId);
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function parseShardId(
-        uint256 shardId
-    ) external pure returns (address vault, uint96 internalId) {
-        (vault, internalId) = _parseShardId(shardId);
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
     function isInvested() external view returns (bool) {
         return _isInvested();
     }
@@ -219,5 +201,12 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
      */
     function whitelistEndsAt() external view returns (uint64 whitelistEndsAt) {
         whitelistEndsAt = _whitelistEndsAt();
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function treasury() external view returns (address treasury) {
+        treasury = _treasury();
     }
 }

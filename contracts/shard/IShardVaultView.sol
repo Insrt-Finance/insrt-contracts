@@ -37,25 +37,6 @@ interface IShardVaultView {
     function count() external view returns (uint16 count);
 
     /**
-     * @notice formats a shardId given the internalId and address of ShardVault contract
-     * @param internalId the internal ID
-     * @return shardId the formatted shardId
-     */
-    function formatShardId(
-        uint96 internalId
-    ) external view returns (uint256 shardId);
-
-    /**
-     * @notice parses a shardId to extract seeded vault address and internalId
-     * @param shardId shardId to parse
-     * @return vault seeded vault address
-     * @return internalId internal ID
-     */
-    function parseShardId(
-        uint256 shardId
-    ) external pure returns (address vault, uint96 internalId);
-
-    /**
      * @notice return isInvested flag state
      * @return isInvested isInvested flag
      */
@@ -201,4 +182,10 @@ interface IShardVaultView {
      * @return whitelistEndsAt timestamp of whitelist end
      */
     function whitelistEndsAt() external view returns (uint64 whitelistEndsAt);
+
+    /**
+     * @notice returns treasury address
+     * @return treasury address of treasury
+     */
+    function treasury() external view returns (address treasury);
 }

@@ -29,6 +29,7 @@ interface IShardVaultManager {
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
      * @param maxUserShards maximum amount of shards allowed per user
+     * @param isPUSDVault indicates whether vault should be allowed to call PETH or PUSD functions
      * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
      * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
      * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
@@ -40,6 +41,7 @@ interface IShardVaultManager {
         uint256 shardValue,
         uint16 maxSupply,
         uint16 maxUserShards,
+        bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
         IShardVault.BufferParams memory bufferParams
     ) external returns (address deployment);

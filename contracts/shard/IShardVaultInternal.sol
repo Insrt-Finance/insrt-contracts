@@ -9,6 +9,7 @@ interface IShardVaultInternal is IOwnableInternal {
         address PUSD;
         address PETH;
         address JPEG;
+        address JPEG_CARDS_CIG_STAKING;
         address PUSD_CITADEL;
         address PETH_CITADEL;
         address CURVE_PUSD_POOL;
@@ -21,6 +22,7 @@ interface IShardVaultInternal is IOwnableInternal {
         address PUNKS;
         address DAWN_OF_INSRT;
         address MARKETPLACE_HELPER;
+        address TREASURY;
     }
 
     /**
@@ -109,6 +111,11 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__DownPaymentInsufficient();
 
     /**
+     * @notice thrown when the vault is meant to handle PUSD but is called a PETH function or vice versa
+     */
+    error ShardVault__CallTypeProhibited();
+
+    /**
      * @notice thrown when attempting to claim yield before yield claiming is initialized
      */
     error ShardVault__YieldClaimingForbidden();
@@ -117,4 +124,9 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to claim excess ETH after yield claiming is initialized
      */
     error ShardVault__ClaimingExcessETHForbidden();
+
+    /**
+     * @notice thrown when attempting to withdraw fees with treasury address == address(0)
+     */
+    error ShardVault__TreasuryIsZeroAddress();
 }

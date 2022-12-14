@@ -190,6 +190,17 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function withdrawFees()
+        external
+        onlyProtocolOwner
+        returns (uint256 feesETH, uint256 feesJPEG)
+    {
+        (feesETH, feesJPEG) = _withdrawFees();
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function setMaxUserShards(uint16 maxUserShards) external onlyProtocolOwner {
         _setMaxUserShards(maxUserShards);
     }
@@ -251,6 +262,20 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function stakeCard(uint256 tokenId) external onlyProtocolOwner {
+        _stakeCard(tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function unstakeCard(uint256 tokenId) external onlyProtocolOwner {
+        _unstakeCard(tokenId);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function provideYieldPETH(
         uint256 autoComp,
         uint256 minETH,
@@ -266,6 +291,16 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
             minETH,
             poolInfoIndex
         );
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function transferCard(
+        uint256 tokenId,
+        address to
+    ) external onlyProtocolOwner {
+        _transferCard(tokenId, to);
     }
 
     /**
