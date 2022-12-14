@@ -33,6 +33,7 @@ library ShardVaultStorage {
         bool isInvested;
         bool isDivested;
         bool isEnabled;
+        bool isPUSDVault;
         bool isYieldClaiming;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => uint16) userShards;

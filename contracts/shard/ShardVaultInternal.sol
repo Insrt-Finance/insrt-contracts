@@ -15,6 +15,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ShardId } from './ShardId.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
+import { IJpegCardsCigStaking } from '../interfaces/jpegd/IJpegCardsCigStaking.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -39,7 +40,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     address internal immutable LP_FARM;
     address internal immutable CURVE_PUSD_POOL;
     address internal immutable CURVE_PETH_POOL;
+    address internal immutable MARKETPLACE_HELPER;
+    address internal immutable JPEG_CARDS_CIG_STAKING;
+    address internal immutable JPEG_CARDS;
     address internal immutable DAWN_OF_INSRT;
+    address internal immutable TREASURY;
     uint256 internal constant BASIS_POINTS = 10000;
 
     constructor(
@@ -54,10 +59,14 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         CURVE_PUSD_POOL = jpegParams.CURVE_PUSD_POOL;
         CURVE_PETH_POOL = jpegParams.CURVE_PETH_POOL;
         JPEG = jpegParams.JPEG;
+        JPEG_CARDS_CIG_STAKING = jpegParams.JPEG_CARDS_CIG_STAKING;
+        JPEG_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
 
         SHARD_COLLECTION = auxiliaryParams.SHARD_COLLECTION;
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
+        MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
+        TREASURY = auxiliaryParams.TREASURY;
     }
 
     modifier onlyProtocolOwner() {
@@ -132,7 +141,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             for (uint256 i; i < shards; ++i) {
                 IShardCollection(SHARD_COLLECTION).mint(
                     msg.sender,
-                    ShardId.formatShardId(uint96(++l.count), address(this))
+                    ShardId.formatShardId(address(this), uint96(++l.count))
                 );
             }
         }
@@ -318,8 +327,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pUSD) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        _enforceIsPUSDVault();
+        address jpegdVault = l.jpegdVault;
         uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
 
         pUSD = _collateralizePunk(
@@ -337,8 +348,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 borrowAmount,
         bool insure
     ) internal returns (uint256 pETH) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        _enforceIsPETHVault();
+        address jpegdVault = l.jpegdVault;
         uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
 
         pETH = _collateralizePunk(
@@ -393,9 +406,11 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
             ICryptoPunkMarket(PUNKS).transferPunk(flashEscrow, punkId);
         }
 
+        uint256 oldBalance = IERC20(token).balanceOf(address(this));
+
         INFTVault(jpegdVault).borrow(punkId, borrowAmount, insure);
 
-        amount = IERC20(token).balanceOf(address(this));
+        amount = IERC20(token).balanceOf(address(this)) - oldBalance;
     }
 
     /**
@@ -411,6 +426,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
+        _enforceIsPUSDVault();
         //pUSD is in position 0 in the curve meta pool
         shares = _stake(
             amount,
@@ -436,6 +452,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minCurveLP,
         uint256 poolInfoIndex
     ) internal returns (uint256 shares) {
+        _enforceIsPETHVault();
         //pETH is in position 1 in the curve meta pool
         shares = _stake(
             amount,
@@ -502,6 +519,27 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+     * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
+     * @return feesETH total ETH fees withdrawn
+     * @return feesJPEG total JPEG fees withdrawn
+     */
+    function _withdrawFees()
+        internal
+        returns (uint256 feesETH, uint256 feesJPEG)
+    {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        feesETH = l.accruedFees;
+        feesJPEG = l.accruedJPEG;
+
+        l.accruedFees -= feesETH;
+        l.accruedJPEG -= feesJPEG;
+
+        IERC20(JPEG).transfer(TREASURY, feesJPEG);
+        payable(TREASURY).sendValue(feesETH);
+    }
+
+    /**
      * @notice sets the sale fee BP
      * @param feeBP basis points value of fee
      */
@@ -540,6 +578,7 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minPUSD,
         uint256 poolInfoIndex
     ) internal returns (uint256 pUSD) {
+        _enforceIsPUSDVault();
         //pUSD is in position 0 in the curve meta pool
         pUSD = _unstake(
             amount,
@@ -563,6 +602,8 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 minPETH,
         uint256 poolInfoIndex
     ) internal returns (uint256 pETH) {
+        _enforceIsPETHVault();
+
         //pETH is in position 1 in the curve meta pool
         pETH = _unstake(
             amount,
@@ -663,7 +704,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        _enforceIsPUSDVault();
+        address jpegdVault = l.jpegdVault;
 
         uint256 autoComp = _queryAutoCompForPUSD(amount);
         paidDebt = _unstakePUSD(autoComp, minPUSD, poolInfoIndex);
@@ -690,7 +734,10 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
         uint256 poolInfoIndex,
         uint256 punkId
     ) internal returns (uint256 paidDebt) {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        _enforceIsPETHVault();
+        address jpegdVault = l.jpegdVault;
 
         uint256 autoComp = _queryAutoCompForPETH(amount);
         paidDebt = _unstakePETH(autoComp, minPETH, poolInfoIndex);
@@ -1231,6 +1278,15 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
     }
 
     /**
+
+     * @notice returns treasury address
+     * @return treasury address of treasury
+     */
+    function _treasury() internal view returns (address treasury) {
+        treasury = TREASURY;
+    }
+
+    /**
      * @notice check to ensure account owns a given shardId corresponding to a shard
      * @param account address to check
      * @param shardId shardId to check
@@ -1294,5 +1350,47 @@ abstract contract ShardVaultInternal is IShardVaultInternal, OwnableInternal {
      */
     function _enforceBasis(uint16 value) internal pure {
         if (value > 10000) revert ShardVault__BasisExceeded();
+    }
+
+    /**
+     * @notice stakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function _stakeCard(uint256 tokenId) internal {
+        IERC721(JPEG_CARDS).approve(JPEG_CARDS_CIG_STAKING, tokenId);
+        IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).deposit(tokenId);
+    }
+
+    /**
+     * @notice unstakes a jpeg card
+     * @param tokenId id of card in card collection
+     */
+    function _unstakeCard(uint256 tokenId) internal {
+        IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).withdraw(tokenId);
+    }
+
+    /**
+     * @notice transfers a jpeg card to an address
+     * @param tokenId id of card in card collection
+     * @param to address to transfer to
+     */
+    function _transferCard(uint256 tokenId, address to) internal {
+        IERC721(JPEG_CARDS).transferFrom(address(this), to, tokenId);
+    }
+
+    /**
+     * @notice enforces that the type of the vault matches the type of the call
+     */
+    function _enforceIsPUSDVault() internal view {
+        if (ShardVaultStorage.layout().isPUSDVault == false)
+            revert ShardVault__CallTypeProhibited();
+    }
+
+    /**
+     * @notice enforces that the type of the vault matches the type of the call
+     */
+    function _enforceIsPETHVault() internal view {
+        if (ShardVaultStorage.layout().isPUSDVault == true)
+            revert ShardVault__CallTypeProhibited();
     }
 }

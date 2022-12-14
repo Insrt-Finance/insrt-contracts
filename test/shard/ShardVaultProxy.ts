@@ -9,6 +9,7 @@ import {
   ShardVaultManager__factory,
   ShardVaultIO__factory,
   ShardVaultView__factory,
+  ShardVaultBase__factory,
   ShardCollection,
   ShardCollection__factory,
   ShardCollectionProxy,
@@ -61,6 +62,7 @@ describe('ShardVaultProxy', () => {
   const pethPunkVaultHelper = '0x2bE665ee27096344B8f015b1952D3dFDb4Db4691';
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
+  const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
   const maxShardsPerUser = BigNumber.from('10');
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
@@ -90,6 +92,7 @@ describe('ShardVaultProxy', () => {
     PUSD: string;
     PETH: string;
     JPEG: string;
+    JPEG_CARDS_CIG_STAKING: string;
     PUSD_CITADEL: string;
     PETH_CITADEL: string;
     CURVE_PUSD_POOL: string;
@@ -101,6 +104,8 @@ describe('ShardVaultProxy', () => {
     SHARD_COLLECTION: string;
     PUNKS: string;
     DAWN_OF_INSRT: string;
+    MARKETPLACE_HELPER: string;
+    TREASURY: string;
   }
 
   const feeParams: FeeParamsStruct = {
@@ -181,6 +186,7 @@ describe('ShardVaultProxy', () => {
       PUSD: PUSD,
       PETH: PETH,
       JPEG: JPEG,
+      JPEG_CARDS_CIG_STAKING: JPEG_CARDS_CIG_STAKING,
       PUSD_CITADEL: pusdCitadel,
       PETH_CITADEL: pethCitadel,
       CURVE_PUSD_POOL: curvePUSDPool,
@@ -192,6 +198,8 @@ describe('ShardVaultProxy', () => {
       SHARD_COLLECTION: shardCollectionProxy.address,
       PUNKS: CRYPTO_PUNKS_MARKET,
       DAWN_OF_INSRT: DAWN_OF_INSRT,
+      MARKETPLACE_HELPER: marketplaceHelper.address,
+      TREASURY: deployer.address,
     };
 
     const shardVaultSelectors = new Set();
@@ -206,6 +214,10 @@ describe('ShardVaultProxy', () => {
         auxiliaryPArams,
       ),
       await new ShardVaultAdmin__factory(deployer).deploy(
+        jpegParams,
+        auxiliaryPArams,
+      ),
+      await new ShardVaultBase__factory(deployer).deploy(
         jpegParams,
         auxiliaryPArams,
       ),
@@ -240,11 +252,10 @@ describe('ShardVaultProxy', () => {
     );
 
     core = ICore__factory.connect(coreDiamond.address, ethers.provider);
-
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
@@ -252,6 +263,7 @@ describe('ShardVaultProxy', () => {
         shardValue,
         maxShards,
         maxShardsPerUser,
+        true,
         feeParams,
         pUSDBufferParams,
       );
@@ -270,7 +282,7 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         BAYC,
         baycVault,
@@ -278,6 +290,7 @@ describe('ShardVaultProxy', () => {
         shardValue,
         maxShards,
         maxShardsPerUser,
+        true,
         feeParams,
         pUSDBufferParams,
       );
@@ -295,7 +308,7 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16))'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
@@ -303,6 +316,7 @@ describe('ShardVaultProxy', () => {
         shardValue,
         maxShards,
         maxShardsPerUser,
+        false,
         feeParams,
         pETHBufferParams,
       );

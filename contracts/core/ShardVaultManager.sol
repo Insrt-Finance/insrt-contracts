@@ -27,6 +27,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         uint256 shardValue,
         uint16 maxSupply,
         uint16 maxUserShards,
+        bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
         IShardVault.BufferParams memory bufferParams
     ) external onlyOwner returns (address deployment) {
@@ -40,6 +41,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 shardValue,
                 maxSupply,
                 maxUserShards,
+                isPUSDVault,
                 feeParams,
                 bufferParams
             )

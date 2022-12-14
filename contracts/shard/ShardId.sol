@@ -8,13 +8,13 @@ pragma solidity ^0.8.0;
 library ShardId {
     /**
      * @notice formats a shardId given the internalId and address of ShardVault contract
-     * @param internalId the internal ID
      * @param vault address of vault to use as seed for ShardId
+     * @param internalId the internal ID
      * @return shardId the formatted shardId
      */
     function formatShardId(
-        uint96 internalId,
-        address vault
+        address vault,
+        uint96 internalId
     ) internal pure returns (uint256 shardId) {
         shardId = ((uint256(uint160(vault)) << 96) | internalId);
     }
