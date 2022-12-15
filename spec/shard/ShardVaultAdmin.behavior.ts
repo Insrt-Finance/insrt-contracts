@@ -3110,7 +3110,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#unstakeCard(uint256)', () => {
+    describe.only('#unstakeCard(uint256)', () => {
       it('unstakes a jpeg cig card', async () => {
         await jpegCards
           .connect(cardOwner)
@@ -3145,7 +3145,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#transferCard(uint256,address)', () => {
+    describe.only('#transferCard(uint256,address)', () => {
       it('transfers a card to a given address', async () => {
         await jpegCards
           .connect(cardOwner)
