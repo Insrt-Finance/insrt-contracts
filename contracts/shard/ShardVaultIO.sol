@@ -28,13 +28,6 @@ contract ShardVaultIO is IShardVaultIO, ShardVaultInternal {
     /**
      * @inheritdoc IShardVaultIO
      */
-    function implicitClaim(address from, address to, uint256 tokenId) external {
-        _implicitClaim(from, to, tokenId);
-    }
-
-    /**
-     * @inheritdoc IShardVaultIO
-     */
     function claimYield(uint256[] memory tokenIds) external {
         _claimYield(tokenIds);
     }

@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.11;
 
-import { OwnableStorage } from '@solidstate/contracts/access/ownable/Ownable.sol';
 import { SafeOwnable } from '@solidstate/contracts/access/ownable/SafeOwnable.sol';
 import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { StakingPoolProxy } from './StakingPoolProxy.sol';
@@ -15,11 +14,10 @@ import { StakingPoolFundStorage } from './StakingPoolFundStorage.sol';
  * @notice StakingPool contracts deploying and managing
  */
 contract StakingPoolFund is SafeOwnable {
-    using OwnableStorage for OwnableStorage.Layout;
     using StakingPoolFundStorage for StakingPoolFundStorage.Layout;
 
     constructor() {
-        OwnableStorage.layout().setOwner(msg.sender);
+        _setOwner(msg.sender);
     }
 
     function deployStakingPoolProxy(

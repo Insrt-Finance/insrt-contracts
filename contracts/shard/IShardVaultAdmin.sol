@@ -127,19 +127,19 @@ interface IShardVaultAdmin {
      * @notice sets the maxSupply of shards
      * @param maxSupply the maxSupply of shards
      */
-    function setMaxSupply(uint16 maxSupply) external;
+    function setMaxSupply(uint256 maxSupply) external;
 
     /**
      * @notice sets the whitelistEndsAt timestamp
      * @param whitelistEndsAt timestamp of whitelist end
      */
-    function setWhitelistEndsAt(uint64 whitelistEndsAt) external;
+    function setWhitelistEndsAt(uint48 whitelistEndsAt) external;
 
     /**
      * @notice sets the maximum amount of shard to be minted during whitelist
      * @param reservedShards reserved shard amount
      */
-    function setReservedShards(uint16 reservedShards) external;
+    function setReservedShards(uint256 reservedShards) external;
 
     /**
      * @notice sets the isEnabled flag, allowing or prohibiting deposits
@@ -153,7 +153,7 @@ interface IShardVaultAdmin {
      * @param reservedShards whitelist shard amount
      */
     function initiateWhitelistAndDeposits(
-        uint64 whitelistEndsAt,
+        uint48 whitelistEndsAt,
         uint16 reservedShards
     ) external;
 
@@ -162,7 +162,7 @@ interface IShardVaultAdmin {
      * but once this amount is exceeded said user may not deposit more
      * @param maxUserShards new maxUserShards value
      */
-    function setMaxUserShards(uint16 maxUserShards) external;
+    function setMaxUserShards(uint256 maxUserShards) external;
 
     /**
      * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP

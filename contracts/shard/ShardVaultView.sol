@@ -18,14 +18,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function totalSupply() external view returns (uint16) {
-        return _totalSupply();
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function maxSupply() external view returns (uint16) {
+    function maxSupply() external view returns (uint256) {
         return _maxSupply();
     }
 
@@ -39,14 +32,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function shardCollection() external view returns (address) {
-        return _shardCollection();
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function count() external view returns (uint16) {
+    function count() external view returns (uint256) {
         return _count();
     }
 
@@ -124,21 +110,14 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function maxUserShards() external view returns (uint16) {
+    function maxUserShards() external view returns (uint256) {
         return _maxUserShards();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function userShards(address account) external view returns (uint16) {
-        return _userShards(account);
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
-    function reservedShards() external view returns (uint16) {
+    function reservedShards() external view returns (uint256) {
         return _reservedShards();
     }
 
@@ -199,7 +178,7 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt) {
+    function whitelistEndsAt() external view returns (uint48 whitelistEndsAt) {
         whitelistEndsAt = _whitelistEndsAt();
     }
 

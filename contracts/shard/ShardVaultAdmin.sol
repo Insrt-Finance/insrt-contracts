@@ -112,7 +112,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setMaxSupply(uint16 maxSupply) external onlyProtocolOwner {
+    function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);
     }
 
@@ -120,7 +120,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function setWhitelistEndsAt(
-        uint64 whitelistEndsAt
+        uint48 whitelistEndsAt
     ) external onlyProtocolOwner {
         _setWhitelistEndsAt(whitelistEndsAt);
     }
@@ -129,7 +129,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function setReservedShards(
-        uint16 reservedShards
+        uint256 reservedShards
     ) external onlyProtocolOwner {
         _setReservedShards(reservedShards);
     }
@@ -167,7 +167,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function initiateWhitelistAndDeposits(
-        uint64 whitelistEndsAt,
+        uint48 whitelistEndsAt,
         uint16 reservedShards
     ) external onlyProtocolOwner {
         _setReservedShards(reservedShards);
@@ -201,7 +201,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setMaxUserShards(uint16 maxUserShards) external onlyProtocolOwner {
+    function setMaxUserShards(
+        uint256 maxUserShards
+    ) external onlyProtocolOwner {
         _setMaxUserShards(maxUserShards);
     }
 
@@ -272,7 +274,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function unstakeCard(uint256 tokenId) external onlyProtocolOwner {
         _unstakeCard(tokenId);
     }
-     
+
     /**
      * @inheritdoc IShardVaultAdmin
      */
@@ -296,13 +298,13 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function transferCard(uint256 tokenId, address to)
-        external
-        onlyProtocolOwner
-    {
+    function transferCard(
+        uint256 tokenId,
+        address to
+    ) external onlyProtocolOwner {
         _transferCard(tokenId, to);
     }
-    
+
     /**
      * @inheritdoc IShardVaultAdmin
      */

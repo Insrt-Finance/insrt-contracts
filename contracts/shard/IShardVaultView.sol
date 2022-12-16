@@ -7,16 +7,10 @@ pragma solidity ^0.8.0;
  */
 interface IShardVaultView {
     /**
-     * @notice returns total shards minted
-     * @return totalSupply total minted shards amount
-     */
-    function totalSupply() external view returns (uint16 totalSupply);
-
-    /**
      * @notice returns maximum possible minted shards
      * @return maxSupply maximum possible minted shards
      */
-    function maxSupply() external view returns (uint16 maxSupply);
+    function maxSupply() external view returns (uint256 maxSupply);
 
     /**
      * @notice returns ETH value of shard at time of mint
@@ -25,16 +19,10 @@ interface IShardVaultView {
     function shardValue() external view returns (uint256 shardValue);
 
     /**
-     * @notice return ShardCollection address
-     * @return shardCollection address
-     */
-    function shardCollection() external view returns (address shardCollection);
-
-    /**
      * @notice return minted token count; does not reduce when tokens are burnt
      * @return count minted token count
      */
-    function count() external view returns (uint16 count);
+    function count() external view returns (uint256 count);
 
     /**
      * @notice return isInvested flag state
@@ -114,20 +102,13 @@ interface IShardVaultView {
      * but once this amount is exceeded said user may not deposit more
      * @return maxShards maxShardsPerUser value
      */
-    function maxUserShards() external view returns (uint16 maxShards);
-
-    /**
-     * @notice return quantity of vault shards owned by an account
-     * @param account address owning shards
-     * @return shards quantity of shards
-     */
-    function userShards(address account) external view returns (uint16 shards);
+    function maxUserShards() external view returns (uint256 maxShards);
 
     /**
      * @notice return amount of shards reserved for whitelist
      * @return reservedShards amount of shards reserved for whitelist
      */
-    function reservedShards() external view returns (uint16 reservedShards);
+    function reservedShards() external view returns (uint256 reservedShards);
 
     /**
      * @notice returns address of market place helper
@@ -181,7 +162,7 @@ interface IShardVaultView {
      * @notice returns timestamp of whitelist end
      * @return whitelistEndsAt timestamp of whitelist end
      */
-    function whitelistEndsAt() external view returns (uint64 whitelistEndsAt);
+    function whitelistEndsAt() external view returns (uint48 whitelistEndsAt);
 
     /**
      * @notice returns treasury address

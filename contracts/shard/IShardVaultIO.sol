@@ -18,15 +18,6 @@ interface IShardVaultIO {
     function withdraw(uint256[] memory shardIds) external payable;
 
     /**
-     * @notice claim yield/excess ETH upon shard transfer
-     * @dev only SHARD_COLLECTION proxy may call
-     * @param from address transferring
-     * @param to address receiving
-     * @param tokenId id of shard being transferred
-     */
-    function implicitClaim(address from, address to, uint256 tokenId) external;
-
-    /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param tokenIds array of shard IDs to claim with
      */
