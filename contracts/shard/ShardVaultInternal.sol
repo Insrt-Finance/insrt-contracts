@@ -966,7 +966,7 @@ abstract contract ShardVaultInternal is
         address from,
         address to,
         uint256 shardId
-    ) internal override {
+    ) internal virtual override {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256[] memory shardIds;
