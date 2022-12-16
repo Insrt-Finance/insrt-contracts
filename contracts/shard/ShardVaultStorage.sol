@@ -6,6 +6,7 @@ import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 
 library ShardVaultStorage {
     struct Layout {
+        uint256 conversionBuffer; //temporary for ClosePunkPosition merge
         uint256 count;
         uint256 maxSupply;
         uint256 maxUserShards;
