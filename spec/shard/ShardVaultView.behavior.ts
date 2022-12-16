@@ -5,8 +5,6 @@ import {
   IMarketPlaceHelper,
   INFTVault,
   IShardVault,
-  ShardCollection,
-  ShardCollection__factory,
 } from '../../typechain-types';
 
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -15,29 +13,9 @@ import { expect } from 'chai';
 
 export interface ShardVaultViewBehaviorArgs {
   getProtocolOwner: () => Promise<SignerWithAddress>;
-  shardCollection: string[];
   marketplaceHelper: string[];
   maxSupply: BigNumber;
   shardValue: BigNumber;
-}
-
-export function formatShardId(
-  internalId: BigNumber,
-  address: string,
-): BigNumber {
-  let shardId: BigNumber;
-  shardId = BigNumber.from(address).shl(96).add(internalId);
-  return shardId;
-}
-
-export function parseShardId(ShardId: BigNumber): [string, BigNumber] {
-  let address: string;
-  let internalId: BigNumber;
-
-  address = ethers.utils.getAddress(ShardId.shr(96).toHexString());
-  internalId = ShardId.mask(96);
-
-  return [address, internalId];
 }
 
 export function describeBehaviorOfShardVaultView(
@@ -50,7 +28,6 @@ export function describeBehaviorOfShardVaultView(
   let owner: SignerWithAddress;
   let instance: IShardVault;
   let pethInstance: IShardVault;
-  let shardCollection: ShardCollection;
   let cryptoPunkMarket: ICryptoPunkMarket;
   let purchaseData: string;
   let pethJpegdVault: INFTVault;
@@ -84,10 +61,6 @@ export function describeBehaviorOfShardVaultView(
   beforeEach(async () => {
     instance = await deploy();
     pethInstance = await pethDeploy();
-    shardCollection = ShardCollection__factory.connect(
-      await instance['shardCollection()'](),
-      depositor,
-    );
 
     let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
       'buyPunk',
@@ -134,12 +107,6 @@ export function describeBehaviorOfShardVaultView(
   });
 
   describe('::ShardVaultView', () => {
-    describe('#totalSupply()', () => {
-      it('returns totalSupply value', async () => {
-        expect(await instance['totalSupply()']()).to.eq(0);
-      });
-    });
-
     describe('#maxSupply()', () => {
       it('returns maxSupply value', async () => {
         expect(await instance['maxSupply()']()).to.eq(args.maxSupply);
@@ -149,14 +116,6 @@ export function describeBehaviorOfShardVaultView(
     describe('#shardValue()', () => {
       it('returns shardValue amount', async () => {
         expect(await instance['shardValue()']()).to.eq(args.shardValue);
-      });
-    });
-
-    describe('#shardCollection()', () => {
-      it('returns SHARD_COLLECTION address', async () => {
-        expect(await instance['shardCollection()']()).to.eq(
-          args.shardCollection[0],
-        );
       });
     });
 
