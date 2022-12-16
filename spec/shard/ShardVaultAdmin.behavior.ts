@@ -138,13 +138,13 @@ export function describeBehaviorOfShardVaultAdmin(
 
       await instance
         .connect(owner)
-        ['setMaxUserShards(uint16)'](BigNumber.from('110'));
+        ['setMaxUserShards(uint256)'](BigNumber.from('110'));
       await secondInstance
         .connect(owner)
-        ['setMaxUserShards(uint16)'](BigNumber.from('110'));
+        ['setMaxUserShards(uint256)'](BigNumber.from('110'));
       await pethInstance
         .connect(owner)
-        ['setMaxUserShards(uint16)'](BigNumber.from('110'));
+        ['setMaxUserShards(uint256)'](BigNumber.from('110'));
 
       let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
         'buyPunk',
@@ -3008,11 +3008,11 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#setMaxSupply(uint16)', () => {
+    describe('#setMaxSupply(uint256)', () => {
       it('sets maxSupply value', async () => {
         const newValue = BigNumber.from('1234');
 
-        await instance.connect(owner)['setMaxSupply(uint16)'](newValue);
+        await instance.connect(owner)['setMaxSupply(uint256)'](newValue);
 
         expect(await instance['maxSupply()']()).to.eq(newValue);
       });
@@ -3021,7 +3021,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['setMaxSupply(uint16)'](ethers.constants.Two),
+              ['setMaxSupply(uint256)'](ethers.constants.Two),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',
@@ -3032,11 +3032,11 @@ export function describeBehaviorOfShardVaultAdmin(
 
     describe('#setWhitelistEndsAt(uint64)', () => {
       it('sets whitelistEndsAt value', async () => {
-        const whitelistEndsAt = BigNumber.from('123123123123123123');
+        const whitelistEndsAt = BigNumber.from('123123123123');
 
         await instance
           .connect(owner)
-          ['setWhitelistEndsAt(uint64)'](whitelistEndsAt);
+          ['setWhitelistEndsAt(uint48)'](whitelistEndsAt);
 
         expect(whitelistEndsAt).to.eq(await instance['whitelistEndsAt()']());
       });
@@ -3046,7 +3046,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['setWhitelistEndsAt(uint64)'](BigNumber.from('1000')),
+              ['setWhitelistEndsAt(uint48)'](BigNumber.from('1000')),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',
@@ -3055,13 +3055,13 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#setReservedShards(uint16)', () => {
+    describe('#setReservedShards(uint256)', () => {
       it('sets reservedShards value', async () => {
         const reservedShards = BigNumber.from('123');
 
         await instance
           .connect(owner)
-          ['setReservedShards(uint16)'](reservedShards);
+          ['setReservedShards(uint256)'](reservedShards);
 
         expect(reservedShards).to.eq(await instance['reservedShards()']());
       });
@@ -3071,7 +3071,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['setReservedShards(uint16)'](BigNumber.from('1000')),
+              ['setReservedShards(uint256)'](BigNumber.from('1000')),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',
@@ -3110,7 +3110,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe.only('#unstakeCard(uint256)', () => {
+    describe('#unstakeCard(uint256)', () => {
       it('unstakes a jpeg cig card', async () => {
         await jpegCards
           .connect(cardOwner)
@@ -3145,7 +3145,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe.only('#transferCard(uint256,address)', () => {
+    describe('#transferCard(uint256,address)', () => {
       it('transfers a card to a given address', async () => {
         await jpegCards
           .connect(cardOwner)
