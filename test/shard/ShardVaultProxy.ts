@@ -10,14 +10,8 @@ import {
   ShardVaultIO__factory,
   ShardVaultView__factory,
   ShardVaultBase__factory,
-  ShardCollection,
-  ShardCollection__factory,
-  ShardCollectionProxy,
-  ShardCollectionProxy__factory,
-  ERC165__factory,
+  IERC165__factory,
   Ownable__factory,
-  IShardCollection__factory,
-  IShardCollection,
   ShardVaultAdmin__factory,
   IMarketPlaceHelper,
   MarketPlaceHelper__factory,
@@ -34,7 +28,6 @@ describe('ShardVaultProxy', () => {
   let instance: IShardVault;
   let secondInstance: IShardVault;
   let pethInstance: IShardVault;
-  let shardCollectionInstance: IShardCollection;
   let marketplaceHelper: IMarketPlaceHelper;
 
   let deployer: any;
@@ -101,10 +94,9 @@ describe('ShardVaultProxy', () => {
   }
 
   interface AuxilaryParamsStruct {
-    SHARD_COLLECTION: string;
+    MARKETPLACE_HELPER: string;
     PUNKS: string;
     DAWN_OF_INSRT: string;
-    MARKETPLACE_HELPER: string;
     TREASURY: string;
   }
 
@@ -140,7 +132,7 @@ describe('ShardVaultProxy', () => {
     );
 
     const ERC165Selectors = new Set();
-    const IERC165 = ERC165__factory.createInterface();
+    const IERC165 = IERC165__factory.createInterface();
     IERC165.fragments.map((f) => ERC165Selectors.add(IERC165.getSighash(f)));
     const OwnableSelectors = new Set();
     const IOwnable = Ownable__factory.createInterface();
@@ -150,22 +142,6 @@ describe('ShardVaultProxy', () => {
     const shardVaultDiamond = await new ShardVaultDiamond__factory(
       deployer,
     ).deploy();
-    const shardCollectionProxy = await new ShardCollectionProxy__factory(
-      deployer,
-    ).deploy('ShardVaultCollection', 'SVC', 'shards');
-
-    const shardCollectionFacetCuts = [
-      await new ShardCollection__factory(deployer).deploy(),
-    ].map(function (f) {
-      return {
-        target: f.address,
-        action: 0,
-        selectors: Object.keys(f.interface.functions)
-          .filter((fn) => !ERC165Selectors.has(f.interface.getSighash(fn)))
-          .filter((fn) => !OwnableSelectors.has(f.interface.getSighash(fn)))
-          .map((fn) => f.interface.getSighash(fn)),
-      };
-    });
 
     const coreFacetCuts = [
       await new ShardVaultManager__factory(deployer).deploy(
@@ -194,7 +170,6 @@ describe('ShardVaultProxy', () => {
     };
 
     const auxiliaryPArams: AuxilaryParamsStruct = {
-      SHARD_COLLECTION: shardCollectionProxy.address,
       PUNKS: CRYPTO_PUNKS_MARKET,
       DAWN_OF_INSRT: DAWN_OF_INSRT,
       MARKETPLACE_HELPER: marketplaceHelper.address,
@@ -228,6 +203,7 @@ describe('ShardVaultProxy', () => {
           .filter(
             (fn) => !shardVaultSelectors.has(fn) && shardVaultSelectors.add(fn),
           )
+          .filter((fn) => !ERC165Selectors.has(f.interface.getSighash(fn)))
           .map((fn) => f.interface.getSighash(fn)),
       };
     });
@@ -240,12 +216,6 @@ describe('ShardVaultProxy', () => {
 
     await shardVaultDiamond.diamondCut(
       shardVaultFacetCuts,
-      ethers.constants.AddressZero,
-      '0x',
-    );
-
-    await shardCollectionProxy.diamondCut(
-      shardCollectionFacetCuts,
       ethers.constants.AddressZero,
       '0x',
     );
@@ -326,25 +296,7 @@ describe('ShardVaultProxy', () => {
       deployer,
     );
 
-    shardCollectionInstance = IShardCollection__factory.connect(
-      shardCollectionProxy.address,
-      deployer,
-    );
-
-    shardCollectionAddress.push(shardCollectionProxy.address);
     marketplaceHelperAddress.push(marketplaceHelper.address);
-
-    await shardCollectionInstance
-      .connect(deployer)
-      ['addToWhitelist(address)'](deployment);
-
-    await shardCollectionInstance
-      .connect(deployer)
-      ['addToWhitelist(address)'](secondDeployment.deployment);
-
-    await shardCollectionInstance
-      .connect(deployer)
-      ['addToWhitelist(address)'](pethDeployment.deployment);
 
     await hre.network.provider.request({
       method: 'hardhat_impersonateAccount',
@@ -392,7 +344,6 @@ describe('ShardVaultProxy', () => {
     async () => pethInstance,
     {
       getProtocolOwner: async () => deployer,
-      shardCollection: shardCollectionAddress,
       marketplaceHelper: marketplaceHelperAddress,
       maxSupply: maxShards,
       shardValue: shardValue,
