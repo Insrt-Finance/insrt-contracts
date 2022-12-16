@@ -6,6 +6,10 @@ import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 
 library ShardVaultStorage {
     struct Layout {
+        uint256 count;
+        uint256 maxSupply;
+        uint256 maxUserShards;
+        uint256 reservedShards;
         uint256 shardValue;
         uint256 accruedFees;
         uint256 accruedJPEG;
@@ -13,26 +17,21 @@ library ShardVaultStorage {
         uint256 cumulativeJPEGPerShard;
         mapping(uint256 => uint256) claimedETHPerShard;
         mapping(uint256 => uint256) claimedJPEGPerShard;
-        uint64 whitelistEndsAt;
-        uint16 reservedShards;
-        uint16 maxUserShards;
-        uint16 count;
-        uint16 maxSupply;
+        address collection;
+        uint48 whitelistEndsAt;
         uint16 saleFeeBP;
         uint16 acquisitionFeeBP;
         uint16 yieldFeeBP;
         uint16 ltvBufferBP;
         uint16 ltvDeviationBP;
-        address jpegdVault;
-        address jpegdVaultHelper;
-        address jpegdLP;
-        address collection;
         bool isInvested;
         bool isEnabled;
         bool isPUSDVault;
         bool isYieldClaiming;
+        address jpegdVault;
+        address jpegdVaultHelper;
+        address jpegdLP;
         EnumerableSet.UintSet ownedTokenIds;
-        mapping(address => uint16) userShards;
     }
 
     bytes32 internal constant STORAGE_SLOT =
