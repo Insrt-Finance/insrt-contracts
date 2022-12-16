@@ -168,7 +168,6 @@ abstract contract ShardVaultInternal is
             for (uint256 i; i < shards; ++i) {
                 uint256 shardId = shardIds[i];
                 _enforceShardOwnership(msg.sender, shardId);
-                _enforceShardExistence(shardId);
 
                 _burn(shardId);
             }
@@ -878,7 +877,6 @@ abstract contract ShardVaultInternal is
             for (uint256 i; i < tokens; ++i) {
                 uint256 shardId = shardIds[i];
                 _enforceShardOwnership(account, shardId);
-                _enforceShardExistence(shardId);
 
                 claimedETHPerShard =
                     cumulativeETHPerShard -
@@ -925,7 +923,6 @@ abstract contract ShardVaultInternal is
             for (uint256 i; i < tokens; ++i) {
                 uint256 shardId = shardIds[i];
                 _enforceShardOwnership(account, shardId);
-                _enforceShardExistence(shardId);
 
                 //account for claimable ETH
                 claimedETHPerShard =
@@ -1218,16 +1215,6 @@ abstract contract ShardVaultInternal is
     ) internal view {
         if (_ownerOf(shardId) != account) {
             revert ShardVault__NotShardOwner();
-        }
-    }
-
-    /**
-     * @notice check to ensure shardId exists
-     * @param shardId shardId to check
-     */
-    function _enforceShardExistence(uint256 shardId) internal view {
-        if (!_exists(shardId)) {
-            revert ShardVault__NonExistentShard();
         }
     }
 

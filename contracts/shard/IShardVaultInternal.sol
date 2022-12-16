@@ -70,11 +70,6 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__NotShardOwner();
 
     /**
-     * @notice thrown when a shardId does not exist
-     */
-    error ShardVault__NonExistentShard();
-
-    /**
      * @notice thrown when attempting to borrow after target LTV amount is reached
      */
     error ShardVault__TargetLTVReached();
