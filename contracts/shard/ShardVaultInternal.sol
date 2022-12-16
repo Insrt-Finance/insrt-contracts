@@ -168,7 +168,6 @@ abstract contract ShardVaultInternal is
             for (uint256 i; i < shards; ++i) {
                 uint256 shardId = shardIds[i];
                 _enforceShardOwnership(msg.sender, shardId);
-
                 _burn(shardId);
             }
         }
