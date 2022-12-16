@@ -18,7 +18,6 @@ interface IShardVaultInternal is IOwnableInternal {
     }
 
     struct AuxiliaryParams {
-        address SHARD_COLLECTION;
         address PUNKS;
         address DAWN_OF_INSRT;
         address MARKETPLACE_HELPER;

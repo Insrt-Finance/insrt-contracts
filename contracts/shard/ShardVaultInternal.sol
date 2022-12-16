@@ -35,7 +35,6 @@ abstract contract ShardVaultInternal is
     using AddressUtils for address payable;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    address internal immutable SHARD_COLLECTION;
     address internal immutable PUSD;
     address internal immutable PETH;
     address internal immutable JPEG;
@@ -67,7 +66,6 @@ abstract contract ShardVaultInternal is
         JPEG_CARDS_CIG_STAKING = jpegParams.JPEG_CARDS_CIG_STAKING;
         JPEG_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
 
-        SHARD_COLLECTION = auxiliaryParams.SHARD_COLLECTION;
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
         MARKETPLACE_HELPER = auxiliaryParams.MARKETPLACE_HELPER;
