@@ -9,7 +9,6 @@ library ShardVaultStorage {
         uint256 shardValue;
         uint256 accruedFees;
         uint256 accruedJPEG;
-        uint256 conversionBuffer;
         uint256 cumulativeETHPerShard;
         uint256 cumulativeJPEGPerShard;
         mapping(uint256 => uint256) claimedETHPerShard;
@@ -19,7 +18,6 @@ library ShardVaultStorage {
         uint16 maxUserShards;
         uint16 count;
         uint16 maxSupply;
-        uint16 totalSupply;
         uint16 saleFeeBP;
         uint16 acquisitionFeeBP;
         uint16 yieldFeeBP;
@@ -30,7 +28,6 @@ library ShardVaultStorage {
         address jpegdLP;
         address collection;
         bool isInvested;
-        bool isDivested;
         bool isEnabled;
         bool isPUSDVault;
         bool isYieldClaiming;
