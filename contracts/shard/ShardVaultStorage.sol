@@ -20,8 +20,8 @@ library ShardVaultStorage {
         uint16 acquisitionFeeBP;
         uint16 yieldFeeBP;
         uint64 maxSupply;
-        uint64 maxUserShards;
-        uint64 reservedShards;
+        uint64 maxMintBalance;
+        uint64 reservedSupply;
         uint16 ltvBufferBP;
         uint16 ltvDeviationBP;
         bool isInvested;

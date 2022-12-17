@@ -28,7 +28,7 @@ interface IShardVaultManager {
        non-ERC721/1155 compiant collections
      * @param shardValue the ETH value of each shard
      * @param maxSupply maximum shards to be minted by vault
-     * @param maxUserShards maximum amount of shards allowed per user
+     * @param maxMintBalance maximum amount of shards allowed per user
      * @param isPUSDVault indicates whether vault should be allowed to call PETH or PUSD functions
      * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
      * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
@@ -40,7 +40,7 @@ interface IShardVaultManager {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        uint16 maxUserShards,
+        uint16 maxMintBalance,
         bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
         IShardVault.BufferParams memory bufferParams

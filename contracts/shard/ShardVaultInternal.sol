@@ -102,17 +102,16 @@ abstract contract ShardVaultInternal is
         }
 
         uint64 maxSupply = l.maxSupply;
-        uint64 maxUserShards = l.maxUserShards;
+        uint64 maxMintBalance = l.maxMintBalance;
         uint256 balance = _balanceOf(msg.sender);
 
-        //MUST MAKE >=
-        if (balance == maxUserShards) {
-            revert ShardVault__MaxUserShards();
+        if (balance >= maxMintBalance) {
+            revert ShardVault__MaxMintBalance();
         }
 
         if (block.timestamp < l.whitelistEndsAt) {
             _enforceWhitelist(msg.sender);
-            maxSupply = l.reservedShards;
+            maxSupply = l.reservedSupply;
         }
 
         uint256 amount = msg.value;
@@ -129,8 +128,8 @@ abstract contract ShardVaultInternal is
         uint256 shards = amount / shardValue;
         uint256 excessShards;
 
-        if (balance + shards > maxUserShards) {
-            excessShards = shards + balance - maxUserShards;
+        if (balance + shards > maxMintBalance) {
+            excessShards = shards + balance - maxMintBalance;
             shards -= excessShards;
         }
 
@@ -203,8 +202,8 @@ abstract contract ShardVaultInternal is
      * @notice return amount of shards reserved for whitelist
      * @return reserverdShards amount of shards reserved for whitelist
      */
-    function _reservedShards() internal view returns (uint64 reserverdShards) {
-        reserverdShards = ShardVaultStorage.layout().reservedShards;
+    function _reservedSupply() internal view returns (uint64 reserverdShards) {
+        reserverdShards = ShardVaultStorage.layout().reservedSupply;
     }
 
     /**
@@ -984,10 +983,10 @@ abstract contract ShardVaultInternal is
 
     /**
      * @notice sets the maximum amount of shard to be minted during whitelist
-     * @param reservedShards whitelist shard amount
+     * @param reservedSupply whitelist shard amount
      */
-    function _setReservedShards(uint64 reservedShards) internal {
-        ShardVaultStorage.layout().reservedShards = reservedShards;
+    function _setReservedSupply(uint64 reservedSupply) internal {
+        ShardVaultStorage.layout().reservedSupply = reservedSupply;
     }
 
     /**
@@ -1001,10 +1000,10 @@ abstract contract ShardVaultInternal is
     /**
      * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
      * but once this amount is exceeded said user may not deposit more
-     * @param maxUserShards new maxUserShards value
+     * @param maxMintBalance new maxMintBalance value
      */
-    function _setMaxUserShards(uint64 maxUserShards) internal {
-        ShardVaultStorage.layout().maxUserShards = maxUserShards;
+    function _setMaxMintBalance(uint64 maxMintBalance) internal {
+        ShardVaultStorage.layout().maxMintBalance = maxMintBalance;
     }
 
     /**
@@ -1062,18 +1061,18 @@ abstract contract ShardVaultInternal is
     ) internal view returns (uint256 shards) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         uint16 userShards = uint16(_balanceOf(account));
-        if (l.maxUserShards > userShards) {
-            shards = l.maxUserShards - userShards;
+        if (l.maxMintBalance > userShards) {
+            shards = l.maxMintBalance - userShards;
         }
     }
 
     /**
      * @notice return the maximum shards a user is allowed to mint; theoretically a user may acquire more than this amount via transfers,
      * but once this amount is exceeded said user may not deposit more
-     * @return maxShards maxShardsPerUser value
+     * @return maxBalance maxMintBalance value
      */
-    function _maxUserShards() internal view returns (uint64 maxShards) {
-        maxShards = ShardVaultStorage.layout().maxUserShards;
+    function _maxMintBalance() internal view returns (uint64 maxBalance) {
+        maxBalance = ShardVaultStorage.layout().maxMintBalance;
     }
 
     /**

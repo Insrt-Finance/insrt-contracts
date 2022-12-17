@@ -24,7 +24,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         address jpegdVaultHelper,
         uint256 shardValue,
         uint16 maxSupply,
-        uint16 maxUserShards,
+        uint16 maxMintBalance,
         bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
         IShardVault.BufferParams memory bufferParams
@@ -37,7 +37,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 jpegdVaultHelper,
                 shardValue,
                 maxSupply,
-                maxUserShards,
+                maxMintBalance,
                 isPUSDVault,
                 feeParams,
                 bufferParams

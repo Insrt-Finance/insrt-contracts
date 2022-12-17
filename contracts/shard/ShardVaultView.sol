@@ -103,15 +103,15 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function maxUserShards() external view returns (uint64) {
-        return _maxUserShards();
+    function maxMintBalance() external view returns (uint64) {
+        return _maxMintBalance();
     }
 
     /**
      * @inheritdoc IShardVaultView
      */
-    function reservedShards() external view returns (uint64) {
-        return _reservedShards();
+    function reservedSupply() external view returns (uint64) {
+        return _reservedSupply();
     }
 
     /**

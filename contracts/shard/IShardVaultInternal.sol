@@ -90,9 +90,9 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__NoReservedShards();
 
     /**
-     * @notice thrown when user is attempting to deposit when already owning max shards
+     * @notice thrown when user is attempting to deposit after owning (minting) max shards
      */
-    error ShardVault__MaxUserShards();
+    error ShardVault__MaxMintBalance();
 
     /**
      * @notice thrown when caller is not shard collection

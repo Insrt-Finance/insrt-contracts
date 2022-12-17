@@ -128,10 +128,10 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setReservedShards(
-        uint64 reservedShards
+    function setReservedSupply(
+        uint64 reservedSupply
     ) external onlyProtocolOwner {
-        _setReservedShards(reservedShards);
+        _setReservedSupply(reservedSupply);
     }
 
     /**
@@ -168,9 +168,9 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      */
     function initiateWhitelistAndDeposits(
         uint48 whitelistEndsAt,
-        uint16 reservedShards
+        uint64 reservedSupply
     ) external onlyProtocolOwner {
-        _setReservedShards(reservedShards);
+        _setReservedSupply(reservedSupply);
         _setWhitelistEndsAt(whitelistEndsAt);
         _setIsEnabled(true);
     }
@@ -201,8 +201,10 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setMaxUserShards(uint64 maxUserShards) external onlyProtocolOwner {
-        _setMaxUserShards(maxUserShards);
+    function setMaxMintBalance(
+        uint64 maxMintBalance
+    ) external onlyProtocolOwner {
+        _setMaxMintBalance(maxMintBalance);
     }
 
     /**
