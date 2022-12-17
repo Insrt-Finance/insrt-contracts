@@ -141,7 +141,7 @@ abstract contract ShardVaultInternal is
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
-                _mint(msg.sender, ++l.count);
+                _mint(msg.sender, totalSupply + i);
             }
         }
 
@@ -189,14 +189,6 @@ abstract contract ShardVaultInternal is
      */
     function _shardValue() internal view returns (uint256 shardValue) {
         shardValue = ShardVaultStorage.layout().shardValue;
-    }
-
-    /**
-     * @notice return minted token count; does not reduce when tokens are burnt
-     * @return count minted token count
-     */
-    function _count() internal view returns (uint256 count) {
-        count = ShardVaultStorage.layout().count;
     }
 
     /**

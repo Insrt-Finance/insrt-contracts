@@ -32,13 +32,6 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
-    function count() external view returns (uint256) {
-        return _count();
-    }
-
-    /**
-     * @inheritdoc IShardVaultView
-     */
     function isInvested() external view returns (bool) {
         return _isInvested();
     }

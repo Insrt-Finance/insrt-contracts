@@ -19,12 +19,6 @@ interface IShardVaultView {
     function shardValue() external view returns (uint256 shardValue);
 
     /**
-     * @notice return minted token count; does not reduce when tokens are burnt
-     * @return count minted token count
-     */
-    function count() external view returns (uint256 count);
-
-    /**
      * @notice return isInvested flag state
      * @return isInvested isInvested flag
      */
