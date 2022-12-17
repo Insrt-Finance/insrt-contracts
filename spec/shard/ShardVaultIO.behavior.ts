@@ -12,7 +12,6 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import { formatShardId } from './ShardVaultView.behavior';
 import { IERC20 } from '../../typechain-types/@solidstate/contracts/interfaces/IERC20';
 
 export interface ShardVaultIOBehaviorArgs {
@@ -193,16 +192,6 @@ export function describeBehaviorOfShardVaultIO(
         expect(
           await instance.callStatic['balanceOf(address)'](depositor.address),
         ).to.eq(shards);
-      });
-      it('increases count', async () => {
-        await instance.connect(owner)['setIsEnabled(bool)'](true);
-        await instance
-          .connect(depositor)
-          ['deposit()']({ value: depositAmount });
-
-        expect(await instance['count()']()).to.eq(
-          depositAmount.div(ethers.utils.parseEther('1.0')),
-        );
       });
       it('returns any excess ETH after MaxUserShards is reached', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);

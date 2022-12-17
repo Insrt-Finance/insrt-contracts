@@ -119,12 +119,6 @@ export function describeBehaviorOfShardVaultView(
       });
     });
 
-    describe('#count()', () => {
-      it('returns count value', async () => {
-        expect(await instance['count()']()).to.eq(0);
-      });
-    });
-
     describe('#isInvested()', () => {
       it('returns isInvested value', async () => {
         expect(await instance['isInvested()']()).to.eq(false);
