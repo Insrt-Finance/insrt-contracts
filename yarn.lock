@@ -824,20 +824,20 @@
   resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.50.tgz#da912fba7847103fd6d8e09ecdbbb6e44ee326d9"
   integrity sha512-6AeaOy1zO26n9m1kRrf944h7uE+TPqcGCY2UeTNfSJOJ7Hkz8/GRwPoiKeAgePh2czIvQSGkVK9OrHYxHw+JJw==
 
-"@solidstate/library@^0.0.49":
-  version "0.0.49"
-  resolved "https://registry.yarnpkg.com/@solidstate/library/-/library-0.0.49.tgz#c713747c8254a5ee48e37c427d7c46fa7915bb70"
-  integrity sha512-nsauA1dQiyNAL6JMKhWVl/usCKaIj9reNXFmy9llURBIqoFssDpINIyjgt9rvtnbHrcK7S7FWwzRCaqHjNES6g==
+"@solidstate/library@^0.0.50":
+  version "0.0.50"
+  resolved "https://registry.yarnpkg.com/@solidstate/library/-/library-0.0.50.tgz#06d4a8e7ec5d0798e1ce22afc9e6791f53484714"
+  integrity sha512-j/RzRMRtmuRxZTMNLbD1JP8g1LYh9t713eC/qQEc+WU+2VRxg6io6Vb4I36sYwDLvEIZiZu9wS3t8OyLRss7Ag==
   dependencies:
     eth-permit "^0.1.10"
 
-"@solidstate/spec@^0.0.49":
-  version "0.0.49"
-  resolved "https://registry.yarnpkg.com/@solidstate/spec/-/spec-0.0.49.tgz#148cdcb259ba14af5a4cf18e8cdbef5e3b254c53"
-  integrity sha512-xDab8smLAxZKL8hJFaYOxji5cz84kGKnWcuHRb8tfPg8uCHoh0ffYY5qUmUl2+li3bsNpFKxoiil93j3L0XHWg==
+"@solidstate/spec@^0.0.50":
+  version "0.0.50"
+  resolved "https://registry.yarnpkg.com/@solidstate/spec/-/spec-0.0.50.tgz#e86425f209a4b9f6771cc234d3c7cb210c8b4942"
+  integrity sha512-cyrPfcbzWH/I6nw65rByn9UXYiRnYuOj079eD9f4W2oGNh6O8BQRDQij4Dyqx2Hoe0s7qV+WoyVVGqya5XIHrg==
   dependencies:
     "@ethereum-waffle/mock-contract" "^3.4.4"
-    "@solidstate/library" "^0.0.49"
+    "@solidstate/library" "^0.0.50"
 
 "@tenderly/hardhat-tenderly@^1.3.2":
   version "1.3.2"

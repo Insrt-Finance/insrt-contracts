@@ -27,7 +27,8 @@
     "@balancer-labs/v2-vault": "^2.0.0",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
     "@nomiclabs/hardhat-ethers": "^2.2.1",
-    "@solidstate/spec": "^0.0.49",
+    "@solidstate/contracts": "^0.0.50",
+    "@solidstate/spec": "^0.0.50",
     "@tenderly/hardhat-tenderly": "^1.3.2",
     "@typechain/ethers-v5": "^10.1.1",
     "@typechain/hardhat": "^6.1.4",
@@ -55,7 +56,5 @@
     "typechain": "^8.1.1",
     "typescript": "^4.9.3"
   },
-  "dependencies": {
-    "@solidstate/contracts": "^0.0.50"
-  }
+  "dependencies": {}
 }
