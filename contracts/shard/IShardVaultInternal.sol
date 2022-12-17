@@ -65,6 +65,11 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__NotProtocolOwner();
 
     /**
+     * @notice thrown when function called by non-authorized account
+     */
+    error ShardVault__NotAuthorized();
+
+    /**
      * @notice thrown when function called by non-shard owner
      */
     error ShardVault__NotShardOwner();

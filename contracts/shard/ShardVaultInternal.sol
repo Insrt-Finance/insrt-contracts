@@ -77,9 +77,23 @@ abstract contract ShardVaultInternal is
         _;
     }
 
+    modifier onlyAuthorized() {
+        _onlyAuthorized(msg.sender);
+        _;
+    }
+
     function _onlyProtocolOwner(address account) internal view {
         if (account != _protocolOwner()) {
             revert ShardVault__NotProtocolOwner();
+        }
+    }
+
+    function _onlyAuthorized(address account) internal view {
+        if (
+            account != _protocolOwner() &&
+            ShardVaultStorage.layout().authorized[account] == false
+        ) {
+            revert ShardVault__NotAuthorized();
         }
     }
 

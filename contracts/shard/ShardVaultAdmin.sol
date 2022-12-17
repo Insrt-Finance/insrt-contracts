@@ -215,7 +215,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 minPUSD,
         uint256 poolInfoIndex,
         uint256 punkId
-    ) external onlyProtocolOwner returns (uint256 paidDebt) {
+    ) external onlyAuthorized returns (uint256 paidDebt) {
         paidDebt = _repayLoanPUSD(amount, minPUSD, poolInfoIndex, punkId);
     }
 
@@ -227,7 +227,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 minPETH,
         uint256 poolInfoIndex,
         uint256 punkId
-    ) external onlyProtocolOwner returns (uint256 paidDebt) {
+    ) external onlyAuthorized returns (uint256 paidDebt) {
         paidDebt = _repayLoanPETH(amount, minPETH, poolInfoIndex, punkId);
     }
 
@@ -237,7 +237,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function directRepayLoanPUSD(
         uint256 amount,
         uint256 punkId
-    ) external onlyProtocolOwner {
+    ) external onlyAuthorized {
         _directRepayLoan(PUSD, amount, punkId);
     }
 
@@ -247,7 +247,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function directRepayLoanPETH(
         uint256 amount,
         uint256 punkId
-    ) external onlyProtocolOwner {
+    ) external onlyAuthorized {
         _directRepayLoan(PETH, amount, punkId);
     }
 
