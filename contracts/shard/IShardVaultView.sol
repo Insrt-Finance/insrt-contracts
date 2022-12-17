@@ -10,7 +10,7 @@ interface IShardVaultView {
      * @notice returns maximum possible minted shards
      * @return maxSupply maximum possible minted shards
      */
-    function maxSupply() external view returns (uint256 maxSupply);
+    function maxSupply() external view returns (uint64 maxSupply);
 
     /**
      * @notice returns ETH value of shard at time of mint
@@ -96,13 +96,13 @@ interface IShardVaultView {
      * but once this amount is exceeded said user may not deposit more
      * @return maxShards maxShardsPerUser value
      */
-    function maxUserShards() external view returns (uint256 maxShards);
+    function maxUserShards() external view returns (uint64 maxShards);
 
     /**
      * @notice return amount of shards reserved for whitelist
      * @return reservedShards amount of shards reserved for whitelist
      */
-    function reservedShards() external view returns (uint256 reservedShards);
+    function reservedShards() external view returns (uint64 reservedShards);
 
     /**
      * @notice returns address of market place helper

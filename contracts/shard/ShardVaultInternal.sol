@@ -101,8 +101,8 @@ abstract contract ShardVaultInternal is
             revert ShardVault__NotEnabled();
         }
 
-        uint256 maxSupply = l.maxSupply;
-        uint256 maxUserShards = l.maxUserShards;
+        uint64 maxSupply = l.maxSupply;
+        uint64 maxUserShards = l.maxUserShards;
         uint256 balance = _balanceOf(msg.sender);
 
         //MUST MAKE >=
@@ -179,7 +179,7 @@ abstract contract ShardVaultInternal is
      * @notice returns maximum possible minted shards
      * @return maxSupply maximum possible minted shards
      */
-    function _maxSupply() internal view returns (uint256 maxSupply) {
+    function _maxSupply() internal view returns (uint64 maxSupply) {
         maxSupply = ShardVaultStorage.layout().maxSupply;
     }
 
@@ -203,7 +203,7 @@ abstract contract ShardVaultInternal is
      * @notice return amount of shards reserved for whitelist
      * @return reserverdShards amount of shards reserved for whitelist
      */
-    function _reservedShards() internal view returns (uint256 reserverdShards) {
+    function _reservedShards() internal view returns (uint64 reserverdShards) {
         reserverdShards = ShardVaultStorage.layout().reservedShards;
     }
 
@@ -793,7 +793,7 @@ abstract contract ShardVaultInternal is
      * @notice sets the maxSupply of shards
      * @param maxSupply the maxSupply of shards
      */
-    function _setMaxSupply(uint256 maxSupply) internal {
+    function _setMaxSupply(uint64 maxSupply) internal {
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
@@ -986,7 +986,7 @@ abstract contract ShardVaultInternal is
      * @notice sets the maximum amount of shard to be minted during whitelist
      * @param reservedShards whitelist shard amount
      */
-    function _setReservedShards(uint256 reservedShards) internal {
+    function _setReservedShards(uint64 reservedShards) internal {
         ShardVaultStorage.layout().reservedShards = reservedShards;
     }
 
@@ -1003,7 +1003,7 @@ abstract contract ShardVaultInternal is
      * but once this amount is exceeded said user may not deposit more
      * @param maxUserShards new maxUserShards value
      */
-    function _setMaxUserShards(uint256 maxUserShards) internal {
+    function _setMaxUserShards(uint64 maxUserShards) internal {
         ShardVaultStorage.layout().maxUserShards = maxUserShards;
     }
 
@@ -1072,7 +1072,7 @@ abstract contract ShardVaultInternal is
      * but once this amount is exceeded said user may not deposit more
      * @return maxShards maxShardsPerUser value
      */
-    function _maxUserShards() internal view returns (uint256 maxShards) {
+    function _maxUserShards() internal view returns (uint64 maxShards) {
         maxShards = ShardVaultStorage.layout().maxUserShards;
     }
 

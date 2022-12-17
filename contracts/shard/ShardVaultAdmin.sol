@@ -112,7 +112,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setMaxSupply(uint256 maxSupply) external onlyProtocolOwner {
+    function setMaxSupply(uint64 maxSupply) external onlyProtocolOwner {
         _setMaxSupply(maxSupply);
     }
 
@@ -129,7 +129,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
      * @inheritdoc IShardVaultAdmin
      */
     function setReservedShards(
-        uint256 reservedShards
+        uint64 reservedShards
     ) external onlyProtocolOwner {
         _setReservedShards(reservedShards);
     }
@@ -201,9 +201,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function setMaxUserShards(
-        uint256 maxUserShards
-    ) external onlyProtocolOwner {
+    function setMaxUserShards(uint64 maxUserShards) external onlyProtocolOwner {
         _setMaxUserShards(maxUserShards);
     }
 
