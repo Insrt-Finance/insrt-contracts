@@ -840,8 +840,9 @@ abstract contract ShardVaultInternal is
             l.isYieldClaiming = true;
         }
 
-        l.cumulativeETHPerShard += providedETH / _totalSupply();
-        l.cumulativeJPEGPerShard += providedJPEG / _totalSupply();
+        uint256 totalSupply = _totalSupply();
+        l.cumulativeETHPerShard += providedETH / totalSupply;
+        l.cumulativeJPEGPerShard += providedJPEG / totalSupply;
     }
 
     /**
@@ -1212,7 +1213,7 @@ abstract contract ShardVaultInternal is
         address account,
         uint256 shardId
     ) internal view {
-        if (_ownerOf(shardId) != account) {
+        if (account != _ownerOf(shardId)) {
             revert ShardVault__NotShardOwner();
         }
     }
@@ -1226,7 +1227,7 @@ abstract contract ShardVaultInternal is
         address account,
         uint256 amount
     ) internal view {
-        if (_balanceOf(account) < amount) {
+        if (amount > _balanceOf(account)) {
             revert ShardVault__InsufficientShards();
         }
     }
