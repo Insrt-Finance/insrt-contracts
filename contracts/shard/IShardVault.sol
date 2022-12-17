@@ -12,11 +12,11 @@ import { IShardVaultAdmin } from './IShardVaultAdmin.sol';
  * @title complete ShardVault interface
  */
 interface IShardVault is
+    IShardVaultBase,
     IShardVaultInternal,
     IShardVaultIO,
     IShardVaultView,
-    IShardVaultAdmin,
-    IShardVaultBase
+    IShardVaultAdmin
 {
     struct FeeParams {
         uint16 saleFeeBP;
