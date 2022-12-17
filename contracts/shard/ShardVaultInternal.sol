@@ -527,6 +527,15 @@ abstract contract ShardVaultInternal is
     }
 
     /**
+     * @notice grants or revokes the 'authorized' state to an account
+     * @param account address of account to grant/revoke 'authorized'
+     * @param isAuthorized value of 'authorized' state
+     */
+    function _setAuthorized(address account, bool isAuthorized) internal {
+        ShardVaultStorage.layout().authorized[account] = isAuthorized;
+    }
+
+    /**
      * @notice unstakes from JPEG'd LPFarming, then from JPEG'd citadel, then from curve LP
      * @param amount amount of shares of auto-compounder to burn
      * @param minPUSD minimum pUSD to receive from curve pool

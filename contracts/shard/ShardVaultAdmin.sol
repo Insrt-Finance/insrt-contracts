@@ -210,6 +210,16 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
+    function setAuthorized(
+        address account,
+        bool isAuthorized
+    ) external onlyProtocolOwner {
+        _setAuthorized(account, isAuthorized);
+    }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
     function repayLoanPUSD(
         uint256 amount,
         uint256 minPUSD,

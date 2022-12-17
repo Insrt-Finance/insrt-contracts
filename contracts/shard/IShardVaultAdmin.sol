@@ -148,6 +148,13 @@ interface IShardVaultAdmin {
     function setIsEnabled(bool isEnabled) external;
 
     /**
+     * @notice grants or revokes the 'authorized' state to an account
+     * @param account address of account to grant/revoke 'authorized'
+     * @param isAuthorized value of 'authorized' state
+     */
+    function setAuthorized(address account, bool isAuthorized) external;
+
+    /**
      * @notice sets the whitelist deadline and allows deposits
      * @param whitelistEndsAt whitelist deadline timestamp
      * @param reservedSupply whitelist shard amount
