@@ -138,13 +138,13 @@ export function describeBehaviorOfShardVaultAdmin(
 
       await instance
         .connect(owner)
-        ['setMaxUserShards(uint256)'](BigNumber.from('110'));
+        ['setMaxMintBalance(uint64)'](BigNumber.from('110'));
       await secondInstance
         .connect(owner)
-        ['setMaxUserShards(uint256)'](BigNumber.from('110'));
+        ['setMaxMintBalance(uint64)'](BigNumber.from('110'));
       await pethInstance
         .connect(owner)
-        ['setMaxUserShards(uint256)'](BigNumber.from('110'));
+        ['setMaxMintBalance(uint64)'](BigNumber.from('110'));
 
       let punkPurchaseData = cryptoPunkMarket.interface.encodeFunctionData(
         'buyPunk',
@@ -210,7 +210,9 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       it('collects acquisition fee', async () => {
-        await instance.connect(owner).setMaxUserShards(BigNumber.from('200'));
+        await instance
+          .connect(owner)
+          ['setMaxMintBalance(uint64)'](BigNumber.from('200'));
         await instance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await instance
           .connect(depositor)
@@ -3008,11 +3010,11 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#setMaxSupply(uint256)', () => {
+    describe('#setMaxSupply(uint64)', () => {
       it('sets maxSupply value', async () => {
         const newValue = BigNumber.from('1234');
 
-        await instance.connect(owner)['setMaxSupply(uint256)'](newValue);
+        await instance.connect(owner)['setMaxSupply(uint64)'](newValue);
 
         expect(await instance['maxSupply()']()).to.eq(newValue);
       });
@@ -3021,7 +3023,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['setMaxSupply(uint256)'](ethers.constants.Two),
+              ['setMaxSupply(uint64)'](ethers.constants.Two),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',
@@ -3030,7 +3032,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#setWhitelistEndsAt(uint64)', () => {
+    describe('#setWhitelistEndsAt(uint48)', () => {
       it('sets whitelistEndsAt value', async () => {
         const whitelistEndsAt = BigNumber.from('123123123123');
 
@@ -3055,15 +3057,15 @@ export function describeBehaviorOfShardVaultAdmin(
       });
     });
 
-    describe('#setReservedShards(uint256)', () => {
-      it('sets reservedShards value', async () => {
+    describe('#setReservedSupply(uint64)', () => {
+      it('sets reservedSupply value', async () => {
         const reservedShards = BigNumber.from('123');
 
         await instance
           .connect(owner)
-          ['setReservedShards(uint256)'](reservedShards);
+          ['setReservedSupply(uint64)'](reservedShards);
 
-        expect(reservedShards).to.eq(await instance['reservedShards()']());
+        expect(reservedShards).to.eq(await instance['reservedSupply()']());
       });
 
       describe('reverts if', () => {
@@ -3071,7 +3073,7 @@ export function describeBehaviorOfShardVaultAdmin(
           await expect(
             instance
               .connect(nonOwner)
-              ['setReservedShards(uint256)'](BigNumber.from('1000')),
+              ['setReservedSupply(uint64)'](BigNumber.from('1000')),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',

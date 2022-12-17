@@ -171,7 +171,7 @@ export function describeBehaviorOfShardVaultView(
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
           .connect(owner)
-          .setMaxUserShards(BigNumber.from('100'));
+          ['setMaxMintBalance(uint64)'](BigNumber.from('100'));
         await pethInstance
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
@@ -247,7 +247,7 @@ export function describeBehaviorOfShardVaultView(
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await pethInstance
           .connect(owner)
-          .setMaxUserShards(BigNumber.from('100'));
+          ['setMaxMintBalance(uint64)'](BigNumber.from('100'));
         await pethInstance
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
@@ -326,7 +326,9 @@ export function describeBehaviorOfShardVaultView(
       it('returns autoComp amount resulting in at least amount of PUSD requested after unstaking', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
-        await instance.connect(owner).setMaxUserShards(BigNumber.from('100'));
+        await instance
+          .connect(owner)
+          ['setMaxMintBalance(uint64)'](BigNumber.from('100'));
         await instance
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
@@ -399,7 +401,9 @@ export function describeBehaviorOfShardVaultView(
       it('returns amout resulting in at most 1/1000000 surplus of PUSD requested after unstaking', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
-        await instance.connect(owner).setMaxUserShards(BigNumber.from('100'));
+        await instance
+          .connect(owner)
+          ['setMaxMintBalance(uint64)'](BigNumber.from('100'));
         await instance
           .connect(depositor)
           .deposit({ value: ethers.utils.parseEther('100') });
