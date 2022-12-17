@@ -32,6 +32,7 @@ interface IShardVaultManager {
      * @param isPUSDVault indicates whether vault should be allowed to call PETH or PUSD functions
      * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
      * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
+     * @param authorized array of authorized addresses for loan health maintenance
      * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
      */
     function deployShardVault(
@@ -43,6 +44,7 @@ interface IShardVaultManager {
         uint16 maxMintBalance,
         bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
-        IShardVault.BufferParams memory bufferParams
+        IShardVault.BufferParams memory bufferParams,
+        address[] memory authorized
     ) external returns (address deployment);
 }

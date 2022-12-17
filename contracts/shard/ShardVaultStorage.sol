@@ -32,6 +32,7 @@ library ShardVaultStorage {
         address jpegdVaultHelper;
         address jpegdLP;
         EnumerableSet.UintSet ownedTokenIds;
+        mapping(address => bool) authorized;
     }
 
     bytes32 internal constant STORAGE_SLOT =

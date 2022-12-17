@@ -27,7 +27,8 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         uint16 maxMintBalance,
         bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
-        IShardVault.BufferParams memory bufferParams
+        IShardVault.BufferParams memory bufferParams,
+        address[] memory authorized
     ) external onlyOwner returns (address deployment) {
         deployment = address(
             new ShardVaultProxy(
@@ -40,7 +41,8 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
                 maxMintBalance,
                 isPUSDVault,
                 feeParams,
-                bufferParams
+                bufferParams,
+                authorized
             )
         );
 

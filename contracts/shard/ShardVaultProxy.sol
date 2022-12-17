@@ -25,7 +25,8 @@ contract ShardVaultProxy is Proxy {
         uint16 maxMintBalance,
         bool isPUSDVault,
         IShardVault.FeeParams memory feeParams,
-        IShardVault.BufferParams memory bufferParams
+        IShardVault.BufferParams memory bufferParams,
+        address[] memory authorized
     ) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
 
@@ -46,6 +47,13 @@ contract ShardVaultProxy is Proxy {
         l.ltvBufferBP = bufferParams.ltvBufferBP;
         l.ltvDeviationBP = bufferParams.ltvDeviationBP;
         l.conversionBuffer = bufferParams.conversionBuffer;
+
+        uint256 authorizedLength = authorized.length;
+        unchecked {
+            for (uint256 i; i < authorizedLength; ++i) {
+                l.authorized[authorized[i]] = true;
+            }
+        }
     }
 
     /**
