@@ -548,7 +548,7 @@ export function describeBehaviorOfShardVaultAdmin(
             'ShardVault__CallTypeProhibited',
           );
         });
-        it('called by non-owner', async () => {
+        it('called by non-owner or non-authorized', async () => {
           await expect(
             instance
               .connect(nonOwner)
@@ -559,7 +559,7 @@ export function describeBehaviorOfShardVaultAdmin(
               ),
           ).to.be.revertedWithCustomError(
             instance,
-            'ShardVault__NotProtocolOwner',
+            'ShardVault__NotAuthorized',
           );
         });
       });
@@ -749,7 +749,7 @@ export function describeBehaviorOfShardVaultAdmin(
           );
         });
 
-        it('called by non-owner', async () => {
+        it('called by non-owner or non-authorized', async () => {
           await expect(
             pethInstance
               .connect(nonOwner)
@@ -760,7 +760,7 @@ export function describeBehaviorOfShardVaultAdmin(
               ),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__NotProtocolOwner',
+            'ShardVault__NotAuthorized',
           );
         });
       });
@@ -1183,7 +1183,7 @@ export function describeBehaviorOfShardVaultAdmin(
           );
         });
 
-        it('called by non-owner', async () => {
+        it('called by non-owner or non-authorized', async () => {
           await expect(
             instance
               .connect(nonOwner)
@@ -1195,7 +1195,7 @@ export function describeBehaviorOfShardVaultAdmin(
               ),
           ).to.be.revertedWithCustomError(
             instance,
-            'ShardVault__NotProtocolOwner',
+            'ShardVault__NotAuthorized',
           );
         });
         it('paidDebt is less than requested amount', async () => {
@@ -1411,7 +1411,7 @@ export function describeBehaviorOfShardVaultAdmin(
           );
         });
 
-        it('called by non-owner', async () => {
+        it('called by non-owner or non authorized', async () => {
           await expect(
             pethInstance
               .connect(nonOwner)
@@ -1423,7 +1423,7 @@ export function describeBehaviorOfShardVaultAdmin(
               ),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__NotProtocolOwner',
+            'ShardVault__NotAuthorized',
           );
         });
         it('paidDebt is less than requested amount', async () => {
@@ -1477,7 +1477,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       describe('reverts if', () => {
-        it('called by non-owner', async () => {
+        it('called by non-owner or non-authorized', async () => {
           await expect(
             instance
               .connect(nonOwner)
@@ -1487,7 +1487,7 @@ export function describeBehaviorOfShardVaultAdmin(
               ),
           ).to.be.revertedWithCustomError(
             instance,
-            'ShardVault__NotProtocolOwner',
+            'ShardVault__NotAuthorized',
           );
         });
       });
@@ -1537,7 +1537,7 @@ export function describeBehaviorOfShardVaultAdmin(
       });
 
       describe('reverts if', () => {
-        it('called by non-owner', async () => {
+        it('called by non-owner or non-authorized', async () => {
           await expect(
             pethInstance
               .connect(nonOwner)
@@ -1547,7 +1547,7 @@ export function describeBehaviorOfShardVaultAdmin(
               ),
           ).to.be.revertedWithCustomError(
             pethInstance,
-            'ShardVault__NotProtocolOwner',
+            'ShardVault__NotAuthorized',
           );
         });
       });
@@ -3074,6 +3074,31 @@ export function describeBehaviorOfShardVaultAdmin(
             instance
               .connect(nonOwner)
               ['setReservedSupply(uint64)'](BigNumber.from('1000')),
+          ).to.be.revertedWithCustomError(
+            instance,
+            'ShardVault__NotProtocolOwner',
+          );
+        });
+      });
+    });
+
+    describe('#setAuthorized(address,bool)', () => {
+      it('sets the authorized status of an account', async () => {
+        await instance['setAuthorized(address,bool)'](nonOwner.address, true);
+
+        expect(await instance['isAuthorized(address)'](nonOwner.address)).to.eq(
+          true,
+        );
+      });
+      describe('reverts if', () => {
+        it('called by non-owner', async () => {
+          await expect(
+            instance
+              .connect(nonOwner)
+              ['setAuthorized(address,bool)'](
+                ethers.constants.AddressZero,
+                true,
+              ),
           ).to.be.revertedWithCustomError(
             instance,
             'ShardVault__NotProtocolOwner',

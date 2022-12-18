@@ -31,6 +31,7 @@ describe('ShardVaultProxy', () => {
   let marketplaceHelper: IMarketPlaceHelper;
 
   let deployer: any;
+  let authorized: any;
   let jpegdOwner: any;
 
   const id = 1;
@@ -120,7 +121,7 @@ describe('ShardVaultProxy', () => {
 
   before(async () => {
     // TODO: must skip signers because they're not parameterized in SolidState spec
-    [, , , deployer] = await ethers.getSigners();
+    [, , , deployer, authorized] = await ethers.getSigners();
 
     const marketplaceHelperDeployment = await new MarketPlaceHelper__factory(
       deployer,
@@ -224,7 +225,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16),address[])'
       ](
         CRYPTO_PUNKS_MARKET,
         pusdPunkVault,
@@ -235,6 +236,7 @@ describe('ShardVaultProxy', () => {
         true,
         feeParams,
         pUSDBufferParams,
+        [authorized.address],
       );
 
     const { events } = await deployShardVaultTx.wait();
@@ -247,7 +249,7 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16),address[])'
       ](
         BAYC,
         baycVault,
@@ -258,6 +260,7 @@ describe('ShardVaultProxy', () => {
         true,
         feeParams,
         pUSDBufferParams,
+        [authorized.address],
       );
 
     const rcpt = await deploySecondShardVaultTx.wait();
@@ -273,7 +276,7 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16))'
+        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16),address[])'
       ](
         CRYPTO_PUNKS_MARKET,
         pethPunkVault,
@@ -284,6 +287,7 @@ describe('ShardVaultProxy', () => {
         false,
         feeParams,
         pETHBufferParams,
+        [authorized.address],
       );
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();
