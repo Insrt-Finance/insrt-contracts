@@ -7,64 +7,51 @@ import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStor
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 
 import { MarketPlaceHelperProxy } from '../helpers/MarketPlaceHelperProxy.sol';
-import { IShardVault } from './IShardVault.sol';
+import { IShardVaultProxy } from './IShardVaultProxy.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
 /**
  * @title Upgradeable proxy with externally controlled ShardVault implementation
  */
-contract ShardVaultProxy is Proxy {
+contract ShardVaultProxy is Proxy, IShardVaultProxy {
     address private immutable SHARD_VAULT_DIAMOND;
 
-    /**
-     * @notice emitted upon MarketPlaceHelperProxy deployment
-     */
-    event MarketPlaceHelperProxyDeployed(address marketPlacerHelperProxy);
-
     constructor(
-        address shardVaultDiamond,
-        address marketPlaceHelper,
-        address collection,
-        address jpegdVault,
-        address jpegdVaultHelper,
-        uint256 shardValue,
-        uint16 maxSupply,
-        uint16 maxMintBalance,
-        bool isPUSDVault,
-        IShardVault.FeeParams memory feeParams,
-        IShardVault.BufferParams memory bufferParams,
-        address[] memory authorized
+        ShardVaultAddresses memory addresses,
+        ShardVaultUints memory uints,
+        bool isPUSDVault
     ) {
-        SHARD_VAULT_DIAMOND = shardVaultDiamond;
+        SHARD_VAULT_DIAMOND = addresses.shardVaultDiamond;
 
         OwnableStorage.layout().owner = msg.sender;
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         address marketPlaceHelperProxy = address(
-            new MarketPlaceHelperProxy(marketPlaceHelper)
+            new MarketPlaceHelperProxy(addresses.marketPlaceHelper)
         );
         emit MarketPlaceHelperProxyDeployed(marketPlaceHelperProxy);
 
         l.marketPlaceHelper = marketPlaceHelperProxy;
-        l.collection = collection;
-        l.jpegdVault = jpegdVault;
-        l.jpegdVaultHelper = jpegdVaultHelper;
-        l.shardValue = shardValue;
-        l.maxSupply = maxSupply;
-        l.maxMintBalance = maxMintBalance;
-        l.isPUSDVault = isPUSDVault;
-        l.saleFeeBP = feeParams.saleFeeBP;
-        l.acquisitionFeeBP = feeParams.acquisitionFeeBP;
-        l.yieldFeeBP = feeParams.yieldFeeBP;
-        l.ltvBufferBP = bufferParams.ltvBufferBP;
-        l.ltvDeviationBP = bufferParams.ltvDeviationBP;
-        l.conversionBuffer = bufferParams.conversionBuffer;
+        l.collection = addresses.collection;
+        l.jpegdVault = addresses.jpegdVault;
+        l.jpegdVaultHelper = addresses.jpegdVaultHelper;
+        l.shardValue = uints.shardValue;
+        l.maxSupply = uints.maxSupply;
+        l.maxMintBalance = uints.maxMintBalance;
 
-        uint256 authorizedLength = authorized.length;
+        l.saleFeeBP = uints.saleFeeBP;
+        l.acquisitionFeeBP = uints.acquisitionFeeBP;
+        l.yieldFeeBP = uints.yieldFeeBP;
+        l.ltvBufferBP = uints.ltvBufferBP;
+        l.ltvDeviationBP = uints.ltvDeviationBP;
+        l.conversionBuffer = uints.conversionBuffer;
+        l.isPUSDVault = isPUSDVault;
+
+        uint256 authorizedLength = addresses.authorized.length;
         unchecked {
             for (uint256 i; i < authorizedLength; ++i) {
-                l.authorized[authorized[i]] = true;
+                l.authorized[addresses.authorized[i]] = true;
             }
         }
     }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import { IShardVault } from '../shard/IShardVault.sol';
+import { IShardVaultProxy } from '../shard/IShardVaultProxy.sol';
 
 /**
  * @title ShardVault Manager contract interface
@@ -28,29 +28,13 @@ interface IShardVaultManager {
 
     /**
      * @notice deploys a ShardVaultProxy
-     * @param collection the address of the NFT collection contract
-     * @param jpegdVault the jpeg'd NFT vault corresponding to the collection
-     * @param jpegdVaultHelper the jpeg'd NFT Vault helper contract used for
-       non-ERC721/1155 compiant collections
-     * @param shardValue the ETH value of each shard
-     * @param maxSupply maximum shards to be minted by vault
-     * @param maxMintBalance maximum amount of shards allowed per user
+     * @param addresses addresses required to deploy a shard vault; see IShardVaultProxy
+     * @param uints uints required to deploy a shard vault; see IShardVaultProxy
      * @param isPUSDVault indicates whether vault should be allowed to call PETH or PUSD functions
-     * @param feeParams struct containing basis point values for all fees (sale, acquisition, yield)
-     * @param bufferParams struct containing basis point values for all buffers (ltv, ltvDeviation, conversion)
-     * @param authorized array of authorized addresses for loan health maintenance
-     * @dev conversion buffer requires increased accuracy thus has more significant figures than BASIS
      */
     function deployShardVault(
-        address collection,
-        address jpegdVault,
-        address jpegdVaultHelper,
-        uint256 shardValue,
-        uint16 maxSupply,
-        uint16 maxMintBalance,
-        bool isPUSDVault,
-        IShardVault.FeeParams memory feeParams,
-        IShardVault.BufferParams memory bufferParams,
-        address[] memory authorized
+        IShardVaultProxy.ShardVaultAddresses memory addresses,
+        IShardVaultProxy.ShardVaultUints memory uints,
+        bool isPUSDVault
     ) external returns (address deployment);
 }

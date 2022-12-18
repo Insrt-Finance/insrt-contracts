@@ -818,7 +818,7 @@ abstract contract ShardVaultInternal is
             .forwardSaleProceeds(calls);
         uint256 saleFee = (proceeds * l.saleFeeBP) / BASIS_POINTS;
         l.accruedFees += saleFee;
-        l.cumulativeETHPerShard += (proceeds - saleFee) / l.totalSupply;
+        l.cumulativeETHPerShard += (proceeds - saleFee) / _totalSupply();
 
         uint256 idLength = punkIds.length;
         if (idLength > 0) {

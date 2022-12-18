@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 
-import { IShardVaultManager } from './IShardVaultManager.sol';
 import { IShardVault } from '../shard/IShardVault.sol';
+import { IShardVaultManager } from './IShardVaultManager.sol';
+import { IShardVaultProxy } from '../shard/IShardVaultProxy.sol';
 import { ShardVaultProxy } from '../shard/ShardVaultProxy.sol';
 
 contract ShardVaultManager is IShardVaultManager, OwnableInternal {
@@ -21,32 +22,14 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
      * @inheritdoc IShardVaultManager
      */
     function deployShardVault(
-        address collection,
-        address jpegdVault,
-        address jpegdVaultHelper,
-        uint256 shardValue,
-        uint16 maxSupply,
-        uint16 maxMintBalance,
-        bool isPUSDVault,
-        IShardVault.FeeParams memory feeParams,
-        IShardVault.BufferParams memory bufferParams,
-        address[] memory authorized
+        IShardVaultProxy.ShardVaultAddresses memory addresses,
+        IShardVaultProxy.ShardVaultUints memory uints,
+        bool isPUSDVault
     ) external onlyOwner returns (address deployment) {
+        addresses.shardVaultDiamond = SHARD_VAULT_DIAMOND;
+        addresses.marketPlaceHelper = MARKETPLACE_HELPER;
         deployment = address(
-            new ShardVaultProxy(
-                SHARD_VAULT_DIAMOND,
-                MARKETPLACE_HELPER,
-                collection,
-                jpegdVault,
-                jpegdVaultHelper,
-                shardValue,
-                maxSupply,
-                maxMintBalance,
-                isPUSDVault,
-                feeParams,
-                bufferParams,
-                authorized
-            )
+            new ShardVaultProxy(addresses, uints, isPUSDVault)
         );
 
         emit ShardVaultDeployed(deployment);
