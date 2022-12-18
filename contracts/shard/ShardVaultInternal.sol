@@ -643,7 +643,7 @@ abstract contract ShardVaultInternal is
             minETH
         );
 
-        l.cumulativeETHPerShard += eth / l.totalSupply;
+        l.cumulativeETHPerShard += eth / _totalSupply();
     }
 
     /**
