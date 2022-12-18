@@ -30,7 +30,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
-    ) external onlyProtocolOwner returns (uint256 pUSD) {
+    ) external onlyAuthorized returns (uint256 pUSD) {
         pUSD = _collateralizePunkPUSD(punkId, borrowAmount, insure);
     }
 
@@ -41,7 +41,7 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
         uint256 punkId,
         uint256 borrowAmount,
         bool insure
-    ) external onlyProtocolOwner returns (uint256 pETH) {
+    ) external onlyAuthorized returns (uint256 pETH) {
         pETH = _collateralizePunkPETH(punkId, borrowAmount, insure);
     }
 

@@ -105,6 +105,15 @@ interface IShardVaultView {
     function reservedSupply() external view returns (uint64 reservedSupply);
 
     /**
+     * @notice returns the authorized status of an account
+     * @param account address to check status of
+     * @return isAuthorized authorized status of account
+     */
+    function isAuthorized(
+        address account
+    ) external view returns (bool isAuthorized);
+
+    /**
      * @notice returns address of market place helper
      * @return MARKETPLACE_HELPER address
      */

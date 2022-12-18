@@ -1092,6 +1092,17 @@ abstract contract ShardVaultInternal is
     }
 
     /**
+     * @notice returns the authorized status of an account
+     * @param account address to check status of
+     * @return isAuthorized authorized status of account
+     */
+    function _isAuthorized(
+        address account
+    ) internal view returns (bool isAuthorized) {
+        isAuthorized = ShardVaultStorage.layout().authorized[account];
+    }
+
+    /**
      * @notice check to ensure account is whitelisted (holding a DAWN_OF_INSRT token)
      * @param account address to check
      */

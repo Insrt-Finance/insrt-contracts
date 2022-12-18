@@ -103,6 +103,15 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     /**
      * @inheritdoc IShardVaultView
      */
+    function isAuthorized(
+        address account
+    ) external view returns (bool isAuthorized) {
+        return _isAuthorized(account);
+    }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
     function maxMintBalance() external view returns (uint64) {
         return _maxMintBalance();
     }
