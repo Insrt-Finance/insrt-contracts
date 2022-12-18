@@ -398,7 +398,7 @@ export function describeBehaviorOfShardVaultView(
           expect(pUSD).to.gte(pUSDAmounts[i]);
         }
       });
-      it('returns amout resulting in at most 1/1000000 surplus of PUSD requested after unstaking', async () => {
+      it('returns amout resulting in at most 1/1000 surplus of PUSD requested after unstaking', async () => {
         await instance.connect(owner)['setIsEnabled(bool)'](true);
         await instance.connect(owner).setMaxSupply(BigNumber.from('100'));
         await instance
@@ -472,7 +472,7 @@ export function describeBehaviorOfShardVaultView(
 
           expect(pUSD.sub(pUSDAmounts[i])).to.gte(ethers.constants.Zero);
           expect(pUSD.sub(pUSDAmounts[i])).to.lte(
-            pUSDAmounts[i].div(BigNumber.from('1000000')),
+            pUSDAmounts[i].div(BigNumber.from('1000')),
           );
         }
       });

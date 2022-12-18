@@ -50,6 +50,8 @@ abstract contract ShardVaultInternal is
     address internal immutable DAWN_OF_INSRT;
     address internal immutable TREASURY;
     uint256 internal constant BASIS_POINTS = 10000;
+    uint256 internal constant CURVE_BASIS = 10000000000;
+    uint256 internal constant CURVE_FEE = 4000000;
 
     constructor(
         JPEGParams memory jpegParams,
@@ -609,40 +611,79 @@ abstract contract ShardVaultInternal is
 
     /**
      * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
-     * @param punkId id of punk position pertains to
+     * @param punkId punkId pertinent to position
+     * @param minPETH minimum pETH to receive from curveLP after unstake
+     * @param poolInfoIndex index of pool in lpFarming pool array
+     * @param minETH minimum amount of ETH to receive from curveLP after exchange
+     */
+    function _closePunkPositionPETH(
+        uint256 punkId,
+        uint256 minPETH,
+        uint256 poolInfoIndex,
+        uint256 minETH
+    ) internal {
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        uint256 peth = _closePunkPosition(
+            punkId,
+            minPETH,
+            poolInfoIndex,
+            l.jpegdVault,
+            PETH,
+            PETH_CITADEL,
+            CURVE_PETH_POOL,
+            int128(1)
+        );
+
+        IERC20(PETH).approve(CURVE_PETH_POOL, peth);
+        uint256 eth = ICurveMetaPool(CURVE_PETH_POOL).exchange(
+            int128(1),
+            int128(0),
+            peth,
+            minETH
+        );
+
+        l.cumulativeETHPerShard += eth / l.totalSupply;
+    }
+
+    /**
+     * @notice liquidates all staked tokens in order to pay back loan, retrieves collateralized punk
+     * @param punkId punkId pertinent to position
      * @param minTokenAmount minimum token (pETH/pUSD) to receive from curveLP
      * @param poolInfoIndex index of pool in lpFarming pool array
-     * @param isPUSD indicates whether loan position is denominated in pUSD or pETH
+     * @param jpegdVault address of jpeg'd NFT Vault
+     * @param token address of PETH or PUSD
+     * @param citadel address of jpeg citadel
+     * @param pool address of Curve pool
+     * @param curveID curve pool index of token to receive
+     * @return surplus amount of PETH/PUSD left over after paying outstanding debt
      */
     function _closePunkPosition(
         uint256 punkId,
         uint256 minTokenAmount,
         uint256 poolInfoIndex,
-        bool isPUSD
-    ) internal {
-        address jpegdVault = ShardVaultStorage.layout().jpegdVault;
+        address jpegdVault,
+        address token,
+        address citadel,
+        address pool,
+        int128 curveID
+    ) internal returns (uint256 surplus) {
         uint256 debt = _totalDebt(jpegdVault, punkId);
-        if (isPUSD) {
-            _unstakePUSD(
-                ILPFarming(LP_FARM)
-                    .userInfo(poolInfoIndex, address(this))
-                    .amount,
-                minTokenAmount,
-                poolInfoIndex
-            );
-            IERC20(PUSD).approve(jpegdVault, debt);
-        } else {
-            _unstakePETH(
-                ILPFarming(LP_FARM)
-                    .userInfo(poolInfoIndex, address(this))
-                    .amount,
-                minTokenAmount,
-                poolInfoIndex
-            );
-            IERC20(PETH).approve(jpegdVault, debt);
-        }
+
+        uint256 tokenAmount = _unstake(
+            _queryAutoCompForPETH(debt),
+            minTokenAmount,
+            poolInfoIndex,
+            citadel,
+            pool,
+            curveID
+        );
+
+        IERC20(token).approve(jpegdVault, debt);
         INFTVault(jpegdVault).repay(punkId, debt);
         INFTVault(jpegdVault).closePosition(punkId);
+
+        surplus = tokenAmount - debt;
     }
 
     /**
@@ -753,9 +794,9 @@ abstract contract ShardVaultInternal is
             false
         );
 
-        //note: accounts for fees; ball-parks
-        uint256 curveLPAccountingFee = (curveLP *
-            ShardVaultStorage.layout().conversionBuffer) / (BASIS_POINTS * 100);
+        //note: accounts for fees;
+        uint256 curveLPAccountingFee = (curveLP * CURVE_BASIS) /
+            (CURVE_BASIS - CURVE_FEE);
 
         autoComp =
             (curveLPAccountingFee * 10 ** IVault(PUSD_CITADEL).decimals()) /
@@ -779,9 +820,9 @@ abstract contract ShardVaultInternal is
             false
         );
 
-        //note: accounts for fees; ball-parks     //conversion_buffer
-        uint256 curveLPAccountingFee = (curveLP *
-            ShardVaultStorage.layout().conversionBuffer) / (100 * BASIS_POINTS);
+        // //note: accounts for fees;
+        uint256 curveLPAccountingFee = (curveLP * CURVE_BASIS) /
+            (CURVE_BASIS - CURVE_FEE);
 
         autoComp =
             (curveLPAccountingFee * 10 ** IVault(PETH_CITADEL).decimals()) /
