@@ -321,4 +321,14 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     function makeUnusedETHClaimable() external onlyProtocolOwner {
         _makeUnusedETHClaimable();
     }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function acceptPunkBid(
+        IMarketPlaceHelper.EncodedCall[] memory calls,
+        uint256 punkId
+    ) external onlyProtocolOwner {
+        _acceptPunkBid(calls, punkId);
+    }
 }

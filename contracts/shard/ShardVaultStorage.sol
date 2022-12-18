@@ -28,6 +28,7 @@ library ShardVaultStorage {
         bool isEnabled;
         bool isPUSDVault;
         bool isYieldClaiming;
+        address marketPlaceHelper;
         address jpegdVault;
         address jpegdVaultHelper;
         address jpegdLP;

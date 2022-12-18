@@ -5,11 +5,12 @@ pragma solidity ^0.8.0;
 import { AddressUtils } from '@solidstate/contracts/utils/AddressUtils.sol';
 import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
+import { Ownable } from '@solidstate/contracts/access/ownable/Ownable.sol';
 
 import { IMarketPlaceHelper } from './IMarketPlaceHelper.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 
-contract MarketPlaceHelper is IMarketPlaceHelper {
+contract MarketPlaceHelper is IMarketPlaceHelper, Ownable {
     using AddressUtils for address payable;
 
     address private immutable CRYPTO_PUNK_MARKET;
@@ -25,7 +26,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         EncodedCall[] calldata calls,
         address purchaseToken,
         uint256 price
-    ) external payable {
+    ) external payable onlyOwner {
         if (purchaseToken == address(0) && msg.value < price) {
             revert MarketPlaceHelper__InsufficientETH();
         } else if (
@@ -49,7 +50,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
     /**
      * @inheritdoc IMarketPlaceHelper
      */
-    function listAsset(EncodedCall[] memory calls) external {
+    function listAsset(EncodedCall[] memory calls) external onlyOwner {
         unchecked {
             for (uint256 i; i < calls.length; ++i) {
                 (bool success, ) = calls[i].target.call{
@@ -62,33 +63,44 @@ contract MarketPlaceHelper is IMarketPlaceHelper {
         }
     }
 
-    //TODO
-    function acceptAssetBid(
-        bytes calldata data,
-        address target,
-        address collection,
-        uint256 tokenId,
-        uint256 minBidValue
-    ) external payable {
-        if (collection == CRYPTO_PUNK_MARKET) {
-            ICryptoPunkMarket(CRYPTO_PUNK_MARKET).acceptBidForPunk(
-                tokenId,
-                minBidValue
-            );
-
-            uint256 oldBalance = address(this).balance;
-            ICryptoPunkMarket(CRYPTO_PUNK_MARKET).withdraw();
-            uint256 newBalance = address(this).balance;
-
+    /**
+     * @inheritdoc IMarketPlaceHelper
+     */
+    function acceptAssetBid(EncodedCall[] memory calls) external onlyOwner {
+        for (uint256 i; i < calls.length; ) {
             unchecked {
-                payable(msg.sender).sendValue(newBalance - oldBalance);
+                (bool success, ) = calls[i].target.call{
+                    value: calls[i].value
+                }(calls[i].data);
+                if (!success) {
+                    revert MarketPlaceHelper__FailedAcceptBidCall();
+                }
+                ++i;
             }
-        } else {
-            (bool success, ) = target.call(data);
+        }
+    }
 
-            if (!success) {
-                revert MarketPlaceHelper__FailedBidAcceptanceCall();
+    /**
+     * @inheritdoc IMarketPlaceHelper
+     */
+    function forwardSaleProceeds(
+        EncodedCall[] memory calls
+    ) external payable onlyOwner returns (uint256 proceeds) {
+        for (uint256 i; i < calls.length; ) {
+            unchecked {
+                (bool success, ) = calls[i].target.call{
+                    value: calls[i].value
+                }(calls[i].data);
+                if (!success) {
+                    revert MarketPlaceHelper__FailedForwardSaleProceedsCall();
+                }
+                ++i;
             }
+        }
+
+        proceeds = address(this).balance;
+        if (proceeds != 0) {
+            payable(msg.sender).sendValue(proceeds);
         }
     }
 }

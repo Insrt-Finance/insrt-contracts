@@ -6,6 +6,7 @@ import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/I
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
 
+import { MarketPlaceHelperProxy } from '../helpers/MarketPlaceHelperProxy.sol';
 import { IShardVault } from './IShardVault.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
 
@@ -15,8 +16,14 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 contract ShardVaultProxy is Proxy {
     address private immutable SHARD_VAULT_DIAMOND;
 
+    /**
+     * @notice emitted upon MarketPlaceHelperProxy deployment
+     */
+    event MarketPlaceHelperProxyDeployed(address marketPlacerHelperProxy);
+
     constructor(
         address shardVaultDiamond,
+        address marketPlaceHelper,
         address collection,
         address jpegdVault,
         address jpegdVaultHelper,
@@ -34,6 +41,12 @@ contract ShardVaultProxy is Proxy {
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
+        address marketPlaceHelperProxy = address(
+            new MarketPlaceHelperProxy(marketPlaceHelper)
+        );
+        emit MarketPlaceHelperProxyDeployed(marketPlaceHelperProxy);
+
+        l.marketPlaceHelper = marketPlaceHelperProxy;
         l.collection = collection;
         l.jpegdVault = jpegdVault;
         l.jpegdVaultHelper = jpegdVaultHelper;

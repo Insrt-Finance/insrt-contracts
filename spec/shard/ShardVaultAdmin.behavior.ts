@@ -2911,6 +2911,76 @@ export function describeBehaviorOfShardVaultAdmin(
         });
       });
     });
+    // describe.only('#acceptBidOnPunk((bytes,uint256,address),uint256)', () => {
+    // it.only('vault receives ETH corresponding to punk proceeds', async () => {
+    // await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
+    // await pethInstance
+    // .connect(depositor)
+    // .deposit({ value: ethers.utils.parseEther('100') });
+
+    // await pethInstance
+    // .connect(owner)
+    // ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
+    // punkPurchaseCallsPETH,
+    // punkId,
+    // true,
+    // );
+
+    // expect(
+    // await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
+    // ).to.eq(pethInstance.address);
+
+    // const listPrice = ethers.utils.parseEther('50');
+    // const listPunkCalls = [];
+
+    // const encodedOfferPunkForSale =
+    // cryptoPunkMarket.interface.encodeFunctionData(
+    // 'offerPunkForSale(uint256,uint256)',
+    // [punkId, listPrice],
+    // );
+
+    // const encodedListCall = {
+    // data: encodedOfferPunkForSale,
+    // target: CRYPTO_PUNKS_MARKET,
+    // value: ethers.constants.Zero,
+    // };
+
+    // listPunkCalls.push(encodedListCall);
+
+    // await pethInstance
+    // .connect(owner)
+    // ['listPunk((bytes,uint256,address)[],uint256)'](
+    // listPunkCalls,
+    // punkId,
+    // );
+
+    // const bidAmount = ethers.utils.parseEther('10');
+    // await cryptoPunkMarket
+    // .connect(depositor)
+    // ['enterBidForPunk(uint256)'](punkId, { value: bidAmount });
+
+    // const encodedAcceptBidOnPunk =
+    // cryptoPunkMarket.interface.encodeFunctionData(
+    // 'acceptBidForPunk(uint256,uint256)',
+    // [punkId, bidAmount],
+    // );
+
+    // const encodedAcceptCall = {
+    // data: encodedAcceptBidOnPunk,
+    // target: CRYPTO_PUNKS_MARKET,
+    // value: ethers.constants.Zero,
+    // };
+
+    // await expect(() => pethInstance.connect(owner).accept);
+    // });
+    // it('increases accrued fees correponding to sale fee', async () => {});
+    // it('increases cumulativeEPS', async () => {});
+    // it('removes punkId from ownedTokenIds', async () => {});
+
+    // describe('reverts if', () => {
+    // it('called by non-owner', async () => {});
+    // });
+    // });
 
     describe('#setAcquisitionFee(uint16)', () => {
       it('sets acquisition fee value', async () => {

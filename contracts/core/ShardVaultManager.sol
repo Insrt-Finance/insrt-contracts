@@ -10,9 +10,11 @@ import { ShardVaultProxy } from '../shard/ShardVaultProxy.sol';
 
 contract ShardVaultManager is IShardVaultManager, OwnableInternal {
     address public immutable SHARD_VAULT_DIAMOND;
+    address public immutable MARKETPLACE_HELPER;
 
-    constructor(address shardVaultDiamond) {
+    constructor(address shardVaultDiamond, address marketPlaceHelper) {
         SHARD_VAULT_DIAMOND = shardVaultDiamond;
+        MARKETPLACE_HELPER = marketPlaceHelper;
     }
 
     /**
@@ -33,6 +35,7 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
         deployment = address(
             new ShardVaultProxy(
                 SHARD_VAULT_DIAMOND,
+                MARKETPLACE_HELPER,
                 collection,
                 jpegdVault,
                 jpegdVaultHelper,

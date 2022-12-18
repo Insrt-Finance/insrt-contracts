@@ -70,16 +70,25 @@ describe('ShardVaultProxy', () => {
   const shardCollectionAddress: string[] = [];
   const marketplaceHelperAddress: string[] = [];
 
-  interface FeeParamsStruct {
+  interface ShardVaultAddresses {
+    shardVaultDiamond: string;
+    marketPlaceHelper: string;
+    collection: string;
+    jpegdVault: string;
+    jpegdVaultHelper: string;
+    authorized: string[];
+  }
+
+  interface ShardVaultUints {
+    shardValue: BigNumber;
+    maxSupply: BigNumber;
+    maxMintBalance: BigNumber;
     saleFeeBP: BigNumber;
     acquisitionFeeBP: BigNumber;
     yieldFeeBP: BigNumber;
-  }
-
-  interface BufferParamsStruct {
+    conversionBuffer: BigNumber;
     ltvBufferBP: BigNumber;
     ltvDeviationBP: BigNumber;
-    conversionBuffer: BigNumber;
   }
 
   interface JPEGParamsStruct {
@@ -101,19 +110,25 @@ describe('ShardVaultProxy', () => {
     TREASURY: string;
   }
 
-  const feeParams: FeeParamsStruct = {
+  const uintsPUSD: ShardVaultUints = {
+    shardValue: shardValue,
+    maxSupply: maxShards,
+    maxMintBalance: maxShardsPerUser,
     saleFeeBP: saleFeeBP,
     acquisitionFeeBP: acquisitionFeeBP,
     yieldFeeBP: yieldFeeBP,
-  };
-
-  const pUSDBufferParams: BufferParamsStruct = {
     ltvBufferBP: ltvBufferBP,
     ltvDeviationBP: ltvDeviationBP,
     conversionBuffer: pUSDConversionBuffer,
   };
 
-  const pETHBufferParams: BufferParamsStruct = {
+  const uintsPETH: ShardVaultUints = {
+    shardValue: shardValue,
+    maxSupply: maxShards,
+    maxMintBalance: maxShardsPerUser,
+    saleFeeBP: saleFeeBP,
+    acquisitionFeeBP: acquisitionFeeBP,
+    yieldFeeBP: yieldFeeBP,
     ltvBufferBP: ltvBufferBP,
     ltvDeviationBP: ltvDeviationBP,
     conversionBuffer: pETHConversionBuffer,
@@ -147,6 +162,7 @@ describe('ShardVaultProxy', () => {
     const coreFacetCuts = [
       await new ShardVaultManager__factory(deployer).deploy(
         shardVaultDiamond.address,
+        marketplaceHelper.address,
       ),
     ].map(function (f) {
       return {
@@ -175,6 +191,33 @@ describe('ShardVaultProxy', () => {
       DAWN_OF_INSRT: DAWN_OF_INSRT,
       MARKETPLACE_HELPER: marketplaceHelper.address,
       TREASURY: deployer.address,
+    };
+
+    const addressesPUSD: ShardVaultAddresses = {
+      shardVaultDiamond: ethers.constants.AddressZero,
+      marketPlaceHelper: ethers.constants.AddressZero,
+      collection: CRYPTO_PUNKS_MARKET,
+      jpegdVault: pusdPunkVault,
+      jpegdVaultHelper: pusdPunkVaultHelper,
+      authorized: [authorized.address],
+    };
+
+    const addressesPUSDTwo: ShardVaultAddresses = {
+      shardVaultDiamond: ethers.constants.AddressZero,
+      marketPlaceHelper: ethers.constants.AddressZero,
+      collection: BAYC,
+      jpegdVault: baycVault,
+      jpegdVaultHelper: ethers.constants.AddressZero,
+      authorized: [authorized.address],
+    };
+
+    const addressesPETH: ShardVaultAddresses = {
+      shardVaultDiamond: ethers.constants.AddressZero,
+      marketPlaceHelper: ethers.constants.AddressZero,
+      collection: CRYPTO_PUNKS_MARKET,
+      jpegdVault: pethPunkVault,
+      jpegdVaultHelper: pethPunkVaultHelper,
+      authorized: [authorized.address],
     };
 
     const shardVaultSelectors = new Set();
@@ -225,43 +268,25 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16),address[])'
-      ](
-        CRYPTO_PUNKS_MARKET,
-        pusdPunkVault,
-        pusdPunkVaultHelper,
-        shardValue,
-        maxShards,
-        maxShardsPerUser,
-        true,
-        feeParams,
-        pUSDBufferParams,
-        [authorized.address],
-      );
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),bool)'
+      ](addressesPUSD, uintsPUSD, true);
 
     const { events } = await deployShardVaultTx.wait();
     const { deployment } = events.find(
       (e) => e.event === 'ShardVaultDeployed',
     ).args;
 
+    const marketPlaceHelperProxy = ethers.utils.getAddress(
+      BigNumber.from(events[0].data).mask(160).toHexString(),
+    );
+
     instance = IShardVault__factory.connect(deployment, deployer);
 
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16),address[])'
-      ](
-        BAYC,
-        baycVault,
-        ethers.constants.AddressZero,
-        shardValue,
-        maxShards,
-        maxShardsPerUser,
-        true,
-        feeParams,
-        pUSDBufferParams,
-        [authorized.address],
-      );
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),bool)'
+      ](addressesPUSDTwo, uintsPUSD, true);
 
     const rcpt = await deploySecondShardVaultTx.wait();
     const secondDeployment = rcpt.events.find(
@@ -276,19 +301,8 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault(address,address,address,uint256,uint16,uint16,bool,(uint16,uint16,uint16),(uint256,uint16,uint16),address[])'
-      ](
-        CRYPTO_PUNKS_MARKET,
-        pethPunkVault,
-        pethPunkVaultHelper,
-        shardValue,
-        maxShards,
-        maxShardsPerUser,
-        false,
-        feeParams,
-        pETHBufferParams,
-        [authorized.address],
-      );
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),bool)'
+      ](addressesPETH, uintsPETH, false);
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();
     const pethDeployment = pethDeploymentRcpt.events.find(
@@ -300,7 +314,7 @@ describe('ShardVaultProxy', () => {
       deployer,
     );
 
-    marketplaceHelperAddress.push(marketplaceHelper.address);
+    marketplaceHelperAddress.push(marketPlaceHelperProxy);
 
     await hre.network.provider.request({
       method: 'hardhat_impersonateAccount',
