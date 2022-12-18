@@ -108,7 +108,7 @@ abstract contract ShardVaultInternal is
     }
 
     /**
-     * @notice deposits ETH in exchange for owed shards
+     * @notice deposits ETH in exchange for shards
      */
     function _deposit() internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
@@ -891,6 +891,9 @@ abstract contract ShardVaultInternal is
      * @param maxSupply the maxSupply of shards
      */
     function _setMaxSupply(uint64 maxSupply) internal {
+        if (maxSupply < _totalSupply()) {
+            revert ShardVault__MaxSupplyTooSmall();
+        }
         ShardVaultStorage.layout().maxSupply = maxSupply;
     }
 
@@ -1084,7 +1087,13 @@ abstract contract ShardVaultInternal is
      * @param reservedSupply whitelist shard amount
      */
     function _setReservedSupply(uint64 reservedSupply) internal {
-        ShardVaultStorage.layout().reservedSupply = reservedSupply;
+        ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+
+        if (l.maxSupply < reservedSupply) {
+            revert ShardVault__ExceededMaxSupply();
+        }
+
+        l.reservedSupply = reservedSupply;
     }
 
     /**

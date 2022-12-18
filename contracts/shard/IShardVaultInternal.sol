@@ -128,4 +128,14 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when attempting to withdraw fees with treasury address == address(0)
      */
     error ShardVault__TreasuryIsZeroAddress();
+
+    /**
+     * @notice thrown when attempting to set a reserved supply larger than max supply
+     */
+    error ShardVault__ExceededMaxSupply();
+
+    /**
+     * @notice thrown when setting a max supply which is smaller than total supply
+     */
+    error ShardVault__MaxSupplyTooSmall();
 }
