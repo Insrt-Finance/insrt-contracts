@@ -597,6 +597,7 @@ abstract contract ShardVaultInternal is
         uint256 minETH
     ) internal {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
+        _enforceIsPETHVault();
 
         uint256 peth = _closePunkPosition(
             punkId,
@@ -885,6 +886,7 @@ abstract contract ShardVaultInternal is
         uint256 minETH,
         uint256 poolInfoIndex
     ) internal returns (uint256 providedETH, uint256 providedJPEG) {
+        _enforceIsPETHVault();
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         providedETH = _unstake(
