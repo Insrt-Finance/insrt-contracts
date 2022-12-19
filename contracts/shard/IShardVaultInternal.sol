@@ -140,8 +140,168 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__MaxSupplyTooSmall();
 
     /**
-     * @notice emitted new new baseURI is set
+     * @notice emitted when baseURI is set
      * @param baseURI the new baseURI for ERC721Metadata
      */
-    event ShardVault__NewBaseURI(string baseURI);
+    event SetBaseURI(string baseURI);
+
+    /**
+     * @notice emitted when whitelistEndsAt is set
+     * @param whitelistEndsAt the new whitelistEndsAt timestamp
+     */
+    event SetWhitelistEndsAt(uint48 whitelistEndsAt);
+
+    /**
+     * @notice emitted when reservedSupply is set
+     * @param reservedSupply the new reservedSupply
+     */
+    event SetReservedSupply(uint64 reservedSupply);
+
+    /**
+     * @notice emitted when isEnabled is set
+     * @param isEnabled the new isEnabled value
+     */
+    event SetIsEnabled(bool isEnabled);
+
+    /**
+     * @notice emitted when maxMintBalance is set
+     * @param maxMintBalance the new maxMintBalance
+     */
+    event SetMaxMintBalance(uint64 maxMintBalance);
+
+    /**
+     * @notice emitted when maxSupply is set
+     * @param maxSupply the new maxSupply
+     */
+    event SetMaxSupply(uint64 maxSupply);
+
+    /**
+     * @notice emitted when protocol fees are withdrawn
+     * @param feesETH amount of ETH withdrawn as fees
+     * @param feesJPEG amount of JPEG withdrawn as fees
+     */
+    event WithdrawFees(uint256 feesETH, uint256 feesJPEG);
+
+    /**
+     * @notice emitted when sale fee is set
+     * @param feeBP the new sale fee basis points
+     */
+    event SetSaleFee(uint16 feeBP);
+
+    /**
+     * @notice emitted when acquisition fee is set
+     * @param feeBP the new acquisition fee basis points
+     */
+    event SetAcquisitionFee(uint16 feeBP);
+
+    /**
+     * @notice emitted when yield fee is set
+     * @param feeBP the new yield fee basis points
+     */
+    event SetYieldFee(uint16 feeBP);
+
+    /**
+     * @notice emitted when the authorized status of an account is set
+     * @param account address of account
+     * @param isAuthorized authorized status
+     */
+    event SetAuthorized(address account, bool isAuthorized);
+
+    /**
+     * @notice emitted when a punk is purchased by the vault
+     * @param punkId purchased punk id
+     */
+    event PurchasePunk(uint256 punkId);
+
+    /**
+     * @notice emitted when unused ETH is made available to claim
+     */
+    event MakeUnusedETHClaimable();
+
+    /**
+     * @notice emitted when a punk is collateralized for pUSD
+     * @param pUSD received pUSD for collateralization
+     */
+    event CollateralizePunkPUSD(uint256 pUSD);
+
+    /**
+     * @notice emitted when a punk is collateralized for pETH
+     * @param pETH received pETH for collateralization
+     */
+    event CollaterlizePunkPETH(uint256 pETH);
+
+    /**
+     * @notice emitted when PUSD is staked
+     * @param shares lpFarm shares received after 3rd staking stage
+     */
+    event StakePUSD(uint256 shares);
+
+    /**
+     * @notice emitted when PETH is staked
+     * @param shares lpFarm shares received after 3rd staking stage
+     */
+    event StakePETH(uint256 shares);
+    /**
+     * @notice emitted when part of the position in unstaked and a PUSD loan is repaid
+     * @param paidDebt amount of PUSD debt paid
+     */
+    event RepayLoanPUSD(uint256 paidDebt);
+
+    /**
+     * @notice emitted when part of the position in unstaked and a PETH loan is repaid
+     * @param paidDebt amount of PETH debt paid
+     */
+    event RepayLoanPETH(uint256 paidDebt);
+
+    /**
+     * @notice emitted when a direct loan repayment is made
+     * @param token address of JPEG 'stablecoin' used for repayment
+     * @param amount amount of 'stablecoin' repaid
+     * @param punkId id of punk for which debt is reduced
+     */
+    event DirectRepayLoan(address token, uint256 amount, uint256 punkId);
+
+    /**
+     * @notice emitted when a JPEG position of a punk in a PETH vault is closed
+     * @param punkId id of punk
+     * @param receivedETH ETH received when surplus PETH is converted
+     */
+    event ClosePunkPositionPETH(uint256 punkId, uint256 receivedETH);
+
+    /**
+     * @notice emitted when a bid is accepted on a punk
+     * @param punkId id of punk
+     */
+    event AccetPunkBid(uint256 punkId);
+
+    /**
+     * @notice emitted when a punk is listed on crypto punk marketplace
+     * @param punkId id of punk
+     */
+    event ListPunk(uint256 punkId);
+
+    /**
+     * @notice emitted when proceeds are received from crypto punk marketplace
+     * @param proceeds amount of ETH received as proceedds
+     */
+    event ReceivePunkProceeds(uint256 proceeds);
+
+    /**
+     * @notice emitted when part of the staked position is unstaked to receive pETH
+     * @param pETH amount of pETH received
+     */
+    event UnstakePETH(uint256 pETH);
+
+    /**
+     * @notice emitted when part of the staked position is unstaked to receive pUSD
+     * @param pUSD amount of pUSD received
+     */
+    event UnstakePUSD(uint256 pUSD);
+
+    /**
+     * @notice emitted when yield is provided in a PETH vault
+     * @param providedETH amount of ETH provided
+     * @param providedJPEG amount of JPEG provided
+     */
+    event ProvideYieldPETH(uint256 providedETH, uint256 providedJPEG);
 }

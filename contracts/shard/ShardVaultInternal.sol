@@ -266,6 +266,7 @@ abstract contract ShardVaultInternal is
         }
         l.accruedFees += (price * l.acquisitionFeeBP) / BASIS_POINTS;
         l.ownedTokenIds.add(punkId);
+        emit PurchasePunk(punkId);
     }
 
     /**
@@ -276,6 +277,8 @@ abstract contract ShardVaultInternal is
         l.cumulativeETHPerShard +=
             (address(this).balance - l.accruedFees) /
             _totalSupply();
+
+        emit MakeUnusedETHClaimable();
     }
 
     /**
@@ -304,6 +307,8 @@ abstract contract ShardVaultInternal is
             value,
             PUSD
         );
+
+        emit CollateralizePunkPUSD(pUSD);
     }
 
     function _collateralizePunkPETH(
@@ -325,6 +330,8 @@ abstract contract ShardVaultInternal is
             value,
             PETH
         );
+
+        emit CollaterlizePunkPETH(pETH);
     }
 
     function _collateralizePunk(
@@ -400,6 +407,7 @@ abstract contract ShardVaultInternal is
             PUSD_CITADEL,
             [amount, 0]
         );
+        emit StakePUSD(shares);
     }
 
     /**
@@ -426,6 +434,7 @@ abstract contract ShardVaultInternal is
             PETH_CITADEL,
             [0, amount]
         );
+        emit StakePETH(shares);
     }
 
     function _stake(
@@ -473,6 +482,7 @@ abstract contract ShardVaultInternal is
 
         IERC20(JPEG).transfer(TREASURY, feesJPEG);
         payable(TREASURY).sendValue(feesETH);
+        emit WithdrawFees(feesETH, feesJPEG);
     }
 
     /**
@@ -482,6 +492,7 @@ abstract contract ShardVaultInternal is
     function _setSaleFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().saleFeeBP = feeBP;
+        emit SetSaleFee(feeBP);
     }
 
     /**
@@ -491,6 +502,7 @@ abstract contract ShardVaultInternal is
     function _setAcquisitionFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().acquisitionFeeBP = feeBP;
+        emit SetAcquisitionFee(feeBP);
     }
 
     /**
@@ -500,6 +512,7 @@ abstract contract ShardVaultInternal is
     function _setYieldFee(uint16 feeBP) internal {
         _enforceBasis(feeBP);
         ShardVaultStorage.layout().yieldFeeBP = feeBP;
+        emit SetYieldFee(feeBP);
     }
 
     /**
@@ -509,6 +522,7 @@ abstract contract ShardVaultInternal is
      */
     function _setAuthorized(address account, bool isAuthorized) internal {
         ShardVaultStorage.layout().authorized[account] = isAuthorized;
+        emit SetAuthorized(account, isAuthorized);
     }
 
     /**
@@ -533,6 +547,8 @@ abstract contract ShardVaultInternal is
             CURVE_PUSD_POOL,
             0
         );
+
+        emit UnstakePUSD(pUSD);
     }
 
     /**
@@ -558,6 +574,8 @@ abstract contract ShardVaultInternal is
             CURVE_PETH_POOL,
             1
         );
+
+        emit UnstakePETH(pETH);
     }
 
     function _unstake(
@@ -619,6 +637,7 @@ abstract contract ShardVaultInternal is
         );
 
         l.cumulativeETHPerShard += eth / _totalSupply();
+        emit ClosePunkPositionPETH(punkId, eth);
     }
 
     /**
@@ -673,6 +692,7 @@ abstract contract ShardVaultInternal is
         address marketPlaceHelper = _marketplaceHelper();
         ICryptoPunkMarket(PUNKS).transferPunk(marketPlaceHelper, punkId);
         IMarketPlaceHelper(marketPlaceHelper).listAsset(calls);
+        emit ListPunk(punkId);
     }
 
     /**
@@ -703,6 +723,7 @@ abstract contract ShardVaultInternal is
 
         IERC20(PUSD).approve(jpegdVault, paidDebt);
         INFTVault(jpegdVault).repay(punkId, paidDebt);
+        emit RepayLoanPUSD(paidDebt);
     }
 
     /**
@@ -733,6 +754,7 @@ abstract contract ShardVaultInternal is
 
         IERC20(PETH).approve(jpegdVault, paidDebt);
         INFTVault(jpegdVault).repay(punkId, paidDebt);
+        emit RepayLoanPETH(paidDebt);
     }
 
     /**
@@ -817,6 +839,7 @@ abstract contract ShardVaultInternal is
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
         IMarketPlaceHelper(l.marketPlaceHelper).acceptAssetBid(calls);
         l.ownedTokenIds.remove(punkId);
+        emit AccetPunkBid(punkId);
     }
 
     /**
@@ -844,6 +867,8 @@ abstract contract ShardVaultInternal is
                 }
             }
         }
+
+        emit ReceivePunkProceeds(proceeds);
     }
 
     /**
@@ -870,6 +895,8 @@ abstract contract ShardVaultInternal is
             revert ShardVault__MaxSupplyTooSmall();
         }
         ShardVaultStorage.layout().maxSupply = maxSupply;
+
+        emit SetMaxSupply(maxSupply);
     }
 
     /**
@@ -911,6 +938,8 @@ abstract contract ShardVaultInternal is
         uint256 totalSupply = _totalSupply();
         l.cumulativeETHPerShard += providedETH / totalSupply;
         l.cumulativeJPEGPerShard += providedJPEG / totalSupply;
+
+        emit ProvideYieldPETH(providedETH, providedJPEG);
     }
 
     /**
@@ -1056,6 +1085,7 @@ abstract contract ShardVaultInternal is
      */
     function _setWhitelistEndsAt(uint48 whitelistEndsAt) internal {
         ShardVaultStorage.layout().whitelistEndsAt = whitelistEndsAt;
+        emit SetWhitelistEndsAt(whitelistEndsAt);
     }
 
     /**
@@ -1070,6 +1100,7 @@ abstract contract ShardVaultInternal is
         }
 
         l.reservedSupply = reservedSupply;
+        emit SetReservedSupply(reservedSupply);
     }
 
     /**
@@ -1078,6 +1109,7 @@ abstract contract ShardVaultInternal is
      */
     function _setIsEnabled(bool isEnabled) internal {
         ShardVaultStorage.layout().isEnabled = isEnabled;
+        emit SetIsEnabled(isEnabled);
     }
 
     /**
@@ -1087,6 +1119,7 @@ abstract contract ShardVaultInternal is
      */
     function _setMaxMintBalance(uint64 maxMintBalance) internal {
         ShardVaultStorage.layout().maxMintBalance = maxMintBalance;
+        emit SetMaxMintBalance(maxMintBalance);
     }
 
     /**
@@ -1264,7 +1297,7 @@ abstract contract ShardVaultInternal is
      */
     function _setBaseURI(string memory baseURI) internal {
         ERC721MetadataStorage.layout().baseURI = baseURI;
-        emit ShardVault__NewBaseURI(baseURI);
+        emit SetBaseURI(baseURI);
     }
 
     /**

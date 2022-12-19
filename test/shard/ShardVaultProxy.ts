@@ -268,8 +268,8 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),bool)'
-      ](addressesPUSD, uintsPUSD, true);
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+      ](addressesPUSD, uintsPUSD, 'name', 'name', 'something', true);
 
     const { events } = await deployShardVaultTx.wait();
     const { deployment } = events.find(
@@ -285,8 +285,8 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),bool)'
-      ](addressesPUSDTwo, uintsPUSD, true);
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+      ](addressesPUSDTwo, uintsPUSD, 'name', 'name', 'something', true);
 
     const rcpt = await deploySecondShardVaultTx.wait();
     const secondDeployment = rcpt.events.find(
@@ -301,8 +301,8 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),bool)'
-      ](addressesPETH, uintsPETH, false);
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+      ](addressesPETH, uintsPETH, 'name', 'name', 'something', false);
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();
     const pethDeployment = pethDeploymentRcpt.events.find(

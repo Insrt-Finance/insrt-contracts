@@ -3261,7 +3261,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
     describe('#setReservedSupply(uint64)', () => {
       it('sets reservedSupply value', async () => {
-        const reservedShards = BigNumber.from('123');
+        const reservedShards = BigNumber.from('5');
 
         await instance
           .connect(owner)
