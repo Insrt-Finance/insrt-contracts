@@ -70,27 +70,6 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     /**
      * @inheritdoc IShardVaultAdmin
      */
-    function investPunk(
-        IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        uint256 borrowAmount,
-        uint256 minCurveLP,
-        uint256 poolInfoIndex,
-        bool insure
-    ) external onlyProtocolOwner {
-        _investPunk(
-            calls,
-            punkId,
-            borrowAmount,
-            minCurveLP,
-            poolInfoIndex,
-            insure
-        );
-    }
-
-    /**
-     * @inheritdoc IShardVaultAdmin
-     */
     function setAcquisitionFee(uint16 feeBP) external onlyProtocolOwner {
         _setAcquisitionFee(feeBP);
     }

@@ -454,33 +454,6 @@ abstract contract ShardVaultInternal is
     }
 
     /**
-     * @notice purchases and collateralizes a punk, and stakes all pUSD gained from collateralization
-     * @param calls  array of EncodedCall structs containing information to execute necessary low level
-     * calls to purchase a punk
-     * @param punkId id of punk
-     * @param minCurveLP minimum LP to receive from curve LP
-     * @param borrowAmount amount to borrow
-     * @param poolInfoIndex the index of the poolInfo struct in PoolInfo array corresponding to
-     * the pool to deposit into
-     * @param insure whether to insure
-     */
-    function _investPunk(
-        IMarketPlaceHelper.EncodedCall[] calldata calls,
-        uint256 punkId,
-        uint256 borrowAmount,
-        uint256 minCurveLP,
-        uint256 poolInfoIndex,
-        bool insure
-    ) internal {
-        _purchasePunk(calls, punkId);
-        _stakePUSD(
-            _collateralizePunkPUSD(punkId, borrowAmount, insure),
-            minCurveLP,
-            poolInfoIndex
-        );
-    }
-
-    /**
      * @notice withdraw JPEG and ETH accrued protocol fees, and send to TREASURY address
      * @return feesETH total ETH fees withdrawn
      * @return feesJPEG total JPEG fees withdrawn
