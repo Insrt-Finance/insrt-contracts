@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+import { ERC721MetadataStorage } from '@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol';
 import { IDiamondReadable } from '@solidstate/contracts/proxy/diamond/readable/IDiamondReadable.sol';
 import { OwnableStorage } from '@solidstate/contracts/access/ownable/OwnableStorage.sol';
 import { Proxy } from '@solidstate/contracts/proxy/Proxy.sol';
@@ -19,11 +20,20 @@ contract ShardVaultProxy is Proxy, IShardVaultProxy {
     constructor(
         ShardVaultAddresses memory addresses,
         ShardVaultUints memory uints,
+        string memory name,
+        string memory symbol,
+        string memory baseURI,
         bool isPUSDVault
     ) {
         SHARD_VAULT_DIAMOND = addresses.shardVaultDiamond;
 
         OwnableStorage.layout().owner = msg.sender;
+
+        ERC721MetadataStorage.Layout storage metadata = ERC721MetadataStorage
+            .layout();
+        metadata.name = name;
+        metadata.symbol = symbol;
+        metadata.baseURI = baseURI;
 
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 

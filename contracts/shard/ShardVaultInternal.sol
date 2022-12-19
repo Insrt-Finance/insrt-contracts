@@ -10,6 +10,7 @@ import { IERC721 } from '@solidstate/contracts/interfaces/IERC721.sol';
 import { OwnableInternal } from '@solidstate/contracts/access/ownable/OwnableInternal.sol';
 import { ERC721BaseInternal } from '@solidstate/contracts/token/ERC721/base/ERC721BaseInternal.sol';
 import { ERC721EnumerableInternal } from '@solidstate/contracts/token/ERC721/enumerable/ERC721EnumerableInternal.sol';
+import { ERC721MetadataStorage } from '@solidstate/contracts/token/ERC721/metadata/ERC721MetadataStorage.sol';
 
 import { IShardVaultInternal } from './IShardVaultInternal.sol';
 import { ShardVaultStorage } from './ShardVaultStorage.sol';
@@ -1248,12 +1249,20 @@ abstract contract ShardVaultInternal is
     }
 
     /**
-
      * @notice returns treasury address
      * @return treasury address of treasury
      */
     function _treasury() internal view returns (address treasury) {
         treasury = TREASURY;
+    }
+
+    /**
+     * @notice sets a new baseURI for ERC721Metadata
+     * @param baseURI the new baseURI
+     */
+    function _setBaseURI(string memory baseURI) internal {
+        ERC721MetadataStorage.layout().baseURI = baseURI;
+        emit ShardVault__NewBaseURI(baseURI);
     }
 
     /**

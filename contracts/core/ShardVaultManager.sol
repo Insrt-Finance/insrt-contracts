@@ -24,12 +24,22 @@ contract ShardVaultManager is IShardVaultManager, OwnableInternal {
     function deployShardVault(
         IShardVaultProxy.ShardVaultAddresses memory addresses,
         IShardVaultProxy.ShardVaultUints memory uints,
+        string memory name,
+        string memory symbol,
+        string memory baseURI,
         bool isPUSDVault
     ) external onlyOwner returns (address deployment) {
         addresses.shardVaultDiamond = SHARD_VAULT_DIAMOND;
         addresses.marketPlaceHelper = MARKETPLACE_HELPER;
         deployment = address(
-            new ShardVaultProxy(addresses, uints, isPUSDVault)
+            new ShardVaultProxy(
+                addresses,
+                uints,
+                name,
+                symbol,
+                baseURI,
+                isPUSDVault
+            )
         );
 
         emit ShardVaultDeployed(deployment);

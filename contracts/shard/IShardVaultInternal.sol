@@ -138,4 +138,10 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when setting a max supply which is smaller than total supply
      */
     error ShardVault__MaxSupplyTooSmall();
+
+    /**
+     * @notice emitted new new baseURI is set
+     * @param baseURI the new baseURI for ERC721Metadata
+     */
+    event ShardVault__NewBaseURI(string baseURI);
 }

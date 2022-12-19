@@ -30,11 +30,17 @@ interface IShardVaultManager {
      * @notice deploys a ShardVaultProxy
      * @param addresses addresses required to deploy a shard vault; see IShardVaultProxy
      * @param uints uints required to deploy a shard vault; see IShardVaultProxy
+     * @param name name of the shard collection
+     * @param symbol symbol of the shard collection
+     * @param baseURI baseURI of the shard collection
      * @param isPUSDVault indicates whether vault should be allowed to call PETH or PUSD functions
      */
     function deployShardVault(
         IShardVaultProxy.ShardVaultAddresses memory addresses,
         IShardVaultProxy.ShardVaultUints memory uints,
+        string memory name,
+        string memory symbol,
+        string memory baseURI,
         bool isPUSDVault
     ) external returns (address deployment);
 }
