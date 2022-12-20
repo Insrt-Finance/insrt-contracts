@@ -172,4 +172,10 @@ interface IShardVaultView {
      * @return treasury address of treasury
      */
     function treasury() external view returns (address treasury);
+
+    /**
+     * @notice returns the isEnabled status of the vault
+     * @return isEnabled status of isEnabled of the vault
+     */
+    function isEnabled() external view returns (bool isEnabled);
 }

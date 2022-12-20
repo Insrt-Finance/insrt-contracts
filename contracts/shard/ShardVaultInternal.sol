@@ -1396,4 +1396,12 @@ abstract contract ShardVaultInternal is
         if (ShardVaultStorage.layout().isPUSDVault == true)
             revert ShardVault__CallTypeProhibited();
     }
+
+    /**
+     * @notice returns the isEnabled status of the vault
+     * @return isEnabled status of isEnabled of the vault
+     */
+    function _isEnabled() internal view returns (bool isEnabled) {
+        isEnabled = ShardVaultStorage.layout().isEnabled;
+    }
 }
