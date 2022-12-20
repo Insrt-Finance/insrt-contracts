@@ -380,7 +380,7 @@ export function describeBehaviorOfShardVaultIO(
           const whitelistEndsAt = BigNumber.from(latestTS.toString()).add(
             BigNumber.from('10000'),
           );
-          const whitelistShards = BigNumber.from('50');
+          const whitelistShards = BigNumber.from('15');
           await instance
             .connect(owner)
             ['initiateWhitelistAndDeposits(uint48,uint64)'](

@@ -268,7 +268,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint16,uint16),string,string,string,bool)'
       ](addressesPUSD, uintsPUSD, 'name', 'name', 'something', true);
 
     const { events } = await deployShardVaultTx.wait();
@@ -285,7 +285,7 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint16,uint16),string,string,string,bool)'
       ](addressesPUSDTwo, uintsPUSD, 'name', 'name', 'something', true);
 
     const rcpt = await deploySecondShardVaultTx.wait();
@@ -301,7 +301,7 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint16,uint16),string,string,string,bool)'
       ](addressesPETH, uintsPETH, 'name', 'name', 'something', false);
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();
