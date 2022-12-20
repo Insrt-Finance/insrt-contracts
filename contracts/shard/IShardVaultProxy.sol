@@ -43,7 +43,6 @@ interface IShardVaultProxy {
         uint16 saleFeeBP;
         uint16 acquisitionFeeBP;
         uint16 yieldFeeBP;
-        uint256 conversionBuffer;
         uint16 ltvBufferBP;
         uint16 ltvDeviationBP;
     }
