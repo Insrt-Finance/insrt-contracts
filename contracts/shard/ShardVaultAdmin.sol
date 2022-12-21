@@ -310,4 +310,11 @@ contract ShardVaultAdmin is ShardVaultInternal, IShardVaultAdmin {
     ) external onlyProtocolOwner {
         _acceptPunkBid(calls, punkId);
     }
+
+    /**
+     * @inheritdoc IShardVaultAdmin
+     */
+    function setBaseURI(string memory baseURI) external onlyProtocolOwner {
+        _setBaseURI(baseURI);
+    }
 }
