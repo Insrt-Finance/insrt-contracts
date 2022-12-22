@@ -37,6 +37,7 @@ export interface JPEGParamsStruct {
   CURVE_PETH_POOL: string;
   LP_FARM: string;
   JPEG_CARDS_CIG_STAKING: string;
+  JPEG_CARDS: string;
 }
 
 export interface AuxilaryParamsStruct {

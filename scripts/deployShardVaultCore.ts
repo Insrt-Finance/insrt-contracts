@@ -42,14 +42,13 @@ async function main() {
   const CURVE_PETH_POOL = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
   const DAWN_OF_INSRT = '0x1522C79D2044BBC06f4368c07b88A32e9Cd64BD1';
   const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
+  const JPEG_CARDS = '0x83979584eC8c6D94D93f838A524049173DebA6F4';
 
   const treasury: string = deployer.address; //MUST CHANGE FOR MAINNET
 
   const dirPath = `data`;
   const network = hre.network.name;
   createDir(`/${dirPath}/${network}`);
-
-  console.log(ethers.provider);
 
   console.log(`\n\n\nDeploying Diamonds and Auxiliary contracts...`);
   console.log('---------------------------------------------------------\n');
@@ -93,6 +92,7 @@ async function main() {
     CURVE_PETH_POOL: CURVE_PETH_POOL,
     LP_FARM: LP_FARM,
     JPEG_CARDS_CIG_STAKING: JPEG_CARDS_CIG_STAKING,
+    JPEG_CARDS: JPEG_CARDS,
   };
 
   const auxiliaryParams: AuxilaryParamsStruct = {

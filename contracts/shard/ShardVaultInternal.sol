@@ -73,7 +73,7 @@ abstract contract ShardVaultInternal is
         CURVE_PETH_POOL = jpegParams.CURVE_PETH_POOL;
         JPEG = jpegParams.JPEG;
         JPEG_CARDS_CIG_STAKING = jpegParams.JPEG_CARDS_CIG_STAKING;
-        JPEG_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
+        JPEG_CARDS = jpegParams.JPEG_CARDS;
 
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;

@@ -10,6 +10,7 @@ interface IShardVaultInternal is IOwnableInternal {
         address PETH;
         address JPEG;
         address JPEG_CARDS_CIG_STAKING;
+        address JPEG_CARDS;
         address PUSD_CITADEL;
         address PETH_CITADEL;
         address CURVE_PUSD_POOL;
