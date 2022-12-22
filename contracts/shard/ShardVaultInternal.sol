@@ -1426,6 +1426,12 @@ abstract contract ShardVaultInternal is
         isEnabled = ShardVaultStorage.layout().isEnabled;
     }
 
+    /**
+     * @notice applies a discount on yield fee
+     * @param account address to check for discount
+     * @param tokenId Dawn of Insrt token Id
+     * @param rawYieldFeeBP the undiscounted yield fee in basis points
+     */
     function _discountYieldFeeBP(
         address account,
         uint256 tokenId,
