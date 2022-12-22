@@ -42,9 +42,9 @@ export function describeBehaviorOfShardVaultIO(
 
   const punkId = BigNumber.from('2534');
   const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
-  const dawnOfInsrtID = BigNumber.from('111');
+  const dawnOfInsrtID = BigNumber.from('567');
   const secondDawnOfInsrtID = BigNumber.from('654');
-  const dawnOfInsrtOwnerAddress = '0x736011B7d04d8a014EFdAe6a653E3405f3CDC720';
+  const dawnOfInsrtOwnerAddress = '0x62E4db9D13E7B8DB18266CF0f89b923d6C65e0ab';
   const secondDawnOfInsrtOwnerAddress =
     '0x0F4BC970e348A061B69D05B7e2E5c13EB687E5e3';
   const DAWN_OF_INSRT = '0x1522C79D2044BBC06f4368c07b88A32e9Cd64BD1';
@@ -56,6 +56,11 @@ export function describeBehaviorOfShardVaultIO(
   const curvePETHPoolAddress = '0x9848482da3Ee3076165ce6497eDA906E66bB85C5';
   const targetLTVBP = BigNumber.from('2800');
   const BASIS_POINTS = BigNumber.from('10000');
+  const TIER0_FEE_COEFFICIENT = BigNumber.from('9000');
+  const TIER1_FEE_COEFFICIENT = BigNumber.from('7500');
+  const TIER2_FEE_COEFFICIENT = BigNumber.from('6000');
+  const TIER3_FEE_COEFFICIENT = BigNumber.from('4000');
+  const TIER4_FEE_COEFFICIENT = BigNumber.from('2000');
   const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
   const punkPurchaseCallsPETH: IMarketPlaceHelper.EncodedCallStruct[] = [];
 
@@ -85,6 +90,11 @@ export function describeBehaviorOfShardVaultIO(
     );
 
     const dawnOfInsrt = await ethers.getContractAt('IERC721', DAWN_OF_INSRT);
+
+    await depositor.sendTransaction({
+      to: dawnOfInsrtOwnerAddress,
+      value: ethers.utils.parseEther('1'),
+    });
 
     await dawnOfInsrt
       .connect(dawnOfInsrtOwner)
@@ -565,7 +575,7 @@ export function describeBehaviorOfShardVaultIO(
       });
     });
 
-    describe('#claimYield(uint256[])', () => {
+    describe('#claimYield(uint256[], uint256)', () => {
       it('increases claimedJPEGPerShard for each shard used to claim', async () => {
         await pethInstance.connect(owner).setMaxSupply(BigNumber.from('200'));
         await pethInstance
@@ -659,7 +669,10 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](shardIds);
+          ['claimYield(uint256[],uint256)'](
+            shardIds,
+            ethers.constants.MaxUint256,
+          );
 
         const newclaimedJPEGPerShard = [];
         for (let i = 0; i < shardIds.length; i++) {
@@ -767,7 +780,10 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](shardIds);
+          ['claimYield(uint256[],uint256)'](
+            shardIds,
+            ethers.constants.MaxUint256,
+          );
 
         const newclaimedETHPerShard = [];
         for (let i = 0; i < shardIds.length; i++) {
@@ -885,7 +901,10 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](shardIds);
+          ['claimYield(uint256[],uint256)'](
+            shardIds,
+            ethers.constants.MaxUint256,
+          );
 
         const newAccruedFees = await pethInstance.callStatic['accruedFees()']();
 
@@ -995,7 +1014,10 @@ export function describeBehaviorOfShardVaultIO(
 
         await pethInstance
           .connect(depositor)
-          ['claimYield(uint256[])'](shardIds);
+          ['claimYield(uint256[],uint256)'](
+            shardIds,
+            ethers.constants.MaxUint256,
+          );
 
         const newAccruedJPEG = await pethInstance['accruedJPEG()']();
 
@@ -1103,7 +1125,12 @@ export function describeBehaviorOfShardVaultIO(
         const claimedJPEGMinusFee = claimedJPEG.sub(jpegFee);
 
         await expect(() =>
-          pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
+          pethInstance
+            .connect(depositor)
+            ['claimYield(uint256[],uint256)'](
+              shardIds,
+              ethers.constants.MaxUint256,
+            ),
         ).to.changeTokenBalances(
           jpeg,
           [depositor, pethInstance],
@@ -1215,7 +1242,12 @@ export function describeBehaviorOfShardVaultIO(
         const claimedETHMinusFee = claimedETH.sub(ETHFee);
 
         await expect(() =>
-          pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
+          pethInstance
+            .connect(depositor)
+            ['claimYield(uint256[],uint256)'](
+              shardIds,
+              ethers.constants.MaxUint256,
+            ),
         ).to.changeEtherBalances(
           [depositor, pethInstance],
           [
@@ -1223,6 +1255,117 @@ export function describeBehaviorOfShardVaultIO(
             claimedETHMinusFee.mul(ethers.constants.NegativeOne),
           ],
         );
+      });
+      it('applies yield fee discount corresponding to DAWN_OF_INSRT token provided', async () => {
+        await pethInstance.connect(owner).setMaxSupply(BigNumber.from('200'));
+        await pethInstance
+          .connect(depositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+        await pethInstance
+          .connect(secondDepositor)
+          .deposit({ value: ethers.utils.parseEther('100') });
+
+        await pethInstance
+          .connect(owner)
+          ['purchasePunk((bytes,uint256,address)[],uint256)'](
+            punkPurchaseCallsPETH,
+            punkId,
+          );
+
+        const requestedBorrow = (
+          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+        )
+          .mul(targetLTVBP)
+          .div(BASIS_POINTS);
+
+        const settings = await pethJpegdVault.callStatic['settings()']();
+        const actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
+
+        await pethInstance
+          .connect(owner)
+          ['collateralizePunkPETH(uint256,uint256,bool)'](
+            punkId,
+            requestedBorrow,
+            false,
+          );
+
+        const curvePETHPool = <ICurveMetaPool>(
+          await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+        );
+
+        const minCurveLP = await curvePETHPool.callStatic[
+          'calc_token_amount(uint256[2],bool)'
+        ]([0, actualBorrow], true);
+
+        const curveBasis = BigNumber.from('10000000000');
+        const curveFee = BigNumber.from('4000000');
+        const curveRemainder = curveBasis.sub(curveFee);
+
+        await pethInstance
+          .connect(owner)
+          ['stakePETH(uint256,uint256,uint256)'](
+            actualBorrow,
+            minCurveLP.mul(curveRemainder).div(curveBasis),
+            ethers.constants.Two,
+          );
+
+        const { timestamp: stakeTimeStamp } = await ethers.provider.getBlock(
+          'latest',
+        );
+
+        const duration = 1000;
+        await hre.network.provider.send('evm_setNextBlockTimestamp', [
+          stakeTimeStamp + duration,
+        ]);
+
+        const unstakeAmount = ethers.utils.parseEther('5');
+        const minETH = ethers.utils.parseEther('4.5');
+        const poolInfoIndex = ethers.constants.Two;
+
+        await pethInstance
+          .connect(owner)
+          ['provideYieldPETH(uint256,uint256,uint256)'](
+            unstakeAmount,
+            minETH,
+            poolInfoIndex,
+          );
+
+        const cumulativeETHPerShard = await pethInstance[
+          'cumulativeETHPerShard()'
+        ]();
+        const shardIds = [];
+        let claimedETH = BigNumber.from('0');
+        for (let i = 1; i < 51; i++) {
+          let shardId = BigNumber.from(i.toString());
+          shardIds.push(shardId);
+          claimedETH = claimedETH.add(
+            cumulativeETHPerShard.sub(
+              await pethInstance.callStatic['claimedETHPerShard(uint256)'](
+                shardId,
+              ),
+            ),
+          );
+        }
+
+        const discountedYieldFee = BigNumber.from(
+          (await pethInstance['yieldFeeBP()']()).toString(),
+        )
+          .mul(TIER4_FEE_COEFFICIENT)
+          .div(BASIS_POINTS);
+        const ETHFee = claimedETH.mul(discountedYieldFee).div(BASIS_POINTS);
+
+        const oldAccruedFees = await pethInstance.callStatic['accruedFees()']();
+
+        await pethInstance
+          .connect(depositor)
+          ['claimYield(uint256[],uint256)'](shardIds, dawnOfInsrtID);
+
+        const newAccruedFees = await pethInstance.callStatic['accruedFees()']();
+        expect(ETHFee).to.eq(newAccruedFees.sub(oldAccruedFees));
       });
 
       describe('reverts if', async () => {
@@ -1299,7 +1442,12 @@ export function describeBehaviorOfShardVaultIO(
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
+            pethInstance
+              .connect(depositor)
+              ['claimYield(uint256[],uint256)'](
+                shardIds,
+                ethers.constants.MaxUint256,
+              ),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__YieldClaimingForbidden',
@@ -1390,7 +1538,12 @@ export function describeBehaviorOfShardVaultIO(
           }
 
           await expect(
-            pethInstance.connect(depositor)['claimYield(uint256[])'](shardIds),
+            pethInstance
+              .connect(depositor)
+              ['claimYield(uint256[],uint256)'](
+                shardIds,
+                ethers.constants.MaxUint256,
+              ),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__InsufficientShards',
@@ -1483,10 +1636,109 @@ export function describeBehaviorOfShardVaultIO(
           await expect(
             pethInstance
               .connect(secondDepositor)
-              ['claimYield(uint256[])'](shardIds),
+              ['claimYield(uint256[],uint256)'](
+                shardIds,
+                ethers.constants.MaxUint256,
+              ),
           ).to.be.revertedWithCustomError(
             pethInstance,
             'ShardVault__NotShardOwner',
+          );
+        });
+        it('claimer is not DAWN_OF_INSRT token owner', async () => {
+          await pethInstance.connect(owner).setMaxSupply(BigNumber.from('200'));
+          await pethInstance
+            .connect(depositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+          await pethInstance
+            .connect(secondDepositor)
+            .deposit({ value: ethers.utils.parseEther('100') });
+
+          await pethInstance
+            .connect(owner)
+            ['purchasePunk((bytes,uint256,address)[],uint256)'](
+              punkPurchaseCallsPETH,
+              punkId,
+            );
+
+          const requestedBorrow = (
+            await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          )
+            .mul(targetLTVBP)
+            .div(BASIS_POINTS);
+
+          const settings = await pethJpegdVault.callStatic['settings()']();
+          const actualBorrow = requestedBorrow.sub(
+            requestedBorrow
+              .mul(settings.organizationFeeRate.numerator)
+              .div(settings.organizationFeeRate.denominator),
+          );
+
+          await pethInstance
+            .connect(owner)
+            ['collateralizePunkPETH(uint256,uint256,bool)'](
+              punkId,
+              requestedBorrow,
+              false,
+            );
+
+          const curvePETHPool = <ICurveMetaPool>(
+            await ethers.getContractAt('ICurveMetaPool', curvePETHPoolAddress)
+          );
+
+          const minCurveLP = await curvePETHPool.callStatic[
+            'calc_token_amount(uint256[2],bool)'
+          ]([0, actualBorrow], true);
+
+          const curveBasis = BigNumber.from('10000000000');
+          const curveFee = BigNumber.from('4000000');
+          const curveRemainder = curveBasis.sub(curveFee);
+
+          await pethInstance
+            .connect(owner)
+            ['stakePETH(uint256,uint256,uint256)'](
+              actualBorrow,
+              minCurveLP.mul(curveRemainder).div(curveBasis),
+              ethers.constants.Two,
+            );
+
+          const { timestamp: stakeTimeStamp } = await ethers.provider.getBlock(
+            'latest',
+          );
+
+          const duration = 1000;
+          await hre.network.provider.send('evm_setNextBlockTimestamp', [
+            stakeTimeStamp + duration,
+          ]);
+
+          const unstakeAmount = ethers.utils.parseEther('5');
+          const minETH = ethers.utils.parseEther('4.5');
+          const poolInfoIndex = ethers.constants.Two;
+
+          await pethInstance
+            .connect(owner)
+            ['provideYieldPETH(uint256,uint256,uint256)'](
+              unstakeAmount,
+              minETH,
+              poolInfoIndex,
+            );
+
+          const shardIds = [];
+          for (let i = 1; i < 51; i++) {
+            let shardId = BigNumber.from(i.toString());
+            shardIds.push(shardId);
+          }
+
+          await expect(
+            pethInstance
+              .connect(depositor)
+              ['claimYield(uint256[],uint256)'](
+                shardIds,
+                ethers.constants.Zero,
+              ),
+          ).to.be.revertedWithCustomError(
+            pethInstance,
+            'ShardVault__NotDawnOfInsrtTokenOwner',
           );
         });
       });
