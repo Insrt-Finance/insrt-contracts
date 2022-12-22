@@ -17,6 +17,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
 import { IJpegCardsCigStaking } from '../interfaces/jpegd/IJpegCardsCigStaking.sol';
+import { IDawnOfInsrt } from '../interfaces/insrt/IDawnOfInsrt.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -53,6 +54,11 @@ abstract contract ShardVaultInternal is
     uint256 internal constant BASIS_POINTS = 10000;
     uint256 internal constant CURVE_BASIS = 10000000000;
     uint256 internal constant CURVE_FEE = 4000000;
+    uint256 internal constant TIER0_FEE_COEFFICIENT = 9000;
+    uint256 internal constant TIER1_FEE_COEFFICIENT = 7500;
+    uint256 internal constant TIER2_FEE_COEFFICIENT = 6000;
+    uint256 internal constant TIER3_FEE_COEFFICIENT = 4000;
+    uint256 internal constant TIER4_FEE_COEFFICIENT = 2000;
 
     constructor(
         JPEGParams memory jpegParams,
@@ -989,17 +995,26 @@ abstract contract ShardVaultInternal is
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to msg.sender
      * @param shardIds array of shard IDs to claim with
+     * @param tokenIdDOI Dawn of INSRT token ID used to apply yieldFeeBP discount
      */
-    function _claimYield(uint256[] memory shardIds) internal {
-        _claimYield(msg.sender, shardIds);
+    function _claimYield(
+        uint256[] memory shardIds,
+        uint256 tokenIdDOI
+    ) internal {
+        _claimYield(msg.sender, shardIds, tokenIdDOI);
     }
 
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param account address making the yield claim
      * @param shardIds array of shard IDs to claim with
+     * @param tokenIdDOI Dawn of INSRT token ID used to apply yieldFeeBP discount
      */
-    function _claimYield(address account, uint256[] memory shardIds) private {
+    function _claimYield(
+        address account,
+        uint256[] memory shardIds,
+        uint256 tokenIdDOI
+    ) private {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = shardIds.length;
@@ -1037,11 +1052,17 @@ abstract contract ShardVaultInternal is
             }
         }
 
+        uint16 yieldFeeBP = _discountYieldFeeBP(
+            account,
+            tokenIdDOI,
+            l.yieldFeeBP
+        );
+
         //apply fees
-        uint256 ETHfee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
+        uint256 ETHfee = (totalETH * yieldFeeBP) / BASIS_POINTS;
         l.accruedFees += ETHfee;
 
-        uint256 jpegFee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
+        uint256 jpegFee = (totalJPEG * yieldFeeBP) / BASIS_POINTS;
         l.accruedJPEG += jpegFee;
 
         //transfer yield
@@ -1070,7 +1091,7 @@ abstract contract ShardVaultInternal is
 
         if (from != address(0)) {
             if (l.isYieldClaiming) {
-                _claimYield(from, shardIds);
+                _claimYield(from, shardIds, type(uint256).max);
             }
 
             if (!l.isYieldClaiming && l.isInvested) {
@@ -1403,5 +1424,35 @@ abstract contract ShardVaultInternal is
      */
     function _isEnabled() internal view returns (bool isEnabled) {
         isEnabled = ShardVaultStorage.layout().isEnabled;
+    }
+
+    function _discountYieldFeeBP(
+        address account,
+        uint256 tokenId,
+        uint16 rawYieldFeeBP
+    ) internal view returns (uint16 yieldFeeBP) {
+        if (tokenId == type(uint256).max) {
+            yieldFeeBP = rawYieldFeeBP;
+        } else {
+            if (account != IERC721(DAWN_OF_INSRT).ownerOf(tokenId)) {
+                revert ShardVault__NotDawnOfInsrtTokenOwner();
+            }
+            uint8 tier = IDawnOfInsrt(DAWN_OF_INSRT).tokenTier(tokenId);
+
+            uint256 discount;
+            if (tier == 0) {
+                discount = TIER0_FEE_COEFFICIENT;
+            } else if (tier == 1) {
+                discount = TIER1_FEE_COEFFICIENT;
+            } else if (tier == 2) {
+                discount = TIER2_FEE_COEFFICIENT;
+            } else if (tier == 3) {
+                discount = TIER3_FEE_COEFFICIENT;
+            } else {
+                discount = TIER4_FEE_COEFFICIENT;
+            }
+
+            yieldFeeBP = uint16((rawYieldFeeBP * discount) / BASIS_POINTS);
+        }
     }
 }

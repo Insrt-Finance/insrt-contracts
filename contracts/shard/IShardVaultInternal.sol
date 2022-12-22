@@ -140,6 +140,11 @@ interface IShardVaultInternal is IOwnableInternal {
     error ShardVault__MaxSupplyTooSmall();
 
     /**
+     * @notice thrown when attempting to reduce yield fee whilst not owning DawnOfInsrt token used to reduce yield fee
+     */
+    error ShardVault__NotDawnOfInsrtTokenOwner();
+
+    /**
      * @notice emitted when baseURI is set
      * @param baseURI the new baseURI for ERC721Metadata
      */

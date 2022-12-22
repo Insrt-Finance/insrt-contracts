@@ -20,8 +20,9 @@ interface IShardVaultIO {
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param tokenIds array of shard IDs to claim with
+     * @param tokenIdDOI Dawn of INSRT token ID used to apply yieldFeeBP discount
      */
-    function claimYield(uint256[] memory tokenIds) external;
+    function claimYield(uint256[] memory tokenIds, uint256 tokenIdDOI) external;
 
     /**
      * @notice returns excess ETH left over after vault has invested
