@@ -163,7 +163,7 @@ abstract contract ShardVaultInternal is
 
         unchecked {
             for (uint256 i; i < shards; ++i) {
-                _mint(msg.sender, totalSupply + i);
+                _mint(msg.sender, totalSupply + i + 1);
             }
         }
 
