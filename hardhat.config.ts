@@ -23,6 +23,7 @@ const {
   TENDERLY_URL_MAINNET,
   MAINNET_FORK_BLOCK_NUMBER,
   PKEY_TENDERLY,
+  GOERLI_URL_TESTNET,
 } = process.env;
 
 export default {
@@ -70,6 +71,11 @@ export default {
       url: TENDERLY_URL_MAINNET,
       accounts: [PKEY_MAINNET],
       blockNumber: MAINNET_FORK_BLOCK_NUMBER,
+    },
+
+    goerli: {
+      url: GOERLI_URL_TESTNET,
+      accounts: [PKEY_TESTNET],
     },
   },
 
