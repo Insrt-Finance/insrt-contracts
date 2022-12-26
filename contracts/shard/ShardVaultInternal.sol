@@ -300,17 +300,13 @@ abstract contract ShardVaultInternal is
         bool insure
     ) internal returns (uint256 pUSD) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
         _enforceIsPUSDVault();
-        address jpegdVault = l.jpegdVault;
-        uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
 
         pUSD = _collateralizePunk(
             punkId,
             borrowAmount,
             insure,
-            jpegdVault,
-            value,
+            l.jpegdVault,
             PUSD
         );
 
@@ -323,17 +319,13 @@ abstract contract ShardVaultInternal is
         bool insure
     ) internal returns (uint256 pETH) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
         _enforceIsPETHVault();
-        address jpegdVault = l.jpegdVault;
-        uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
 
         pETH = _collateralizePunk(
             punkId,
             borrowAmount,
             insure,
-            jpegdVault,
-            value,
+            l.jpegdVault,
             PETH
         );
 
@@ -345,15 +337,17 @@ abstract contract ShardVaultInternal is
         uint256 borrowAmount,
         bool insure,
         address jpegdVault,
-        uint256 value,
         address token
     ) private returns (uint256 amount) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
+        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(
+            address(this),
+            punkId
+        );
 
         uint256 targetLTV = creditLimit -
-            (value * (l.ltvBufferBP + l.ltvDeviationBP)) /
+            (creditLimit * (l.ltvBufferBP + l.ltvDeviationBP)) /
             BASIS_POINTS;
 
         if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
