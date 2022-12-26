@@ -14,6 +14,8 @@ import Dotenv from 'dotenv';
 
 Dotenv.config();
 
+require('./tasks/transferContractOwnership');
+
 const {
   NODE_URL_MAINNET,
   NODE_URL_TESTNET,
