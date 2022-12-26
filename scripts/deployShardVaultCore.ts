@@ -53,19 +53,28 @@ async function main() {
   console.log(`\n\n\nDeploying Diamonds and Auxiliary contracts...`);
   console.log('---------------------------------------------------------\n');
   console.log('Deploying Core Diamond...');
-  const coreDiamond: Core = await new Core__factory(deployer).deploy();
+  const coreDiamond: Core = await new Core__factory(deployer).deploy({
+    gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+    gasLimit: 4000000,
+  });
   console.log(`Successfully deployed Core Diamond at ${coreDiamond.address}`);
 
   console.log('Deploying ShardVaultDiamond...');
   const shardVaultDiamond: ShardVaultDiamond =
-    await new ShardVaultDiamond__factory(deployer).deploy();
+    await new ShardVaultDiamond__factory(deployer).deploy({
+      gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+      gasLimit: 4000000,
+    });
   console.log(
     `Successfully deployed ShardVaultDiamond at ${shardVaultDiamond.address}`,
   );
 
   console.log('Deploying MarketplaceHelper...');
   const marketplaceHelper: MarketPlaceHelper =
-    await new MarketPlaceHelper__factory(deployer).deploy(CRYPTO_PUNKS_MARKET);
+    await new MarketPlaceHelper__factory(deployer).deploy(CRYPTO_PUNKS_MARKET, {
+      gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+      gasLimit: 4000000,
+    });
   console.log(
     `Successfully deployed MarketplaceHelper at ${marketplaceHelper.address}`,
   );
@@ -77,6 +86,7 @@ async function main() {
     await new ShardVaultManager__factory(deployer).deploy(
       shardVaultDiamond.address,
       marketplaceHelper.address,
+      { gasPrice: ethers.utils.parseUnits('20', 'gwei'), gasLimit: 4000000 },
     );
   console.log(
     `Successfully deployed ShardVaultManager facet at ${shardVaultManagerImpl.address}`,
@@ -105,14 +115,20 @@ async function main() {
   console.log('Deploying ShardVaultBase facet...');
   const shardVaultBaseImpl: ShardVaultBase = await new ShardVaultBase__factory(
     deployer,
-  ).deploy(jpegParams, auxiliaryParams);
+  ).deploy(jpegParams, auxiliaryParams, {
+    gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+    gasLimit: 4000000,
+  });
   console.log(
     `Successfully deployed ShardVaultBase facet at ${shardVaultBaseImpl.address}`,
   );
   console.log('Deploying ShardVaultIO facet...');
   const shardVaultIOImpl: ShardVaultIO = await new ShardVaultIO__factory(
     deployer,
-  ).deploy(jpegParams, auxiliaryParams);
+  ).deploy(jpegParams, auxiliaryParams, {
+    gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+    gasLimit: 4000000,
+  });
   console.log(
     `Successfully deployed ShardVaultIO facet at ${shardVaultIOImpl.address}`,
   );
@@ -122,6 +138,7 @@ async function main() {
     await new ShardVaultAdmin__factory(deployer).deploy(
       jpegParams,
       auxiliaryParams,
+      { gasPrice: ethers.utils.parseUnits('20', 'gwei'), gasLimit: 4000000 },
     );
   console.log(
     `Successfully deployed ShardVaultAdmin facet at ${shardVaultAdminImpl.address}`,
@@ -130,7 +147,10 @@ async function main() {
   console.log('Deploying ShardVaultView facet...');
   const shardVaultViewImpl: ShardVaultView = await new ShardVaultView__factory(
     deployer,
-  ).deploy(jpegParams, auxiliaryParams);
+  ).deploy(jpegParams, auxiliaryParams, {
+    gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+    gasLimit: 4000000,
+  });
   console.log(
     `Successfully deployed ShardVaultView facet at ${shardVaultViewImpl.address}`,
   );
@@ -178,7 +198,10 @@ async function main() {
   try {
     const coreCutTx = await coreDiamond
       .connect(deployer)
-      .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x');
+      .diamondCut(coreFacetCuts, ethers.constants.AddressZero, '0x', {
+        gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+        gasLimit: 4000000,
+      });
     await coreCutTx.wait();
 
     console.log('Successfully cut Core facets into Core Diamond');
@@ -190,7 +213,10 @@ async function main() {
   try {
     const shardVaultCutTx = await shardVaultDiamond
       .connect(deployer)
-      .diamondCut(shardVaultFacetCuts, ethers.constants.AddressZero, '0x');
+      .diamondCut(shardVaultFacetCuts, ethers.constants.AddressZero, '0x', {
+        gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+        gasLimit: 4000000,
+      });
 
     await shardVaultCutTx.wait();
     console.log('Successfully cut ShardVault facets into ShardVault Diamond');

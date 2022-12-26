@@ -54,7 +54,7 @@ export default {
   networks: {
     hardhat: {
       forking: {
-        url: NODE_URL_MAINNET,
+        url: NODE_URL_TESTNET,
         blockNumber: 16165493,
       },
     },
