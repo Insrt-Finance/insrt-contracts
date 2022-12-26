@@ -53,7 +53,7 @@ export default {
     hardhat: {
       forking: {
         url: NODE_URL_MAINNET,
-        blockNumber: 15889350,
+        blockNumber: 16165493,
       },
     },
 

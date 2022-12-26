@@ -48,7 +48,7 @@ export function describeBehaviorOfShardVaultAdmin(
     let jpegCards: IERC721;
     let lpFarm: ILPFarming;
 
-    const punkId = BigNumber.from('2534');
+    const punkId = BigNumber.from('1621');
     const CRYPTO_PUNKS_MARKET = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
     const PUSD = '0x466a756E9A7401B5e2444a3fCB3c2C12FBEa0a54';
     const PETH = '0x836A808d4828586A69364065A1e064609F5078c7';
@@ -63,7 +63,7 @@ export function describeBehaviorOfShardVaultAdmin(
     const cardOwnerAddress = '0xeDE2a066F4aB9bB21D768aD0367F539978EE6f8c';
     const cardID = BigNumber.from('513');
     const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
-    const targetLTVBP = BigNumber.from('2800');
+    const targetLTVBP = BigNumber.from('700');
     const BASIS_POINTS = BigNumber.from('10000');
     const punkPurchaseCallsPETH: IMarketPlaceHelper.EncodedCallStruct[] = [];
     const punkPurchaseCallsPUSD: IMarketPlaceHelper.EncodedCallStruct[] = [];
@@ -235,7 +235,7 @@ export function describeBehaviorOfShardVaultAdmin(
             .div(BASIS_POINTS),
         );
 
-        const secondPunkId = 3588;
+        const secondPunkId = BigNumber.from('5847');
         const secondPunkPurchaseData =
           cryptoPunkMarket.interface.encodeFunctionData('buyPunk', [
             secondPunkId,
@@ -385,7 +385,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -420,12 +423,18 @@ export function describeBehaviorOfShardVaultAdmin(
             punkPurchaseCallsPUSD,
             punkId,
           );
+        const creditLimit = await jpegdVault.callStatic['getCreditLimit'](
+          instance.address,
+          punkId,
+        );
+
+        const targetLTV = creditLimit.sub(
+          creditLimit.mul(targetLTVBP).div(BASIS_POINTS),
+        );
 
         const settings = await jpegdVault.callStatic['settings()']();
-        let requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
-        )
-          .mul(BigNumber.from('2000'))
+        let requestedBorrow = creditLimit
+          .mul(BigNumber.from('6000'))
           .div(BASIS_POINTS);
 
         let actualBorrow = requestedBorrow.sub(
@@ -453,13 +462,9 @@ export function describeBehaviorOfShardVaultAdmin(
           borrowTimeStamp + duration,
         ]);
 
-        requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
-        )
-          .mul(BigNumber.from('2000'))
+        requestedBorrow = creditLimit
+          .mul(BigNumber.from('6000'))
           .div(BASIS_POINTS);
-
-        const oldBalance = await pUSD['balanceOf(address)'](instance.address);
 
         await instance
           .connect(owner)
@@ -469,19 +474,21 @@ export function describeBehaviorOfShardVaultAdmin(
             false,
           );
 
-        const newBalance = await pUSD['balanceOf(address)'](instance.address);
+        const balance = await pUSD['balanceOf(address)'](instance.address);
 
         const debtInterest = await jpegdVault.callStatic[
           'getDebtInterest(uint256)'
         ](punkId);
 
-        actualBorrow = requestedBorrow
-          .mul(targetLTVBP.sub(BigNumber.from('2000')))
-          .div(BigNumber.from('2000'));
+        actualBorrow = requestedBorrow.sub(
+          requestedBorrow
+            .mul(settings.organizationFeeRate.numerator)
+            .div(settings.organizationFeeRate.denominator),
+        );
 
-        expect(newBalance.sub(oldBalance))
-          .to.be.lte(actualBorrow.sub(debtInterest).add(ethers.constants.One))
-          .gte(actualBorrow.sub(debtInterest).sub(ethers.constants.One));
+        expect(balance)
+          .to.be.lte(targetLTV.sub(debtInterest).add(ethers.constants.One))
+          .gte(targetLTV.sub(debtInterest).sub(ethers.constants.One));
       });
 
       describe('reverts if', () => {
@@ -499,7 +506,10 @@ export function describeBehaviorOfShardVaultAdmin(
             );
 
           let requestedBorrow = (
-            await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+            await jpegdVault.callStatic['getCreditLimit'](
+              instance.address,
+              punkId,
+            )
           )
             .mul(BigNumber.from('2000'))
             .div(BASIS_POINTS);
@@ -508,7 +518,10 @@ export function describeBehaviorOfShardVaultAdmin(
             .connect(owner)
             ['collateralizePunkPUSD(uint256,uint256,bool)'](
               punkId,
-              await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId),
+              await jpegdVault.callStatic['getCreditLimit'](
+                instance.address,
+                punkId,
+              ),
               false,
             );
 
@@ -578,11 +591,23 @@ export function describeBehaviorOfShardVaultAdmin(
             punkPurchaseCallsPETH,
             punkId,
           );
+
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit'](
+            pethInstance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
+
+        console.log(
+          'test CL: ',
+          await jpegdVault.callStatic['getCreditLimit'](
+            pethInstance.address,
+            punkId,
+          ),
+        );
 
         const settings = await pethJpegdVault.callStatic['settings()']();
         const actualBorrow = requestedBorrow.sub(
@@ -590,6 +615,8 @@ export function describeBehaviorOfShardVaultAdmin(
             .mul(settings.organizationFeeRate.numerator)
             .div(settings.organizationFeeRate.denominator),
         );
+
+        console.log('borrowAmount: ', actualBorrow);
 
         await expect(() =>
           pethInstance
@@ -615,11 +642,19 @@ export function describeBehaviorOfShardVaultAdmin(
             punkId,
           );
 
-        const settings = await pethJpegdVault.callStatic['settings()']();
-        let requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
-        )
-          .mul(BigNumber.from('2000'))
+        const creditLimit = await pethJpegdVault.callStatic['getCreditLimit'](
+          pethInstance.address,
+          punkId,
+        );
+
+        const targetLTV = creditLimit.sub(
+          creditLimit.mul(targetLTVBP).div(BASIS_POINTS),
+        );
+
+        const settings = await jpegdVault.callStatic['settings()']();
+
+        let requestedBorrow = creditLimit
+          .mul(BigNumber.from('6000'))
           .div(BASIS_POINTS);
 
         let actualBorrow = requestedBorrow.sub(
@@ -647,15 +682,9 @@ export function describeBehaviorOfShardVaultAdmin(
           borrowTimeStamp + duration,
         ]);
 
-        requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
-        )
-          .mul(BigNumber.from('2000'))
+        requestedBorrow = requestedBorrow = creditLimit
+          .mul(BigNumber.from('6000'))
           .div(BASIS_POINTS);
-
-        const oldBalance = await pETH['balanceOf(address)'](
-          pethInstance.address,
-        );
 
         await pethInstance
           .connect(owner)
@@ -665,9 +694,7 @@ export function describeBehaviorOfShardVaultAdmin(
             false,
           );
 
-        const newBalance = await pETH['balanceOf(address)'](
-          pethInstance.address,
-        );
+        const balance = await pETH['balanceOf(address)'](pethInstance.address);
 
         const debtInterest = await pethJpegdVault.callStatic[
           'getDebtInterest(uint256)'
@@ -677,9 +704,9 @@ export function describeBehaviorOfShardVaultAdmin(
           .mul(targetLTVBP.sub(BigNumber.from('2000')))
           .div(BigNumber.from('2000'));
 
-        expect(newBalance.sub(oldBalance))
-          .to.be.lte(actualBorrow.sub(debtInterest).add(ethers.constants.One))
-          .gte(actualBorrow.sub(debtInterest).sub(ethers.constants.One));
+        expect(balance)
+          .to.be.lte(targetLTV.sub(debtInterest).add(ethers.constants.One))
+          .gte(targetLTV.sub(debtInterest).sub(ethers.constants.One));
       });
 
       describe('reverts if', () => {
@@ -697,16 +724,20 @@ export function describeBehaviorOfShardVaultAdmin(
             );
 
           let requestedBorrow = (
-            await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+            await pethJpegdVault.callStatic['getCreditLimit'](
+              pethInstance.address,
+              punkId,
+            )
           )
-            .mul(BigNumber.from('2000'))
+            .mul(BigNumber.from('6000'))
             .div(BASIS_POINTS);
 
           await pethInstance
             .connect(owner)
             ['collateralizePunkPETH(uint256,uint256,bool)'](
               punkId,
-              await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](
+              await jpegdVault.callStatic['getCreditLimit'](
+                pethInstance.address,
                 punkId,
               ),
               false,
@@ -781,7 +812,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -890,7 +924,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -998,7 +1035,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1096,7 +1136,10 @@ export function describeBehaviorOfShardVaultAdmin(
             punkId,
           );
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1219,7 +1262,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1320,7 +1366,10 @@ export function describeBehaviorOfShardVaultAdmin(
             punkId,
           );
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1447,7 +1496,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1507,9 +1559,12 @@ export function describeBehaviorOfShardVaultAdmin(
             punkId,
           );
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(3))
           .div(BASIS_POINTS);
 
         await pethInstance
@@ -1568,7 +1623,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1656,7 +1714,10 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await jpegdVault.callStatic['getNFTValueUSD(uint256)'](punkId)
+          await jpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            instance.address,
+            punkId,
+          )
         )
           .mul(targetLTVBP)
           .div(BASIS_POINTS);
@@ -1753,9 +1814,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(4))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -1834,9 +1898,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(4))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -1878,6 +1945,7 @@ export function describeBehaviorOfShardVaultAdmin(
 
         const pethCitadel = IVault__factory.connect(PETH_CITADEL, owner);
 
+        console.log('prior to unstake');
         const pETH = await pethInstance
           .connect(owner)
           .callStatic['unstakePETH(uint256,uint256,uint256)'](
@@ -1886,6 +1954,7 @@ export function describeBehaviorOfShardVaultAdmin(
             2,
           );
 
+        console.log(' post unstake');
         const calcPETH = await curvePETHPool.callStatic[
           'calc_withdraw_one_coin(uint256,int128)'
         ](
@@ -1931,9 +2000,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -1988,7 +2060,7 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(owner)
           ['transfer(address,uint256)'](
             pethInstance.address,
-            ethers.utils.parseEther('10'),
+            ethers.utils.parseEther('15'),
           );
 
         await pethInstance
@@ -1998,6 +2070,7 @@ export function describeBehaviorOfShardVaultAdmin(
             punkId,
           );
 
+        console.log('before close');
         await pethInstance
           .connect(owner)
           ['closePunkPositionPETH(uint256,uint256,uint256,uint256)'](
@@ -2028,9 +2101,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2085,13 +2161,13 @@ export function describeBehaviorOfShardVaultAdmin(
           .connect(owner)
           ['transfer(address,uint256)'](
             pethInstance.address,
-            ethers.utils.parseEther('10'),
+            ethers.utils.parseEther('15'),
           );
 
         await pethInstance
           .connect(owner)
           ['directRepayLoanPETH(uint256,uint256)'](
-            ethers.utils.parseEther('10'),
+            ethers.utils.parseEther('15'),
             punkId,
           );
 
@@ -2174,9 +2250,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2266,9 +2345,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2348,9 +2430,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2431,9 +2516,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2510,9 +2598,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2600,9 +2691,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2685,9 +2779,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2769,9 +2866,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -2850,9 +2950,12 @@ export function describeBehaviorOfShardVaultAdmin(
           );
 
         const requestedBorrow = (
-          await pethJpegdVault.callStatic['getNFTValueETH(uint256)'](punkId)
+          await pethJpegdVault.callStatic['getCreditLimit(address,uint256)'](
+            pethInstance.address,
+            punkId,
+          )
         )
-          .mul(targetLTVBP)
+          .mul(targetLTVBP.mul(10))
           .div(BASIS_POINTS);
 
         const settings = await pethJpegdVault.callStatic['settings()']();
@@ -3043,76 +3146,6 @@ export function describeBehaviorOfShardVaultAdmin(
         });
       });
     });
-    // describe.only('#acceptBidOnPunk((bytes,uint256,address),uint256)', () => {
-    // it.only('vault receives ETH corresponding to punk proceeds', async () => {
-    // await pethInstance.connect(owner).setMaxSupply(BigNumber.from('100'));
-    // await pethInstance
-    // .connect(depositor)
-    // .deposit({ value: ethers.utils.parseEther('100') });
-
-    // await pethInstance
-    // .connect(owner)
-    // ['purchasePunk((bytes,uint256,address)[],uint256,bool)'](
-    // punkPurchaseCallsPETH,
-    // punkId,
-    // true,
-    // );
-
-    // expect(
-    // await cryptoPunkMarket['punkIndexToAddress(uint256)'](punkId),
-    // ).to.eq(pethInstance.address);
-
-    // const listPrice = ethers.utils.parseEther('50');
-    // const listPunkCalls = [];
-
-    // const encodedOfferPunkForSale =
-    // cryptoPunkMarket.interface.encodeFunctionData(
-    // 'offerPunkForSale(uint256,uint256)',
-    // [punkId, listPrice],
-    // );
-
-    // const encodedListCall = {
-    // data: encodedOfferPunkForSale,
-    // target: CRYPTO_PUNKS_MARKET,
-    // value: ethers.constants.Zero,
-    // };
-
-    // listPunkCalls.push(encodedListCall);
-
-    // await pethInstance
-    // .connect(owner)
-    // ['listPunk((bytes,uint256,address)[],uint256)'](
-    // listPunkCalls,
-    // punkId,
-    // );
-
-    // const bidAmount = ethers.utils.parseEther('10');
-    // await cryptoPunkMarket
-    // .connect(depositor)
-    // ['enterBidForPunk(uint256)'](punkId, { value: bidAmount });
-
-    // const encodedAcceptBidOnPunk =
-    // cryptoPunkMarket.interface.encodeFunctionData(
-    // 'acceptBidForPunk(uint256,uint256)',
-    // [punkId, bidAmount],
-    // );
-
-    // const encodedAcceptCall = {
-    // data: encodedAcceptBidOnPunk,
-    // target: CRYPTO_PUNKS_MARKET,
-    // value: ethers.constants.Zero,
-    // };
-
-    // await expect(() => pethInstance.connect(owner).accept);
-    // });
-    // it('increases accrued fees correponding to sale fee', async () => {});
-    // it('increases cumulativeEPS', async () => {});
-    // it('removes punkId from ownedTokenIds', async () => {});
-
-    // describe('reverts if', () => {
-    // it('called by non-owner', async () => {});
-    // });
-    // });
 
     describe('#setAcquisitionFee(uint16)', () => {
       it('sets acquisition fee value', async () => {
