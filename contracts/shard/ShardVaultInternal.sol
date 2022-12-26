@@ -1316,6 +1316,26 @@ abstract contract ShardVaultInternal is
     }
 
     /**
+     * @notice sets the new value of ltvBufferBP
+     * @param ltvBufferBP new value of ltvBufferBP
+     */
+    function _setLtvBufferBP(uint16 ltvBufferBP) internal {
+        _enforceBasis(ltvBufferBP);
+        ShardVaultStorage.layout().ltvBufferBP = ltvBufferBP;
+        emit SetLtvBufferBP(ltvBufferBP);
+    }
+
+    /**
+     * @notice sets the new value of ltvDeviationBP
+     * @param ltvDeviationBP new value of ltvDeviationBP
+     */
+    function _setLtvDeviationBP(uint16 ltvDeviationBP) internal {
+        _enforceBasis(ltvDeviationBP);
+        ShardVaultStorage.layout().ltvDeviationBP = ltvDeviationBP;
+        emit SetLtvDeviationBP(ltvDeviationBP);
+    }
+
+    /**
      * @notice check to ensure account owns a given shardId corresponding to a shard
      * @param account address to check
      * @param shardId shardId to check

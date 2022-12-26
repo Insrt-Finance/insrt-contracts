@@ -300,4 +300,16 @@ interface IShardVaultAdmin {
      * @param baseURI the new baseURI
      */
     function setBaseURI(string memory baseURI) external;
+
+    /**
+     * @notice sets the new value of ltvBufferBP
+     * @param ltvBufferBP new value of ltvBufferBP
+     */
+    function setLtvBufferBP(uint16 ltvBufferBP) external;
+
+    /**
+     * @notice sets the new value of ltvDeviationBP
+     * @param ltvDeviationBP new value of ltvDeviationBP
+     */
+    function setLtvDeviationBP(uint16 ltvDeviationBP) external;
 }

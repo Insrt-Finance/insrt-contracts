@@ -310,4 +310,16 @@ interface IShardVaultInternal is IOwnableInternal {
      * @param providedJPEG amount of JPEG provided
      */
     event ProvideYieldPETH(uint256 providedETH, uint256 providedJPEG);
+
+    /**
+     * @notice emitted when a new ltvBufferBP value is set
+     * @param ltvBufferBP new value of ltvBufferBP
+     */
+    event SetLtvBufferBP(uint16 ltvBufferBP);
+
+    /**
+     * @notice emitted when a new ltvDeviationBP value is set
+     * @param ltvDeviationBP new value of ltvDeviationBP
+     */
+    event SetLtvDeviationBP(uint16 ltvDeviationBP);
 }
