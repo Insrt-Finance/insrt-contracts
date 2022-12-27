@@ -21,7 +21,6 @@ library ShardVaultStorage {
         uint64 maxSupply;
         uint64 maxMintBalance;
         uint64 reservedSupply;
-        uint64 count;
         uint16 ltvBufferBP;
         uint16 ltvDeviationBP;
         bool isInvested;
@@ -34,6 +33,7 @@ library ShardVaultStorage {
         address jpegdLP;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => bool) authorized;
+        uint64 count;
     }
 
     bytes32 internal constant STORAGE_SLOT =
