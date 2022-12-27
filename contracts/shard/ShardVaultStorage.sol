@@ -21,6 +21,7 @@ library ShardVaultStorage {
         uint64 maxSupply;
         uint64 maxMintBalance;
         uint64 reservedSupply;
+        uint64 count;
         uint16 ltvBufferBP;
         uint16 ltvDeviationBP;
         bool isInvested;
