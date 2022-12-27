@@ -23,9 +23,9 @@ async function main() {
   const DAWN_OF_INSRT = '0x1522C79D2044BBC06f4368c07b88A32e9Cd64BD1';
   const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
   const JPEG_CARDS = '0x83979584eC8c6D94D93f838A524049173DebA6F4';
-
-  const treasury: string = deployer.address; //MUST CHANGE FOR MAINNET
-  const marketplaceHelperAddress: string = deployer.address; //MUST CHANGE TO DEPLOYMENT ADDRESS
+  const treasury: string = '0x55397d6D489a3e51C9c415484bAc6c13ADD193Be';
+  const marketplaceHelperAddress: string =
+    '0x0dF1dF34B4586905e662CaF79e7a28aFF8CA58bb';
 
   const jpegParams: JPEGParamsStruct = {
     PUSD: PUSD,
