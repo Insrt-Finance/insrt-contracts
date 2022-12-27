@@ -162,9 +162,11 @@ abstract contract ShardVaultInternal is
         }
 
         unchecked {
-            for (uint256 i; i < shards; ++i) {
-                _mint(msg.sender, ++l.count);
+            uint256 count = l.totalMintCount;
+            for (uint256 i = 1; i <= shards; ++i) {
+                _mint(msg.sender, count + i);
             }
+            l.totalMintCount += uint64(shards);
         }
 
         if (excessShards > 0) {
