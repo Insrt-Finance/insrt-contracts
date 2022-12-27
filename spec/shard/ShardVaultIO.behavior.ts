@@ -487,6 +487,25 @@ export function describeBehaviorOfShardVaultIO(
         );
       });
 
+      it('CERTIK: able to mint after withdrawing', async () => {
+        await instance.connect(owner)['setIsEnabled(bool)'](true);
+        await instance
+          .connect(depositor)
+          ['deposit()']({ value: depositAmount });
+
+        const withdrawShards = 5;
+        const shards = [];
+        for (let i = 0; i < withdrawShards; i++) {
+          shards.push(await instance.tokenOfOwnerByIndex(depositor.address, i));
+        }
+        await instance.connect(depositor)['withdraw(uint256[])'](shards);
+
+        const newDepositAmount = ethers.utils.parseEther('1');
+        await instance
+          .connect(depositor)
+          ['deposit()']({ value: newDepositAmount });
+      });
+
       describe('reverts if', () => {
         it('caller does not have enough shards', async () => {
           await expect(
