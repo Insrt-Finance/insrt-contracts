@@ -6,7 +6,6 @@ import { EnumerableSet } from '@solidstate/contracts/data/EnumerableSet.sol';
 
 library ShardVaultStorage {
     struct Layout {
-        uint256 conversionBuffer; //temporary for ClosePunkPosition merge
         uint256 shardValue;
         uint256 accruedFees;
         uint256 accruedJPEG;
@@ -34,6 +33,7 @@ library ShardVaultStorage {
         address jpegdLP;
         EnumerableSet.UintSet ownedTokenIds;
         mapping(address => bool) authorized;
+        uint64 totalMintCount;
     }
 
     bytes32 internal constant STORAGE_SLOT =

@@ -722,6 +722,16 @@
   resolved "https://registry.yarnpkg.com/@nomiclabs/hardhat-ethers/-/hardhat-ethers-2.2.1.tgz#8057b43566a0e41abeb8142064a3c0d3f23dca86"
   integrity sha512-RHWYwnxryWR8hzRmU4Jm/q4gzvXpetUOJ4OPlwH2YARcDB+j79+yAYCwO0lN1SUOb4++oOTJEe6AWLEc42LIvg==
 
+"@openzeppelin/contracts-upgradeable@^4.8.0":
+  version "4.8.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.8.0.tgz#26688982f46969018e3ed3199e72a07c8d114275"
+  integrity sha512-5GeFgqMiDlqGT8EdORadp1ntGF0qzWZLmEY7Wbp/yVhN7/B3NNzCxujuI77ktlyG81N3CUZP8cZe3ZAQ/cW10w==
+
+"@openzeppelin/contracts@^4.7.3":
+  version "4.8.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.8.0.tgz#6854c37df205dd2c056bdfa1b853f5d732109109"
+  integrity sha512-AGuwhRRL+NaKx73WKRNzeCxOCOCxpaqF+kp8TJ89QzAipSwZy/NoflkWaL9bywXFRhIzXt8j38sfF7KBKCPWLw==
+
 "@scure/base@~1.1.0":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@scure/base/-/base-1.1.1.tgz#ebb651ee52ff84f420097055f4bf46cfba403938"
@@ -819,25 +829,25 @@
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
-"@solidstate/contracts@^0.0.50":
-  version "0.0.50"
-  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.50.tgz#da912fba7847103fd6d8e09ecdbbb6e44ee326d9"
-  integrity sha512-6AeaOy1zO26n9m1kRrf944h7uE+TPqcGCY2UeTNfSJOJ7Hkz8/GRwPoiKeAgePh2czIvQSGkVK9OrHYxHw+JJw==
+"@solidstate/contracts@^0.0.51":
+  version "0.0.51"
+  resolved "https://registry.yarnpkg.com/@solidstate/contracts/-/contracts-0.0.51.tgz#2aa6d4cfc63ef9166a5dc7be8836c93bdb93bf28"
+  integrity sha512-CyHLjGq3b71MIOpxvZ5fxzZDuO9HEzVDtAqWno7OcltyOtg89SvmTE77qavJt7UcBaH1K4WEA5Kb2zVaR0QBCQ==
 
-"@solidstate/library@^0.0.50":
-  version "0.0.50"
-  resolved "https://registry.yarnpkg.com/@solidstate/library/-/library-0.0.50.tgz#06d4a8e7ec5d0798e1ce22afc9e6791f53484714"
-  integrity sha512-j/RzRMRtmuRxZTMNLbD1JP8g1LYh9t713eC/qQEc+WU+2VRxg6io6Vb4I36sYwDLvEIZiZu9wS3t8OyLRss7Ag==
+"@solidstate/library@^0.0.51":
+  version "0.0.51"
+  resolved "https://registry.yarnpkg.com/@solidstate/library/-/library-0.0.51.tgz#70b133495b81d7020fd9b170f3e519518bd60b66"
+  integrity sha512-ZMHL/NgXDSkzK8dfOc+lzHbEF5RmgbWtCRnJ1Hdp14c0Fuy2j7CMnuhpJrBgRbmOxPscC7TS6emFXOiLOuMSBA==
   dependencies:
     eth-permit "^0.1.10"
 
-"@solidstate/spec@^0.0.50":
-  version "0.0.50"
-  resolved "https://registry.yarnpkg.com/@solidstate/spec/-/spec-0.0.50.tgz#e86425f209a4b9f6771cc234d3c7cb210c8b4942"
-  integrity sha512-cyrPfcbzWH/I6nw65rByn9UXYiRnYuOj079eD9f4W2oGNh6O8BQRDQij4Dyqx2Hoe0s7qV+WoyVVGqya5XIHrg==
+"@solidstate/spec@^0.0.51":
+  version "0.0.51"
+  resolved "https://registry.yarnpkg.com/@solidstate/spec/-/spec-0.0.51.tgz#b3889b11058aeb590ee44757130da53f28dae0bb"
+  integrity sha512-Z1PmXnctBRQzZ3eZWT3+/ILSkYbupqPHG6tGizNRY+dB+TnMv1nNqerOWI3R1js9wfJivDCsEQlOjgDV/VD/Iw==
   dependencies:
     "@ethereum-waffle/mock-contract" "^3.4.4"
-    "@solidstate/library" "^0.0.50"
+    "@solidstate/library" "^0.0.51"
 
 "@tenderly/hardhat-tenderly@^1.3.2":
   version "1.3.2"
@@ -4658,6 +4668,14 @@ open@^8.4.0:
     define-lazy-prop "^2.0.0"
     is-docker "^2.1.1"
     is-wsl "^2.2.0"
+
+operator-filter-registry@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/operator-filter-registry/-/operator-filter-registry-1.3.1.tgz#0f7a9ddeaf25d9e78dce6b5ca4a6962f57ada4b0"
+  integrity sha512-6iHmJc5YP+EktYjMg88MLnezbPP/5kBBdzXoFODSYK2/UnfQoCFHF920+gFgX0jUJRys7e5e9nU9/j+Nor8ZTQ==
+  dependencies:
+    "@openzeppelin/contracts" "^4.7.3"
+    "@openzeppelin/contracts-upgradeable" "^4.8.0"
 
 optionator@^0.8.1:
   version "0.8.3"

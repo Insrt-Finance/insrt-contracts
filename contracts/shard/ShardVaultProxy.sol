@@ -55,7 +55,6 @@ contract ShardVaultProxy is Proxy, IShardVaultProxy {
         l.yieldFeeBP = uints.yieldFeeBP;
         l.ltvBufferBP = uints.ltvBufferBP;
         l.ltvDeviationBP = uints.ltvDeviationBP;
-        l.conversionBuffer = uints.conversionBuffer;
         l.isPUSDVault = isPUSDVault;
 
         uint256 authorizedLength = addresses.authorized.length;

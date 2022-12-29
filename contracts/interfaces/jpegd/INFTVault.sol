@@ -64,8 +64,11 @@ interface INFTVault {
     function getNFTValueUSD(uint256 _nftIndex) external view returns (uint256);
 
     /// @param _nftIndex The NFT to return the credit limit of
-    /// @return The PUSD credit limit of the NFT at index `_nftIndex`.
-    function getCreditLimit(uint256 _nftIndex) external view returns (uint256);
+    /// @return The PETH/PUSD credit limit of the NFT at index `_nftIndex`.
+    function getCreditLimit(
+        address _owner,
+        uint256 _nftIndex
+    ) external view returns (uint256);
 
     /**
      * @notice getter for jpegdVault settings
@@ -113,7 +116,16 @@ interface INFTVault {
      */
     function totalDebtAmount() external view returns (uint256);
 
-    /// @param _nftIndex The NFT to return the value of
-    /// @return The value in ETH of the NFT at index `_nftIndex`, with 18 decimals.
-    function getNFTValueETH(uint256 _nftIndex) external view returns (uint256);
+    /**
+     * @notice getter for the JPEG'd NFT Value provider contract address
+     * @return address of NFT Value provider
+     */
+    function nftValueProvider() external view returns (address);
+
+    /// @param _nftIndex The NFT to return the liquidation limit of
+    /// @return The PETH liquidation limit of the NFT at index `_nftIndex`.
+    function getLiquidationLimit(
+        address _owner,
+        uint256 _nftIndex
+    ) external view returns (uint256);
 }

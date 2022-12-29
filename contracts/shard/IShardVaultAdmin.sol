@@ -294,4 +294,22 @@ interface IShardVaultAdmin {
         IMarketPlaceHelper.EncodedCall[] memory calls,
         uint256 punkId
     ) external;
+
+    /**
+     * @notice sets a new baseURI for ERC721Metadata
+     * @param baseURI the new baseURI
+     */
+    function setBaseURI(string memory baseURI) external;
+
+    /**
+     * @notice sets the new value of ltvBufferBP
+     * @param ltvBufferBP new value of ltvBufferBP
+     */
+    function setLtvBufferBP(uint16 ltvBufferBP) external;
+
+    /**
+     * @notice sets the new value of ltvDeviationBP
+     * @param ltvDeviationBP new value of ltvDeviationBP
+     */
+    function setLtvDeviationBP(uint16 ltvDeviationBP) external;
 }

@@ -57,6 +57,7 @@ describe('ShardVaultProxy', () => {
   const baycVault = '0x271c7603AAf2BD8F68e8Ca60f4A4F22c4920259f';
   const jpegdOwnerAddress = '0x51C2cEF9efa48e08557A361B52DB34061c025a1B';
   const JPEG_CARDS_CIG_STAKING = '0xFf9233825542977cd093E9Ffb8F0fC526164D3B7';
+  const JPEG_CARDS = '0x83979584eC8c6D94D93f838A524049173DebA6F4';
   const maxShardsPerUser = BigNumber.from('10');
   const saleFeeBP = BigNumber.from('200');
   const acquisitionFeeBP = BigNumber.from('100');
@@ -96,6 +97,7 @@ describe('ShardVaultProxy', () => {
     PETH: string;
     JPEG: string;
     JPEG_CARDS_CIG_STAKING: string;
+    JPEG_CARDS: string;
     PUSD_CITADEL: string;
     PETH_CITADEL: string;
     CURVE_PUSD_POOL: string;
@@ -179,6 +181,7 @@ describe('ShardVaultProxy', () => {
       PETH: PETH,
       JPEG: JPEG,
       JPEG_CARDS_CIG_STAKING: JPEG_CARDS_CIG_STAKING,
+      JPEG_CARDS: JPEG_CARDS,
       PUSD_CITADEL: pusdCitadel,
       PETH_CITADEL: pethCitadel,
       CURVE_PUSD_POOL: curvePUSDPool,
@@ -268,7 +271,7 @@ describe('ShardVaultProxy', () => {
     const deployShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint16,uint16),string,string,string,bool)'
       ](addressesPUSD, uintsPUSD, 'name', 'name', 'something', true);
 
     const { events } = await deployShardVaultTx.wait();
@@ -285,7 +288,7 @@ describe('ShardVaultProxy', () => {
     const deploySecondShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint16,uint16),string,string,string,bool)'
       ](addressesPUSDTwo, uintsPUSD, 'name', 'name', 'something', true);
 
     const rcpt = await deploySecondShardVaultTx.wait();
@@ -301,7 +304,7 @@ describe('ShardVaultProxy', () => {
     const deployPethShardVaultTx = await core
       .connect(deployer)
       [
-        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint256,uint16,uint16),string,string,string,bool)'
+        'deployShardVault((address,address,address,address,address,address[]),(uint256,uint64,uint64,uint16,uint16,uint16,uint16,uint16),string,string,string,bool)'
       ](addressesPETH, uintsPETH, 'name', 'name', 'something', false);
 
     const pethDeploymentRcpt = await deployPethShardVaultTx.wait();

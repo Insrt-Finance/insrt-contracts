@@ -190,4 +190,11 @@ contract ShardVaultView is ShardVaultInternal, IShardVaultView {
     function treasury() external view returns (address treasury) {
         treasury = _treasury();
     }
+
+    /**
+     * @inheritdoc IShardVaultView
+     */
+    function isEnabled() external view returns (bool isEnabled) {
+        isEnabled = _isEnabled();
+    }
 }

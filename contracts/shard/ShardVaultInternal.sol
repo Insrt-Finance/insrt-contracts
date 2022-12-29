@@ -17,6 +17,7 @@ import { ShardVaultStorage } from './ShardVaultStorage.sol';
 import { ICryptoPunkMarket } from '../interfaces/cryptopunk/ICryptoPunkMarket.sol';
 import { ICurveMetaPool } from '../interfaces/curve/ICurveMetaPool.sol';
 import { IJpegCardsCigStaking } from '../interfaces/jpegd/IJpegCardsCigStaking.sol';
+import { IDawnOfInsrt } from '../interfaces/insrt/IDawnOfInsrt.sol';
 import { ILPFarming } from '../interfaces/jpegd/ILPFarming.sol';
 import { INFTEscrow } from '../interfaces/jpegd/INFTEscrow.sol';
 import { INFTVault } from '../interfaces/jpegd/INFTVault.sol';
@@ -53,6 +54,11 @@ abstract contract ShardVaultInternal is
     uint256 internal constant BASIS_POINTS = 10000;
     uint256 internal constant CURVE_BASIS = 10000000000;
     uint256 internal constant CURVE_FEE = 4000000;
+    uint256 internal constant TIER0_FEE_COEFFICIENT = 9000;
+    uint256 internal constant TIER1_FEE_COEFFICIENT = 7500;
+    uint256 internal constant TIER2_FEE_COEFFICIENT = 6000;
+    uint256 internal constant TIER3_FEE_COEFFICIENT = 4000;
+    uint256 internal constant TIER4_FEE_COEFFICIENT = 2000;
 
     constructor(
         JPEGParams memory jpegParams,
@@ -67,7 +73,7 @@ abstract contract ShardVaultInternal is
         CURVE_PETH_POOL = jpegParams.CURVE_PETH_POOL;
         JPEG = jpegParams.JPEG;
         JPEG_CARDS_CIG_STAKING = jpegParams.JPEG_CARDS_CIG_STAKING;
-        JPEG_CARDS = IJpegCardsCigStaking(JPEG_CARDS_CIG_STAKING).cards();
+        JPEG_CARDS = jpegParams.JPEG_CARDS;
 
         PUNKS = auxiliaryParams.PUNKS;
         DAWN_OF_INSRT = auxiliaryParams.DAWN_OF_INSRT;
@@ -156,9 +162,11 @@ abstract contract ShardVaultInternal is
         }
 
         unchecked {
-            for (uint256 i; i < shards; ++i) {
-                _mint(msg.sender, totalSupply + i);
+            uint256 count = l.totalMintCount;
+            for (uint256 i = 1; i <= shards; ++i) {
+                _mint(msg.sender, count + i);
             }
+            l.totalMintCount += uint64(shards);
         }
 
         if (excessShards > 0) {
@@ -294,17 +302,13 @@ abstract contract ShardVaultInternal is
         bool insure
     ) internal returns (uint256 pUSD) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
         _enforceIsPUSDVault();
-        address jpegdVault = l.jpegdVault;
-        uint256 value = INFTVault(jpegdVault).getNFTValueUSD(punkId);
 
         pUSD = _collateralizePunk(
             punkId,
             borrowAmount,
             insure,
-            jpegdVault,
-            value,
+            l.jpegdVault,
             PUSD
         );
 
@@ -317,17 +321,13 @@ abstract contract ShardVaultInternal is
         bool insure
     ) internal returns (uint256 pETH) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
-
         _enforceIsPETHVault();
-        address jpegdVault = l.jpegdVault;
-        uint256 value = INFTVault(jpegdVault).getNFTValueETH(punkId);
 
         pETH = _collateralizePunk(
             punkId,
             borrowAmount,
             insure,
-            jpegdVault,
-            value,
+            l.jpegdVault,
             PETH
         );
 
@@ -339,15 +339,17 @@ abstract contract ShardVaultInternal is
         uint256 borrowAmount,
         bool insure,
         address jpegdVault,
-        uint256 value,
         address token
     ) private returns (uint256 amount) {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
-        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(punkId);
+        uint256 creditLimit = INFTVault(jpegdVault).getCreditLimit(
+            address(this),
+            punkId
+        );
 
         uint256 targetLTV = creditLimit -
-            (value * (l.ltvBufferBP + l.ltvDeviationBP)) /
+            (creditLimit * (l.ltvBufferBP + l.ltvDeviationBP)) /
             BASIS_POINTS;
 
         if (INFTVault(jpegdVault).positionOwner(punkId) != address(0)) {
@@ -989,17 +991,26 @@ abstract contract ShardVaultInternal is
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to msg.sender
      * @param shardIds array of shard IDs to claim with
+     * @param tokenIdDOI Dawn of INSRT token ID used to apply yieldFeeBP discount
      */
-    function _claimYield(uint256[] memory shardIds) internal {
-        _claimYield(msg.sender, shardIds);
+    function _claimYield(
+        uint256[] memory shardIds,
+        uint256 tokenIdDOI
+    ) internal {
+        _claimYield(msg.sender, shardIds, tokenIdDOI);
     }
 
     /**
      * @notice sends yield in the form of ETH + JPEG tokens to account
      * @param account address making the yield claim
      * @param shardIds array of shard IDs to claim with
+     * @param tokenIdDOI Dawn of INSRT token ID used to apply yieldFeeBP discount
      */
-    function _claimYield(address account, uint256[] memory shardIds) private {
+    function _claimYield(
+        address account,
+        uint256[] memory shardIds,
+        uint256 tokenIdDOI
+    ) private {
         ShardVaultStorage.Layout storage l = ShardVaultStorage.layout();
 
         uint256 tokens = shardIds.length;
@@ -1037,11 +1048,17 @@ abstract contract ShardVaultInternal is
             }
         }
 
+        uint16 yieldFeeBP = _discountYieldFeeBP(
+            account,
+            tokenIdDOI,
+            l.yieldFeeBP
+        );
+
         //apply fees
-        uint256 ETHfee = (totalETH * l.yieldFeeBP) / BASIS_POINTS;
+        uint256 ETHfee = (totalETH * yieldFeeBP) / BASIS_POINTS;
         l.accruedFees += ETHfee;
 
-        uint256 jpegFee = (totalJPEG * l.yieldFeeBP) / BASIS_POINTS;
+        uint256 jpegFee = (totalJPEG * yieldFeeBP) / BASIS_POINTS;
         l.accruedJPEG += jpegFee;
 
         //transfer yield
@@ -1070,7 +1087,7 @@ abstract contract ShardVaultInternal is
 
         if (from != address(0)) {
             if (l.isYieldClaiming) {
-                _claimYield(from, shardIds);
+                _claimYield(from, shardIds, type(uint256).max);
             }
 
             if (!l.isYieldClaiming && l.isInvested) {
@@ -1301,6 +1318,26 @@ abstract contract ShardVaultInternal is
     }
 
     /**
+     * @notice sets the new value of ltvBufferBP
+     * @param ltvBufferBP new value of ltvBufferBP
+     */
+    function _setLtvBufferBP(uint16 ltvBufferBP) internal {
+        _enforceBasis(ltvBufferBP);
+        ShardVaultStorage.layout().ltvBufferBP = ltvBufferBP;
+        emit SetLtvBufferBP(ltvBufferBP);
+    }
+
+    /**
+     * @notice sets the new value of ltvDeviationBP
+     * @param ltvDeviationBP new value of ltvDeviationBP
+     */
+    function _setLtvDeviationBP(uint16 ltvDeviationBP) internal {
+        _enforceBasis(ltvDeviationBP);
+        ShardVaultStorage.layout().ltvDeviationBP = ltvDeviationBP;
+        emit SetLtvDeviationBP(ltvDeviationBP);
+    }
+
+    /**
      * @notice check to ensure account owns a given shardId corresponding to a shard
      * @param account address to check
      * @param shardId shardId to check
@@ -1395,5 +1432,49 @@ abstract contract ShardVaultInternal is
     function _enforceIsPETHVault() internal view {
         if (ShardVaultStorage.layout().isPUSDVault == true)
             revert ShardVault__CallTypeProhibited();
+    }
+
+    /**
+     * @notice returns the isEnabled status of the vault
+     * @return isEnabled status of isEnabled of the vault
+     */
+    function _isEnabled() internal view returns (bool isEnabled) {
+        isEnabled = ShardVaultStorage.layout().isEnabled;
+    }
+
+    /**
+     * @notice applies a discount on yield fee
+     * @param account address to check for discount
+     * @param tokenId Dawn of Insrt token Id
+     * @param rawYieldFeeBP the undiscounted yield fee in basis points
+     */
+    function _discountYieldFeeBP(
+        address account,
+        uint256 tokenId,
+        uint16 rawYieldFeeBP
+    ) internal view returns (uint16 yieldFeeBP) {
+        if (tokenId == type(uint256).max) {
+            yieldFeeBP = rawYieldFeeBP;
+        } else {
+            if (account != IERC721(DAWN_OF_INSRT).ownerOf(tokenId)) {
+                revert ShardVault__NotDawnOfInsrtTokenOwner();
+            }
+            uint8 tier = IDawnOfInsrt(DAWN_OF_INSRT).tokenTier(tokenId);
+
+            uint256 discount;
+            if (tier == 0) {
+                discount = TIER0_FEE_COEFFICIENT;
+            } else if (tier == 1) {
+                discount = TIER1_FEE_COEFFICIENT;
+            } else if (tier == 2) {
+                discount = TIER2_FEE_COEFFICIENT;
+            } else if (tier == 3) {
+                discount = TIER3_FEE_COEFFICIENT;
+            } else {
+                discount = TIER4_FEE_COEFFICIENT;
+            }
+
+            yieldFeeBP = uint16((rawYieldFeeBP * discount) / BASIS_POINTS);
+        }
     }
 }

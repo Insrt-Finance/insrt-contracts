@@ -10,6 +10,7 @@ interface IShardVaultInternal is IOwnableInternal {
         address PETH;
         address JPEG;
         address JPEG_CARDS_CIG_STAKING;
+        address JPEG_CARDS;
         address PUSD_CITADEL;
         address PETH_CITADEL;
         address CURVE_PUSD_POOL;
@@ -138,6 +139,11 @@ interface IShardVaultInternal is IOwnableInternal {
      * @notice thrown when setting a max supply which is smaller than total supply
      */
     error ShardVault__MaxSupplyTooSmall();
+
+    /**
+     * @notice thrown when attempting to reduce yield fee whilst not owning DawnOfInsrt token used to reduce yield fee
+     */
+    error ShardVault__NotDawnOfInsrtTokenOwner();
 
     /**
      * @notice emitted when baseURI is set
@@ -304,4 +310,16 @@ interface IShardVaultInternal is IOwnableInternal {
      * @param providedJPEG amount of JPEG provided
      */
     event ProvideYieldPETH(uint256 providedETH, uint256 providedJPEG);
+
+    /**
+     * @notice emitted when a new ltvBufferBP value is set
+     * @param ltvBufferBP new value of ltvBufferBP
+     */
+    event SetLtvBufferBP(uint16 ltvBufferBP);
+
+    /**
+     * @notice emitted when a new ltvDeviationBP value is set
+     * @param ltvDeviationBP new value of ltvDeviationBP
+     */
+    event SetLtvDeviationBP(uint16 ltvDeviationBP);
 }

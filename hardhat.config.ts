@@ -14,14 +14,18 @@ import Dotenv from 'dotenv';
 
 Dotenv.config();
 
+require('./tasks/transferContractOwnership');
+
 const {
   NODE_URL_MAINNET,
   NODE_URL_TESTNET,
   PKEY_MAINNET,
   PKEY_TESTNET,
   REPORT_GAS,
-  TENDERLY_URL_ARBITRUM,
-  ARBITRUM_FORK_BLOCK_NUMBER,
+  TENDERLY_URL_MAINNET,
+  MAINNET_FORK_BLOCK_NUMBER,
+  PKEY_TENDERLY,
+  GOERLI_URL_TESTNET,
 } = process.env;
 
 export default {
@@ -50,8 +54,8 @@ export default {
   networks: {
     hardhat: {
       forking: {
-        url: NODE_URL_MAINNET,
-        blockNumber: 15889350,
+        url: NODE_URL_TESTNET,
+        blockNumber: 16165493,
       },
     },
 
@@ -66,9 +70,14 @@ export default {
     },
 
     tenderly: {
-      url: TENDERLY_URL_ARBITRUM,
+      url: TENDERLY_URL_MAINNET,
+      accounts: [PKEY_MAINNET],
+      blockNumber: MAINNET_FORK_BLOCK_NUMBER,
+    },
+
+    goerli: {
+      url: GOERLI_URL_TESTNET,
       accounts: [PKEY_TESTNET],
-      blockNumber: ARBITRUM_FORK_BLOCK_NUMBER,
     },
   },
 

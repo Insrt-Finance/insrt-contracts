@@ -35,6 +35,7 @@ contract MarketPlaceHelper is IMarketPlaceHelper, Ownable {
         ) {
             revert MarketPlaceHelper__InsufficientPurchaseToken();
         }
+
         unchecked {
             for (uint256 i; i < calls.length; ++i) {
                 (bool success, ) = calls[i].target.call{
