@@ -1,4 +1,5 @@
-import '@nomiclabs/hardhat-waffle';
+import '@nomicfoundation/hardhat-chai-matchers';
+import '@nomiclabs/hardhat-ethers';
 import '@typechain/hardhat';
 import '@tenderly/hardhat-tenderly';
 import 'hardhat-abi-exporter';
@@ -27,7 +28,7 @@ export default {
   solidity: {
     compilers: [
       {
-        version: '0.8.15',
+        version: '0.8.17',
         settings: {
           optimizer: {
             enabled: true,
@@ -50,7 +51,7 @@ export default {
     hardhat: {
       forking: {
         url: NODE_URL_MAINNET,
-        blockNumber: 13465420,
+        blockNumber: 15889350,
       },
     },
 

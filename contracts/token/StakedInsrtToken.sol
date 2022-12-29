@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.11;
 
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { ERC20MetadataInternal } from '@solidstate/contracts/token/ERC20/metadata/ERC20MetadataInternal.sol';
 import { SolidStateERC4626 } from '@solidstate/contracts/token/ERC4626/SolidStateERC4626.sol';
 import { ERC4626BaseStorage } from '@solidstate/contracts/token/ERC4626/base/ERC4626BaseStorage.sol';

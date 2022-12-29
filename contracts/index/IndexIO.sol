@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import { IERC20 } from '@solidstate/contracts/token/ERC20/IERC20.sol';
+import { IERC20 } from '@solidstate/contracts/interfaces/IERC20.sol';
 import { SafeERC20 } from '@solidstate/contracts/utils/SafeERC20.sol';
 
 import { IIndexIO } from './IIndexIO.sol';
 import { IndexInternal } from './IndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
 import { ISwapper } from './ISwapper.sol';
-import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
-import { IVault } from '../balancer/IVault.sol';
+import { IBalancerHelpers } from '../interfaces/balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
+import { IVault } from '../interfaces/balancer/IVault.sol';
 
 /**
  * @title Infra Index Input-Output functions
@@ -40,9 +40,10 @@ contract IndexIO is IndexInternal, IIndexIO {
     /**
      * @inheritdoc IIndexIO
      */
-    function initialize(uint256[] memory poolTokenAmounts, address receiver)
-        external
-    {
+    function initialize(
+        uint256[] memory poolTokenAmounts,
+        address receiver
+    ) external {
         bytes memory userData = abi.encode(
             IInvestmentPool.JoinKind.INIT,
             poolTokenAmounts

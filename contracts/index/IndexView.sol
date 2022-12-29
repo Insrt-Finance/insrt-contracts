@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import { ABDKMath64x64 } from 'abdk-libraries-solidity/ABDKMath64x64.sol';
 
-import { IBalancerHelpers } from '../balancer/IBalancerHelpers.sol';
-import { IInvestmentPool } from '../balancer/IInvestmentPool.sol';
-import { IVault, IAsset } from '../balancer/IVault.sol';
+import { IBalancerHelpers } from '../interfaces/balancer/IBalancerHelpers.sol';
+import { IInvestmentPool } from '../interfaces/balancer/IInvestmentPool.sol';
+import { IVault, IAsset } from '../interfaces/balancer/IVault.sol';
 import { IIndexView } from './IIndexView.sol';
 import { IndexInternal } from './IndexInternal.sol';
 import { IndexStorage } from './IndexStorage.sol';
