@@ -90,15 +90,6 @@ export default {
     runOnCompile: false,
   },
 
-  dependencyCompiler: {
-    paths: [
-      '@balancer-labs/v2-pool-weighted/contracts/WeightedPoolFactory.sol',
-      '@balancer-labs/v2-pool-weighted/contracts/smart/InvestmentPoolFactory.sol',
-      '@balancer-labs/v2-vault/contracts/interfaces/IVault.sol',
-      '@uniswap/v2-periphery/contracts/UniswapV2Router02.sol',
-    ],
-  },
-
   gasReporter: {
     enabled: REPORT_GAS === 'true',
   },
