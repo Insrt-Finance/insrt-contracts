@@ -1,16 +1,6 @@
 import fs from 'fs';
 import { BigNumber, ethers } from 'ethers';
 
-export interface CoreAddresses {
-  CoreDiamond: string;
-  IndexDiamond: string;
-  IndexManager: string;
-  IndexBase: string;
-  IndexIO: string;
-  IndexView: string;
-  IndexSettings: string;
-}
-
 export interface ShardCoreAddresses {
   CoreDiamond: string;
   ShardVaultManager: string;
@@ -71,16 +61,6 @@ export interface EncodedCallStruct {
   data: string;
   value: BigNumber;
   target: string;
-}
-
-export interface Index {
-  Index: string;
-}
-
-export interface MockToken {
-  name: string;
-  symbol: string;
-  address: string;
 }
 
 export function parseEncodedCalls(callsString: string): EncodedCallStruct[] {
